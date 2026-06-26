@@ -77,8 +77,6 @@
         <select id="schedule-month-select" onchange="changeScheduleMonth()">
           <option value="Schedules">當月最新班表</option>
           <option value="2026-07">2026 年 07 月</option>
-          <option value="2026-06">2026 年 06 月</option>
-          <option value="2026-05">2026 年 05 月</option>
         </select>
       </div>
       <ul id="schedule-list">
@@ -117,6 +115,7 @@
   </div>
 
   <script>
+    // 修正點：網址格式確保前後有英文字元引號包住
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
     let currentUser = { id: "", name: "", location: "" };
 
@@ -144,9 +143,7 @@
           document.getElementById('user-name').innerText = data.employeeName;
           document.getElementById('user-location').innerText = data.assignedLocation;
           
-          // 渲染預設當月班表
           renderSchedules(data.schedules);
-          // 渲染假單
           renderLeaveStatus(data.leaves);
           
           document.getElementById('login-section').classList.add('hidden');
@@ -164,7 +161,7 @@
       if (schedules && schedules.length > 0) {
         schedules.forEach(s => {
           const li = document.createElement('li');
-          li.innerHTML = `📅 <strong>${s.date}</strong><br>📍 ${s.shift}`;
+          li.innerHTML = `📅 <strong>${s.date}</strong> ： ${s.shift}`;
           schedList.appendChild(li);
         });
       } else {
@@ -172,7 +169,6 @@
       }
     }
 
-    // 當員工在手機網頁切換月份選單時執行
     function changeScheduleMonth() {
       const selectedMonth = document.getElementById('schedule-month-select').value;
       const schedList = document.getElementById('schedule-list');
