@@ -96,8 +96,8 @@
           <option value="事假">事假 (勞基法上限14天)</option>
           <option value="病假">病假 (勞基法上限30天)</option>
           <option value="特休">特休 (依到職年資動態計算)</option>
-          <option value="婚假">婚假</option>
-          <option value="喪假">喪假</option>
+          <option value="婚假">婚假 (上限8天)</option>
+          <option value="喪假">喪假 (依勞基法對象上限8天)</option>
           <option value="公假">公假</option>
         </select>
       </div>
@@ -120,16 +120,19 @@
   </div>
 
   <script>
-    // ⚠️ 請在此處貼上你剛才「管理部署作業」中複製出來的最新 GAS 網址！
+    // ⚠️ 請記得把這裡換成你剛剛在 GAS「全新部署」得到的網址喔！
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
     
     let currentUser = { id: "", name: "", location: "" };
     let globalLeaveSummary = {};
     let allowedSpecialLeaveHours = 0; 
 
+    // 法定請假時數上限定義（天數 * 8小時）
     const LAW_LIMITS = {
       "事假": 14 * 8, 
-      "病假": 30 * 8  
+      "病假": 30 * 8,
+      "婚假": 8 * 8,
+      "喪假": 8 * 8
     };
 
     function login() {
@@ -176,7 +179,7 @@
     function renderLeaveSummary(summary, allowedSpecialDays) {
       const container = document.getElementById('leave-summary-content');
       let html = "";
-      const targetLeaves = ["事假", "病假", "特休"];
+      const targetLeaves = ["事假", "病假", "特休", "婚假", "喪假"];
       
       targetLeaves.forEach(type => {
         const info = summary[type] || { totalHours: 0, display: "0 天 0 小時" };
@@ -184,6 +187,8 @@
         if (type === "事假") limitText = " / 上限 14 天";
         if (type === "病假") limitText = " / 上限 30 天";
         if (type === "特休") limitText = ` / 依年資您有 ${allowedSpecialDays} 天`;
+        if (type === "婚假") limitText = " / 上限 8 天";
+        if (type === "喪假") limitText = " / 上限 8 天";
         
         html += `📌 <strong>${type}</strong>：${info.display}${limitText}<br>`;
       });
