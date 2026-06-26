@@ -21,17 +21,22 @@
     button:hover { background-color: #0056b3; }
     .error-msg { color: #dc3545; text-align: center; font-size: 14px; margin-top: 15px; display: none; }
     .hidden { display: none; }
-    .nav-tabs { display: flex; border-bottom: 1px solid #dee2e6; margin-bottom: 20px; }
-    .nav-item { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-weight: 500; border-bottom: 2px solid transparent; }
+    .nav-tabs { display: flex; border-bottom: 1px solid #dee2e6; margin-bottom: 20px; flex-wrap: wrap; }
+    .nav-item { flex: 1; text-align: center; padding: 12px 5px; cursor: pointer; font-weight: 500; border-bottom: 2px solid transparent; font-size: 13px; }
     .nav-item.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
     .info-box { background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; line-height: 1.5; }
     ul { list-style: none; }
-    li { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+    li { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; line-height: 1.4; }
     li:last-child { border-bottom: none; }
+    .badge { padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-left: 5px; }
+    .badge-wait { background: #ffeeba; color: #856404; }
+    .badge-pass { background: #d4edda; color: #155724; }
+    .badge-fail { background: #f8d7da; color: #721c24; }
   </style>
 </head>
 <body>
 
+  <!-- 1. 登入區塊 -->
   <div id="login-section" class="card">
     <h2>物業考勤系統登入</h2>
     <div class="form-group">
@@ -44,6 +49,7 @@
     <div id="login-error" class="error-msg">連線失敗，請檢查網路或 GAS 網址</div>
   </div>
 
+  <!-- 2. 主功能區塊 -->
   <div id="main-section" class="card hidden">
     <div class="info-box">
       <p>歡迎，<strong id="user-name">---</strong></p>
@@ -53,9 +59,11 @@
     <div class="nav-tabs">
       <div class="nav-item active" onclick="switchTab('punch')">定位打卡</div>
       <div class="nav-item" onclick="switchTab('schedule')">班表查詢</div>
-      <div class="nav-item" onclick="switchTab('leave')">請假申請</div>
+      <div class="nav-item" onclick="switchTab('leave')">請假線上申請</div>
+      <div class="nav-item" onclick="switchTab('leavestatus')">假單進度</div>
     </div>
 
+    <!-- 打卡分頁 -->
     <div id="tab-punch">
       <div class="form-group">
         <label>打卡類型</label>
@@ -68,23 +76,25 @@
       <div id="punch-error" class="error-msg"></div>
     </div>
 
+    <!-- 班表分頁 -->
     <div id="tab-schedule" class="hidden">
       <ul id="schedule-list">
         <li>暫無排班資料</li>
       </ul>
     </div>
 
+    <!-- 請假分頁 -->
     <div id="tab-leave" class="hidden">
       <div class="form-group">
         <label>請假假別</label>
-       <select id="leave-type">
-  <option value="事假">事假</option>
-  <option value="病假">病假</option>
-  <option value="特休">特休</option>
-  <option value="婚假">婚假</option>
-  <option value="喪假">喪假</option>
-  <option value="公假">公假</option>
-</select>
+        <select id="leave-type">
+          <option value="事假">事假</option>
+          <option value="病假">病假</option>
+          <option value="特休">特休</option>
+          <option value="婚假">婚假</option>
+          <option value="喪假">喪假</option>
+          <option value="公假">公假</option>
+        </select>
       </div>
       <div class="form-group">
         <label>開始日期</label>
@@ -97,24 +107,19 @@
       <button onclick="submitLeave()">送出請假申請</button>
       <div id="leave-error" class="error-msg"></div>
     </div>
+
+    <!-- 假單進度分頁 -->
+    <div id="tab-leavestatus" class="hidden">
+      <ul id="leave-status-list">
+        <li>暫無請假紀錄</li>
+      </ul>
+    </div>
   </div>
 
   <script>
-    // 后端 Google Apps Script 部署網址
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
 
-    // 全域變數，紀錄登入後的員工資訊
     let currentUser = { id: "", name: "", location: "" };
-
-    function showLoading(btnText) {
-      const btn = document.querySelector('button');
-      if(btn) { btn.disabled = true; btn.innerText = '處理中...'; }
-    }
-
-    function hideLoading(btnText) {
-      const btn = document.querySelector('button');
-      if(btn) { btn.disabled = false; btn.innerText = btnText; }
-    }
 
     function login() {
       const empId = document.getElementById('emp-id').value.trim();
@@ -126,7 +131,6 @@
         errorDiv.style.display = "block";
         return;
       }
-      
       errorDiv.style.display = "none";
       
       fetch(GAS_WEB_APP_URL, {
@@ -157,6 +161,9 @@
           } else {
             schedList.innerHTML = '<li>本月暫無排班資料</li>';
           }
+
+          // 渲染假單進度
+          renderLeaveStatus(data.leaves);
           
           document.getElementById('login-section').classList.add('hidden');
           document.getElementById('main-section').classList.remove('hidden');
@@ -168,8 +175,25 @@
       .catch(err => {
         errorDiv.innerText = "連線失敗，請檢查網路或 GAS 網址";
         errorDiv.style.display = "block";
-        console.error(err);
       });
+    }
+
+    function renderLeaveStatus(leaves) {
+      const leaveList = document.getElementById('leave-status-list');
+      leaveList.innerHTML = '';
+      if (leaves && leaves.length > 0) {
+        leaves.forEach(l => {
+          const li = document.createElement('li');
+          let badgeClass = "badge-wait";
+          if(l.status === "已核准" || l.status === "核准") badgeClass = "badge-pass";
+          if(l.status === "不核准" || l.status === "駁回") badgeClass = "badge-fail";
+          
+          li.innerHTML = `🏷️ <strong>${l.type}</strong> <span class="badge ${badgeClass}">${l.status}</span><br>⏳ ${l.start} ~ ${l.end}`;
+          leaveList.appendChild(li);
+        });
+      } else {
+        leaveList.innerHTML = '<li>暫無請假紀錄</li>';
+      }
     }
 
     function switchTab(tabName) {
@@ -179,6 +203,7 @@
       document.getElementById('tab-punch').classList.add('hidden');
       document.getElementById('tab-schedule').classList.add('hidden');
       document.getElementById('tab-leave').classList.add('hidden');
+      document.getElementById('tab-leavestatus').classList.add('hidden');
       
       document.getElementById('tab-' + tabName).classList.remove('hidden');
     }
@@ -187,12 +212,7 @@
       const type = document.getElementById('punch-type').value;
       const errorDiv = document.getElementById('punch-error');
       errorDiv.style.display = "none";
-      
-      if (!navigator.geolocation) {
-        errorDiv.innerText = "您的瀏覽器不支援定位功能";
-        errorDiv.style.display = "block";
-        return;
-      }
+      if (!navigator.geolocation) { alert("您的瀏覽器不支援定位功能"); return; }
       
       navigator.geolocation.getCurrentPosition(position => {
         const lat = position.coords.latitude;
@@ -203,58 +223,35 @@
           mode: 'cors',
           headers: { 'Content-Type': 'text/plain' },
           body: JSON.stringify({
-            action: 'checkin',
-            employeeId: currentUser.id,
-            employeeName: currentUser.name,
-            type: type,
-            distance: "手機GPS定位",
-            result: `經度:${lng.toFixed(4)}, 緯度:${lat.toFixed(4)}`
+            action: 'checkin', employeeId: currentUser.id, employeeName: currentUser.name, type: type, distance: "手機GPS定位", result: `經度:${lng.toFixed(4)}, 緯度:${lat.toFixed(4)}`
           })
         })
-        .then(res => res.json())
-        .then(data => {
-          alert(data.message);
-        })
-        .catch(err => {
-          alert("打卡傳送失敗");
-          console.error(err);
-        });
-      }, err => {
-        errorDiv.innerText = "無法取得定位權限，請開啟手機定位";
-        errorDiv.style.display = "block";
-      });
+        .then(res => res.json()).then(data => alert(data.message))
+        .catch(err => alert("打卡傳送失敗"));
+      }, err => { alert("無法取得定位權限"); });
     }
 
     function submitLeave() {
       const type = document.getElementById('leave-type').value;
       const start = document.getElementById('leave-start').value;
       const end = document.getElementById('leave-end').value;
-      
-      if(!start || !end) {
-        alert("請選擇請假起訖日期");
-        return;
-      }
+      if(!start || !end) { alert("請選擇請假起訖日期"); return; }
       
       fetch(GAS_WEB_APP_URL, {
         method: 'POST',
         mode: 'cors',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({
-          action: 'leave',
-          employeeId: currentUser.id,
-          employeeName: currentUser.name,
-          leaveType: type,
-          startDate: start,
-          endDate: end
+          action: 'leave', employeeId: currentUser.id, employeeName: currentUser.name, leaveType: type, startDate: start, endDate: end
         })
       })
       .then(res => res.json())
       .then(data => {
         alert(data.message);
+        // 送出後提醒員工重新登入即可刷新進度
+        location.reload();
       })
-      .catch(err => {
-        alert("請假送出失敗");
-      });
+      .catch(err => alert("請假送出失敗"));
     }
   </script>
 </body>
