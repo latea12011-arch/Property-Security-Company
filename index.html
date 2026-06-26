@@ -1,335 +1,91 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>物業行動考勤系統</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="物業考勤">
-  <style>
-    :root { --primary-color: #007bff; --bg-color: #f4f6f9; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-    .card { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
-    h2 { margin-bottom: 24px; text-align: center; font-size: 24px; font-weight: 700; }
-    .form-group { margin-bottom: 20px; }
-    label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; }
-    input, select { width: 100%; padding: 12px 16px; border: 1px solid #ced4da; border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.2s; }
-    input:focus, select:focus { border-color: var(--primary-color); }
-    button { width: 100%; padding: 14px; background-color: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; margin-top: 10px; }
-    button:hover { background-color: #0056b3; }
-    .error-msg { color: #dc3545; text-align: center; font-size: 14px; margin-top: 15px; display: none; }
-    .hidden { display: none; }
-    .nav-tabs { display: flex; border-bottom: 1px solid #dee2e6; margin-bottom: 20px; flex-wrap: wrap; }
-    .nav-item { flex: 1; text-align: center; padding: 12px 3px; cursor: pointer; font-weight: 500; border-bottom: 2px solid transparent; font-size: 13px; }
-    .nav-item.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
-    .info-box { background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; line-height: 1.5; }
-    
-    /* 📢 公司公告專用外觀 */
-    .announcement-box { background: #e8f4fd; color: #1d6fa5; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #2196f3; font-size: 13px; }
-    .announcement-title { font-weight: bold; font-size: 14px; margin-bottom: 6px; display: flex; align-items: center; }
-    .announcement-item { padding: 6px 0; border-bottom: 1px dashed #bce0fd; }
-    .announcement-item:last-child { border-bottom: none; }
-    .announcement-date { font-size: 11px; color: #5dade2; margin-right: 6px; font-weight: bold; }
-
-    ul { list-style: none; }
-    li { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; line-height: 1.4; }
-    li:last-child { border-bottom: none; }
-    .badge { padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-left: 5px; }
-    .badge-wait { background: #ffeeba; color: #856404; }
-    .badge-pass { background: #d4edda; color: #155724; }
-    .badge-fail { background: #f8d7da; color: #721c24; }
-    .month-select-container { margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px; }
-    .leave-summary-card { background: #fff3cd; color: #856404; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; border-left: 4px solid #ffc107; }
-    .leave-summary-title { font-weight: bold; margin-bottom: 5px; border-bottom: 1px dashed #ddc06d; padding-bottom: 3px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物業考勤系統 - 員工端</title>
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
+        let globalEmployeeId = "";
+        let globalEmployeeName = "";
+        let globalAssignedLocation = ""; // 儲存員工所屬案場
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-
-  <div id="login-section" class="card">
-    <h2>物業考勤系統登入</h2>
-    <div class="form-group">
-      <input type="text" id="emp-id" placeholder="請輸入員工編號">
-    </div>
-    <div class="form-group">
-      <input type="password" id="emp-password" placeholder="請輸入密碼">
-    </div>
-    <button onclick="login()">登入系統</button>
-    <div id="login-error" class="error-msg">連線失敗，請檢查網路或 GAS 網址</div>
-  </div>
-
-  <div id="main-section" class="card hidden">
-    <div class="announcement-box">
-      <div class="announcement-title">📢 公司重要公告</div>
-      <div id="announcement-list">暫無任何公司公告</div>
+<body class="bg-gray-100 min-h-screen p-4 flex flex-col items-center justify-start">
+    <div id="login-box" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md my-auto">
+        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">物業考勤系統 (員工登入)</h2>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">員工工號</label>
+                <input type="text" id="empId" class="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入工號">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">登入密碼</label>
+                <input type="password" id="password" class="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入密碼">
+            </div>
+            <button onclick="login()" id="login-btn" class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition">登入</button>
+            <p id="error-msg" class="text-red-500 text-center text-sm hidden mt-2"></p>
+        </div>
     </div>
 
-    <div class="info-box">
-      <p>歡迎，<strong id="user-name">---</strong></p>
-      <p>今日指派案場：<strong id="user-location">---</strong></p>
-      <p style="font-size:12px; color:#666; margin-top:5px;">系統偵測到職日：<span id="detected-hire-date">---</span></p>
-    </div>
-    
-    <div class="nav-tabs">
-      <div class="nav-item active" onclick="switchTab('punch')">定位打卡</div>
-      <div class="nav-item" onclick="switchTab('schedule')">班表查詢</div>
-      <div class="nav-item" onclick="switchTab('leave')">請假申請</div>
-      <div class="nav-item" onclick="switchTab('leavestatus')">假單進度</div>
-    </div>
+    <div id="main-panel" class="w-full max-w-md space-y-6 hidden">
+        <div class="bg-white p-6 rounded-2xl shadow-xl flex justify-between items-center">
+            <div>
+                <h2 id="welcome-title" class="text-xl font-bold text-gray-800">你好</h2>
+                <p id="location-tag" class="text-sm text-blue-600 font-medium"></p>
+            </div>
+            <button onclick="window.location.reload()" class="text-sm bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg">登出</button>
+        </div>
 
-    <div id="tab-punch">
-      <div class="form-group">
-        <label>打卡類型</label>
-        <select id="punch-type">
-          <option value="上班">上班打卡</option>
-          <option value="下班">下班打卡</option>
-        </select>
-      </div>
-      <button onclick="processPunch()">執行定位打卡</button>
+        <div class="bg-white p-6 rounded-2xl shadow-xl space-y-4">
+            <h3 class="font-semibold text-gray-700">📌 即時考勤打卡</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="checkIn('上班')" class="bg-green-500 text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:bg-green-600 active:scale-95 transition">上班打卡</button>
+                <button onclick="checkIn('下班')" class="bg-amber-500 text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:bg-amber-600 active:scale-95 transition">下班打卡</button>
+            </div>
+        </div>
     </div>
 
-    <div id="tab-schedule" class="hidden">
-      <div class="month-select-container">
-        <label style="font-size: 13px; margin-bottom: 4px;">選擇查詢月份：</label>
-        <select id="schedule-month-select" onchange="changeScheduleMonth()">
-          </select>
-      </div>
-      <ul id="schedule-list">
-        <li>載入中...</li>
-      </ul>
-    </div>
-
-    <div id="tab-leave" class="hidden">
-      <div class="leave-summary-card">
-        <div class="leave-summary-title">📊 今年度已請假累計 (含待審核)</div>
-        <div id="leave-summary-content">載入統計中...</div>
-      </div>
-      <div class="form-group">
-        <label>請假假別</label>
-        <select id="leave-type">
-          <option value="事假">事假 (勞基法上限14天)</option>
-          <option value="病假">病假 (勞基法上限30天)</option>
-          <option value="特休">特休 (依到職年資動態計算)</option>
-          <option value="婚假">婚假 (上限8天)</option>
-          <option value="喪假">喪假 (上限8天)</option>
-          <option value="公假">公假</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>開始時間</label>
-        <input type="datetime-local" id="leave-start">
-      </div>
-      <div class="form-group">
-        <label>結束時間</label>
-        <input type="datetime-local" id="leave-end">
-      </div>
-      <button onclick="submitLeave()">送出請假申請</button>
-    </div>
-
-    <div id="tab-leavestatus" class="hidden">
-      <ul id="leave-status-list">
-        <li>暫無請假紀錄</li>
-      </ul>
-    </div>
-  </div>
-
-  <script>
-    // ⚠️ 請記得檢查此網址是否為您最新部署產生的網址！
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
-    
-    let currentUser = { id: "", name: "", location: "" };
-    let globalLeaveSummary = {};
-    let allowedSpecialLeaveHours = 0; 
-
-    const LAW_LIMITS = { "事假": 14 * 8, "病假": 30 * 8, "婚假": 8 * 8, "喪假": 8 * 8 };
-
-    function login() {
-      const empId = document.getElementById('emp-id').value.trim();
-      const password = document.getElementById('emp-password').value.trim();
-      const errorDiv = document.getElementById('login-error');
-      
-      if (!empId || !password) { alert("請填寫工號與密碼"); return; }
-      errorDiv.style.display = "none";
-      
-      fetch(GAS_WEB_APP_URL, {
-        method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'login', employeeId: empId, password: password })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          currentUser.id = empId;
-          currentUser.name = data.employeeName;
-          currentUser.location = data.assignedLocation;
-          
-          document.getElementById('user-name').innerText = data.employeeName;
-          document.getElementById('user-location').innerText = data.assignedLocation;
-          document.getElementById('detected-hire-date').innerText = data.hireDateDetected || "未填寫";
-          
-          buildMonthSelect(data.availableMonths);
-          renderSchedules(data.schedules);
-          renderLeaveStatus(data.leaves);
-          renderAnnouncements(data.announcements); // 渲染公告
-          
-          globalLeaveSummary = data.leaveSummary || {};
-          allowedSpecialLeaveHours = (data.allowedSpecialLeaveDays || 0) * 8; 
-          renderLeaveSummary(globalLeaveSummary, data.allowedSpecialLeaveDays || 0);
-          
-          document.getElementById('login-section').classList.add('hidden');
-          document.getElementById('main-section').classList.remove('hidden');
-        } else {
-          errorDiv.innerText = data.message; errorDiv.style.display = "block";
+    <script>
+        async function login() {
+            const id = document.getElementById("empId").value.trim();
+            const pass = document.getElementById("password").value.trim();
+            if(!id || !pass) return;
+            
+            document.getElementById("login-btn").innerText = "驗證中...";
+            try {
+                const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action:"login", employeeId:id, password:pass })});
+                const r = await res.json();
+                if(r.success) {
+                    globalEmployeeId = id;
+                    globalEmployeeName = r.employeeName;
+                    globalAssignedLocation = r.assignedLocation;
+                    document.getElementById("login-box").classList.add("hidden");
+                    document.getElementById("main-panel").classList.remove("hidden");
+                    document.getElementById("welcome-title").innerText = `${r.employeeName}，您好`;
+                    document.getElementById("location-tag").innerText = `所屬案場：${r.assignedLocation}`;
+                } else { alert(r.message); }
+            } catch(e) { alert("連線失敗"); }
+            document.getElementById("login-btn").innerText = "登入";
         }
-      })
-      .catch(err => { errorDiv.innerText = "連線失敗"; errorDiv.style.display = "block"; });
-    }
 
-    function renderAnnouncements(list) {
-      const box = document.getElementById('announcement-list');
-      if (!list || list.length === 0) {
-        box.innerHTML = "<div>暫無任何公司公告</div>";
-        return;
-      }
-      let html = "";
-      list.forEach(item => {
-        html += `<div class="announcement-item">
-          <span class="announcement-date">[${item.date}]</span>
-          <strong>${item.title}</strong>
-          <div style="color:#555; margin-top:2px; padding-left:5px;">${item.content}</div>
-        </div>`;
-      });
-      box.innerHTML = html;
-    }
-
-    function renderLeaveSummary(summary, allowedSpecialDays) {
-      const container = document.getElementById('leave-summary-content');
-      let html = "";
-      const targetLeaves = ["事假", "病假", "特休", "婚假", "喪假"];
-      targetLeaves.forEach(type => {
-        const info = summary[type] || { totalHours: 0, display: "0 天 0 小時" };
-        let limitText = "";
-        if (type === "事假") limitText = " / 上限 14 天";
-        if (type === "病假") limitText = " / 上限 30 天";
-        if (type === "特休") limitText = ` / 依年資您有 ${allowedSpecialDays} 天`;
-        if (type === "婚假") limitText = " / 上限 8 天";
-        if (type === "喪假") limitText = " / 上限 8 天";
-        html += `📌 <strong>${type}</strong>：${info.display}${limitText}<br>`;
-      });
-      container.innerHTML = html;
-    }
-
-    function buildMonthSelect(months) {
-      const select = document.getElementById('schedule-month-select');
-      select.innerHTML = '<option value="Schedules">當月最新班表</option>';
-      if (months && months.length > 0) {
-        months.forEach(m => {
-          const opt = document.createElement('option');
-          opt.value = m;
-          opt.innerText = m.replace('-', ' 年 ') + ' 月';
-          select.appendChild(opt);
-        });
-      }
-    }
-
-    function renderSchedules(schedules) {
-      const schedList = document.getElementById('schedule-list');
-      schedList.innerHTML = '';
-      if (schedules && schedules.length > 0) {
-        schedules.forEach(s => {
-          const li = document.createElement('li');
-          li.innerHTML = `📅 <strong>${s.date}</strong> ： ${s.shift}`;
-          schedList.appendChild(li);
-        });
-      } else { schedList.innerHTML = '<li>該月份暫無排班資料</li>'; }
-    }
-
-    function changeScheduleMonth() {
-      const selectedMonth = document.getElementById('schedule-month-select').value;
-      const schedList = document.getElementById('schedule-list');
-      schedList.innerHTML = '<li>切換月份載入中...</li>';
-      fetch(GAS_WEB_APP_URL, {
-        method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'querySchedule', employeeId: currentUser.id, month: selectedMonth })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) { renderSchedules(data.schedules); } 
-        else { schedList.innerHTML = `<li>${data.message}</li>`; }
-      })
-      .catch(err => { schedList.innerHTML = '<li>讀取歷史紀錄連線失敗</li>'; });
-    }
-
-    function renderLeaveStatus(leaves) {
-      const leaveList = document.getElementById('leave-status-list');
-      leaveList.innerHTML = '';
-      if (leaves && leaves.length > 0) {
-        leaves.forEach(l => {
-          const li = document.createElement('li');
-          let badgeClass = "badge-wait";
-          if(l.status === "已核准" || l.status === "核准") badgeClass = "badge-pass";
-          if(l.status === "不核准" || l.status === "駁回") badgeClass = "badge-fail";
-          li.innerHTML = `🏷️ <strong>${l.type}</strong> <span class="badge ${badgeClass}">${l.status}</span><br>⏳ ${l.start} ~ <br>${l.end}`;
-          leaveList.appendChild(li);
-        });
-      } else { leaveList.innerHTML = '<li>暫無請假紀錄</li>'; }
-    }
-
-    function switchTab(tabName) {
-      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      if(window.event && window.event.target) window.event.target.classList.add('active');
-      document.getElementById('tab-punch').classList.add('hidden');
-      document.getElementById('tab-schedule').classList.add('hidden');
-      document.getElementById('tab-leave').classList.add('hidden');
-      document.getElementById('tab-leavestatus').classList.add('hidden');
-      document.getElementById('tab-' + tabName).classList.remove('hidden');
-    }
-
-    function processPunch() {
-      const type = document.getElementById('punch-type').value;
-      if (!navigator.geolocation) { alert("不支援定位"); return; }
-      navigator.geolocation.getCurrentPosition(position => {
-        const lat = position.coords.latitude; const lng = position.coords.longitude;
-        fetch(GAS_WEB_APP_URL, {
-          method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ action: 'checkin', employeeId: currentUser.id, employeeName: currentUser.name, type: type, distance: "手機GPS定位", result: `經度:${lng.toFixed(4)}, 緯度:${lat.toFixed(4)}` })
-        }).then(res => res.json()).then(data => alert(data.message));
-      });
-    }
-
-    function submitLeave() {
-      const type = document.getElementById('leave-type').value;
-      const start = document.getElementById('leave-start').value;
-      const end = document.getElementById('leave-end').value;
-      if(!start || !end) { alert("請選擇請假起訖時間"); return; }
-      
-      const startObj = new Date(start);
-      const endObj = new Date(end);
-      const newRequestHours = (endObj.getTime() - startObj.getTime()) / (1000 * 60 * 60);
-      if (newRequestHours <= 0) { alert("結束時間必須大於開始時間"); return; }
-      
-      let currentLimitHours = 0;
-      let isChecking = false;
-      if (type === "特休") { currentLimitHours = allowedSpecialLeaveHours; isChecking = true; } 
-      else if (LAW_LIMITS[type] !== undefined) { currentLimitHours = LAW_LIMITS[type]; isChecking = true; }
-      
-      if (isChecking) {
-        const alreadyHours = globalLeaveSummary[type] ? globalLeaveSummary[type].totalHours : 0;
-        if (alreadyHours + newRequestHours > currentLimitHours) {
-          const overDays = Math.ceil(((alreadyHours + newRequestHours) - currentLimitHours) / 8);
-          const confirmLeave = confirm(`⚠️ 額度超額警告：\n您的【${type}】可請上限為 ${currentLimitHours/8} 天。\n確定仍要送出申請嗎？`);
-          if (!confirmLeave) return;
+        async function checkIn(type) {
+            try {
+                const res = await fetch(GAS_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "checkin",
+                        employeeId: globalEmployeeId,
+                        employeeName: globalEmployeeName,
+                        type: type,
+                        location: globalAssignedLocation // 🚀 自動附帶案場名稱送出
+                    })
+                });
+                const r = await res.json();
+                alert(r.message);
+            } catch(e) { alert("打卡連線失敗"); }
         }
-      }
-      
-      fetch(GAS_WEB_APP_URL, {
-        method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'leave', employeeId: currentUser.id, employeeName: currentUser.name, leaveType: type, startDate: start, endDate: end })
-      }).then(res => res.json()).then(data => { alert(data.message); location.reload(); });
-    }
-  </script>
+    </script>
 </body>
 </html>
