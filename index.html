@@ -64,13 +64,12 @@
         </div>
     </div>
 
-    <script>
-        // ⚠️ 請把下方網址替換成你剛剛在 Google Apps Script 部署得到的「網頁應用程式 URL」
-        const GAS_WEB_APP_URL = "const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
+   <script>
+  // ⚠️ 請確保這行程式碼完好如初，前後都有雙引號與結尾分號
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
 
-        // 全域變數，紀錄登入後的員工資訊
-        let currentUser = { id: "", name: "", location: "" };
-
+  // 全域變數，紀錄登入後的員工資訊
+  let currentUser = { id: "", name: "", location: "" };
         // 假設定義案場的 GPS 座標 (實務上可從後端抓，這裡先示範比對)
         // 請改成你真實案場的經緯度
         const LOCATION_COARDS = {
