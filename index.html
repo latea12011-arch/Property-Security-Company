@@ -30,6 +30,8 @@
     .badge-pass { background: #d4edda; color: #155724; }
     .badge-fail { background: #f8d7da; color: #721c24; }
     .month-select-container { margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px; }
+    .leave-summary-card { background: #fff3cd; color: #856404; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; border-left: 4px solid #ffc107; }
+    .leave-summary-title { font-weight: bold; margin-bottom: 5px; border-bottom: 1px dashed #ddc06d; padding-bottom: 3px; }
   </style>
 </head>
 <body>
@@ -83,12 +85,17 @@
     </div>
 
     <div id="tab-leave" class="hidden">
+      <div class="leave-summary-card">
+        <div class="leave-summary-title">📊 今年度已請假累計 (含待審核)</div>
+        <div id="leave-summary-content">載入統計中...</div>
+      </div>
+
       <div class="form-group">
         <label>請假假別</label>
         <select id="leave-type">
-          <option value="事假">事假</option>
-          <option value="病假">病假</option>
-          <option value="特休">特休</option>
+          <option value="事假">事假 (勞基法上限14天)</option>
+          <option value="病假">病假 (勞基法上限30天)</option>
+          <option value="特休">特休 (依到職年資動態計算)</option>
           <option value="婚假">婚假</option>
           <option value="喪假">喪假</option>
           <option value="公假">公假</option>
@@ -113,8 +120,17 @@
   </div>
 
   <script>
+    // ⚠️ 請在此處貼上你剛才「管理部署作業」中複製出來的最新 GAS 網址！
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
+    
     let currentUser = { id: "", name: "", location: "" };
+    let globalLeaveSummary = {};
+    let allowedSpecialLeaveHours = 0; 
+
+    const LAW_LIMITS = {
+      "事假": 14 * 8, 
+      "病假": 30 * 8  
+    };
 
     function login() {
       const empId = document.getElementById('emp-id').value.trim();
@@ -144,6 +160,10 @@
           renderSchedules(data.schedules);
           renderLeaveStatus(data.leaves);
           
+          globalLeaveSummary = data.leaveSummary || {};
+          allowedSpecialLeaveHours = (data.allowedSpecialLeaveDays || 0) * 8; 
+          renderLeaveSummary(globalLeaveSummary, data.allowedSpecialLeaveDays || 0);
+          
           document.getElementById('login-section').classList.add('hidden');
           document.getElementById('main-section').classList.remove('hidden');
         } else {
@@ -151,6 +171,23 @@
         }
       })
       .catch(err => { errorDiv.innerText = "連線失敗"; errorDiv.style.display = "block"; });
+    }
+
+    function renderLeaveSummary(summary, allowedSpecialDays) {
+      const container = document.getElementById('leave-summary-content');
+      let html = "";
+      const targetLeaves = ["事假", "病假", "特休"];
+      
+      targetLeaves.forEach(type => {
+        const info = summary[type] || { totalHours: 0, display: "0 天 0 小時" };
+        let limitText = "";
+        if (type === "事假") limitText = " / 上限 14 天";
+        if (type === "病假") limitText = " / 上限 30 天";
+        if (type === "特休") limitText = ` / 依年資您有 ${allowedSpecialDays} 天`;
+        
+        html += `📌 <strong>${type}</strong>：${info.display}${limitText}<br>`;
+      });
+      container.innerHTML = html;
     }
 
     function buildMonthSelect(months) {
@@ -185,20 +222,14 @@
       const selectedMonth = document.getElementById('schedule-month-select').value;
       const schedList = document.getElementById('schedule-list');
       schedList.innerHTML = '<li>切換月份載入中...</li>';
-      
       fetch(GAS_WEB_APP_URL, {
-        method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'text/plain' },
+        method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ action: 'querySchedule', employeeId: currentUser.id, month: selectedMonth })
       })
       .then(res => res.json())
       .then(data => {
-        if (data.success) {
-          renderSchedules(data.schedules);
-        } else {
-          schedList.innerHTML = `<li>${data.message}</li>`;
-        }
+        if (data.success) { renderSchedules(data.schedules); } 
+        else { schedList.innerHTML = `<li>${data.message}</li>`; }
       })
       .catch(err => { schedList.innerHTML = '<li>讀取歷史紀錄連線失敗</li>'; });
     }
@@ -220,7 +251,9 @@
 
     function switchTab(tabName) {
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      event.target.classList.add('active');
+      if(event && event.target) {
+         event.target.classList.add('active');
+      }
       document.getElementById('tab-punch').classList.add('hidden');
       document.getElementById('tab-schedule').classList.add('hidden');
       document.getElementById('tab-leave').classList.add('hidden');
@@ -245,6 +278,32 @@
       const start = document.getElementById('leave-start').value;
       const end = document.getElementById('leave-end').value;
       if(!start || !end) { alert("請選擇請假起訖時間"); return; }
+      
+      const startObj = new Date(start);
+      const endObj = new Date(end);
+      const newRequestHours = (endObj.getTime() - startObj.getTime()) / (1000 * 60 * 60);
+      
+      if (newRequestHours <= 0) { alert("結束時間必須大於開始時間"); return; }
+      
+      let currentLimitHours = 0;
+      let isChecking = false;
+      
+      if (type === "特休") {
+        currentLimitHours = allowedSpecialLeaveHours;
+        isChecking = true;
+      } else if (LAW_LIMITS[type] !== undefined) {
+        currentLimitHours = LAW_LIMITS[type];
+        isChecking = true;
+      }
+      
+      if (isChecking) {
+        const alreadyHours = globalLeaveSummary[type] ? globalLeaveSummary[type].totalHours : 0;
+        if (alreadyHours + newRequestHours > currentLimitHours) {
+          const overDays = Math.ceil(((alreadyHours + newRequestHours) - currentLimitHours) / 8);
+          const confirmLeave = confirm(`⚠️ 額度超額警告：\n您的【${type}】可請上限為 ${currentLimitHours/8} 天。\n您先前已累積請了 ${Math.round(alreadyHours/8)} 天，本次加總後將超出上限約 ${overDays} 天。\n\n您確定仍要送出申請，交由主管審核嗎？`);
+          if (!confirmLeave) return;
+        }
+      }
       
       fetch(GAS_WEB_APP_URL, {
         method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain' },
