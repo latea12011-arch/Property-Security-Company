@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>物業考勤系統 - 主委端</title>
     
-    <link rel="icon" type="image/png" href="https://i.meee.com.tw/7RMQed0.jpg">
-    <link rel="apple-touch-icon" href="https://i.meee.com.tw/7RMQed0.jpg">
-    <meta name="apple-mobile-web-app-image" content="https://i.meee.com.tw/7RMQed0.jpg">
+    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/96/home-building.png">
+    <link class="apple-touch-icon" rel="apple-touch-icon" href="https://img.icons8.com/fluency/96/home-building.png">
+    <meta name="apple-mobile-web-app-image" content="https://img.icons8.com/fluency/96/home-building.png">
     
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
-
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-4 flex flex-col items-center justify-start">
@@ -45,7 +44,7 @@
                 <h2 id="welcome-title" class="text-xl font-bold text-gray-800">歡迎主委</h2>
                 <p id="location-tag" class="text-sm text-indigo-600 font-medium"></p>
             </div>
-            <button onclick="logout()" class="text-sm bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-300">登出</button>
+            <button onclick="window.location.reload()" class="text-sm bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg">登出</button>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -104,54 +103,33 @@
         async function login() {
             const user = document.getElementById("username").value.trim();
             const pass = document.getElementById("password").value.trim();
-            const errorMsg = document.getElementById("error-msg");
-            const loginBtn = document.getElementById("login-btn");
+            if(!user || !pass) return;
 
-            if (!user || !pass) {
-                showError("請輸入完整的帳號與密碼");
-                return;
-            }
-
-            loginBtn.innerText = "驗證中...";
-            loginBtn.disabled = true;
-            errorMsg.classList.add("hidden");
-
+            document.getElementById("login-btn").innerText = "驗證中...";
             try {
-                const response = await fetch(GAS_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "committeeLogin", username: user, password: pass })
-                });
-                const result = await response.json();
-
-                if (result.success) {
-                    globalCommitteeName = result.committeeName;
-                    globalLocation = result.location;
-
+                const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "committeeLogin", username: user, password: pass })});
+                const r = await res.json();
+                if(r.success) {
+                    globalCommitteeName = r.committeeName;
+                    globalLocation = r.location;
                     document.getElementById("login-box").classList.add("hidden");
                     document.getElementById("main-panel").classList.remove("hidden");
+                    document.getElementById("welcome-title").innerText = `${r.committeeName}，您好`;
+                    document.getElementById("location-tag").innerText = `監管案場：${r.location}`;
                     
-                    document.getElementById("welcome-title").innerText = `${result.committeeName}，您好`;
-                    document.getElementById("location-tag").innerText = `監管案場：${result.location}`;
-                    
-                    renderAttendance(result.attendance);
-                    renderLeaves(result.leaves);
-                    renderAnnouncements(result.announcements);
-                } else {
-                    showError(result.message || "帳密錯誤");
-                }
-            } catch (err) {
-                showError("連線失敗，請確認 GAS 網址與部署版本");
-            } finally {
-                loginBtn.innerText = "登入系統";
-                loginBtn.disabled = false;
-            }
+                    renderAttendance(r.attendance);
+                    renderLeaves(r.leaves);
+                    renderAnnouncements(r.announcements);
+                } else { alert(r.message || "帳密錯誤"); }
+            } catch (err) { alert("連線失敗"); }
+            document.getElementById("login-btn").innerText = "登入系統";
         }
 
         function renderAttendance(list) {
             const container = document.getElementById("attendance-list");
             const noData = document.getElementById("no-attendance");
             container.innerHTML = "";
-            if (!list || list.length === 0) { noData.classList.remove("hidden"); return; }
+            if(!list || list.length === 0) { noData.classList.remove("hidden"); return; }
             noData.classList.add("hidden");
             list.forEach(item => {
                 const badge = item.type === "上班" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800";
@@ -163,19 +141,13 @@
             const container = document.getElementById("leave-list");
             const noData = document.getElementById("no-leaves");
             container.innerHTML = "";
-            if (!list || list.length === 0) { noData.classList.remove("hidden"); return; }
+            if(!list || list.length === 0) { noData.classList.remove("hidden"); return; }
             noData.classList.add("hidden");
             list.forEach(item => {
-                let statusBadge = "bg-gray-100 text-gray-800";
-                if (item.status === "准假" || item.status === "已核准") statusBadge = "bg-blue-100 text-blue-800";
-                if (item.status === "待審核") statusBadge = "bg-rose-100 text-rose-800 animate-pulse";
-                
-                container.innerHTML += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="py-2 font-medium">${item.name}</td>
-                        <td class="py-2 text-xs text-gray-600">${item.type}</td>
-                        <td class="py-2"><span class="px-2 py-0.5 rounded text-xs ${statusBadge}">${item.status}</span></td>
-                    </tr>`;
+                let badge = "bg-gray-100 text-gray-800";
+                if(item.status === "准假" || item.status === "已核准") badge = "bg-blue-100 text-blue-800";
+                if(item.status === "待審核") badge = "bg-rose-100 text-rose-800 animate-pulse";
+                container.innerHTML += `<tr><td class="py-2 font-medium">${item.name}</td><td class="py-2 text-xs text-gray-600">${item.type}</td><td class="py-2"><span class="px-2 py-0.5 rounded text-xs ${badge}">${item.status}</span></td></tr>`;
             });
         }
 
@@ -183,63 +155,28 @@
             const title = document.getElementById("suggest-title").value.trim();
             const content = document.getElementById("suggest-content").value.trim();
             const msgEl = document.getElementById("suggest-msg");
-            const btn = document.getElementById("suggest-btn");
+            if (!title || !content) { msgEl.innerText = "請填寫完整！"; return; }
 
-            if (!title || !content) {
-                msgEl.className = "text-sm font-medium mt-1 text-red-500";
-                msgEl.innerText = "請填寫建議的主旨與詳細內容！";
-                return;
-            }
-
-            btn.innerText = "提交中...";
-            btn.disabled = true;
-
+            document.getElementById("suggest-btn").disabled = true;
             try {
-                const response = await fetch(GAS_URL, {
-                    method: "POST",
-                    body: JSON.stringify({
-                        action: "submitSuggestion",
-                        committeeName: globalCommitteeName,
-                        location: globalLocation,
-                        title: title,
-                        content: content
-                    })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    msgEl.className = "text-sm font-medium mt-1 text-green-600";
-                    msgEl.innerText = result.message;
-                    document.getElementById("suggest-title").value = "";
-                    document.getElementById("suggest-content").value = "";
-                } else {
-                    msgEl.className = "text-sm font-medium mt-1 text-red-500";
-                    msgEl.innerText = result.message;
+                const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "submitSuggestion", committeeName: globalCommitteeName, location: globalLocation, title: title, content: content })});
+                const r = await res.json();
+                if (r.success) {
+                    msgEl.className = "text-sm text-green-600"; msgEl.innerText = r.message;
+                    document.getElementById("suggest-title").value = ""; document.getElementById("suggest-content").value = "";
                 }
-            } catch (err) {
-                msgEl.className = "text-sm font-medium mt-1 text-red-500";
-                msgEl.innerText = "連線失敗，請稍後再試。";
-            } finally {
-                btn.innerText = "提交反映項目";
-                btn.disabled = false;
-            }
+            } catch (e) { msgEl.innerText = "提交失敗"; }
+            document.getElementById("suggest-btn").disabled = false;
         }
 
         function renderAnnouncements(list) {
             const container = document.getElementById("announcement-list");
             container.innerHTML = "";
-            if (!list || list.length === 0) { container.innerHTML = `<p class="text-gray-400 text-sm text-center py-2">目前尚無公告</p>`; return; }
+            if(!list || list.length === 0) { container.innerHTML = `<p class="text-gray-400 text-sm">目前無公告</p>`; return; }
             list.forEach(item => {
-                container.innerHTML += `<div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100"><div class="flex justify-between items-center mb-1"><h4 class="font-bold text-sm text-gray-800">${item.title}</h4><span class="text-xs text-gray-400">${item.date}</span></div><p class="text-xs text-gray-600 whitespace-pre-line">${item.content}</p></div>`;
+                container.innerHTML += `<div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100"><div class="flex justify-between items-center mb-1"><h4 class="font-bold text-sm text-gray-800">${item.title}</h4><span class="text-xs text-gray-400">${item.date}</span></div><p class="text-xs text-gray-600">${item.content}</p></div>`;
             });
         }
-
-        function showError(msg) {
-            const errorMsg = document.getElementById("error-msg");
-            errorMsg.innerText = msg;
-            errorMsg.classList.remove("hidden");
-        }
-
-        function logout() { window.location.reload(); }
     </script>
 </body>
 </html>
