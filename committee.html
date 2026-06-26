@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>物業考勤系統 - 主委端</title>
+    
+    <link rel="icon" type="image/png" href="https://i.meee.com.tw/7RMQed0.jpg">
+    <link rel="apple-touch-icon" href="https://i.meee.com.tw/7RMQed0.jpg">
+    <meta name="apple-mobile-web-app-image" content="https://i.meee.com.tw/7RMQed0.jpg">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-4 flex flex-col items-center justify-start">
@@ -125,7 +134,7 @@
                     document.getElementById("location-tag").innerText = `監管案場：${result.location}`;
                     
                     renderAttendance(result.attendance);
-                    renderLeaves(result.leaves); // 渲染請假資料
+                    renderLeaves(result.leaves);
                     renderAnnouncements(result.announcements);
                 } else {
                     showError(result.message || "帳密錯誤");
@@ -150,7 +159,6 @@
             });
         }
 
-        // 🚀 渲染請假列表函數
         function renderLeaves(list) {
             const container = document.getElementById("leave-list");
             const noData = document.getElementById("no-leaves");
@@ -171,7 +179,6 @@
             });
         }
 
-        // 🚀 提交主委反映事項函數
         async function submitSuggestion() {
             const title = document.getElementById("suggest-title").value.trim();
             const content = document.getElementById("suggest-content").value.trim();
