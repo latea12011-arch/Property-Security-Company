@@ -1,225 +1,258 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>物業行動考勤系統</title>
-    <style>
-        :root { --primary: #007bff; --success: #28a745; --danger: #dc3545; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; color: #333; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h2, h3 { margin-top: 0; color: #1a1a1a; }
-        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
-        button { background: var(--primary); color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; }
-        button:active { opacity: 0.8; }
-        .btn-success { background: var(--success); }
-        .hidden { display: none; }
-        .log-item { background: #eee; padding: 8px; margin: 4px 0; border-radius: 4px; font-size: 14px; text-align: left; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>物業行動考勤系統</title>
+  <style>
+    :root {
+      --primary-color: #007bff;
+      --bg-color: #f4f6f9;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    .card { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
+    h2 { margin-bottom: 24px; text-align: center; font-size: 24px; font-weight: 700; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; }
+    input, select { width: 100%; padding: 12px 16px; border: 1px solid #ced4da; border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.2s; }
+    input:focus, select:focus { border-color: var(--primary-color); }
+    button { width: 100%; padding: 14px; background-color: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; margin-top: 10px; }
+    button:hover { background-color: #0056b3; }
+    .error-msg { color: #dc3545; text-align: center; font-size: 14px; margin-top: 15px; display: none; }
+    .hidden { display: none; }
+    .nav-tabs { display: flex; border-bottom: 1px solid #dee2e6; margin-bottom: 20px; }
+    .nav-item { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-weight: 500; border-bottom: 2px solid transparent; }
+    .nav-item.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+    .info-box { background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; line-height: 1.5; }
+    ul { list-style: none; }
+    li { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+    li:last-child { border-bottom: none; }
+  </style>
 </head>
 <body>
 
-    <div id="login-view" class="card">
-        <h2>物業考勤系統登入</h2>
-        <input type="text" id="emp-id" placeholder="請輸入員工編號 (如: EMP001)">
-        <input type="password" id="emp-pwd" placeholder="請輸入密碼">
-        <button onclick="login()">登入系統</button>
-        <div id="login-msg" style="color:var(--danger); text-align:center; margin-top:10px;"></div>
+  <div id="login-section" class="card">
+    <h2>物業考勤系統登入</h2>
+    <div class="form-group">
+      <input type="text" id="emp-id" placeholder="請輸入員工編號（如 00001）">
+    </div>
+    <div class="form-group">
+      <input type="password" id="emp-password" placeholder="請輸入密碼">
+    </div>
+    <button onclick="login()">登入系統</button>
+    <div id="login-error" class="error-msg">連線失敗，請檢查網路或 GAS 網址</div>
+  </div>
+
+  <div id="main-section" class="card hidden">
+    <div class="info-box">
+      <p>歡迎，<strong id="user-name">---</strong></p>
+      <p>今日指派案場：<strong id="user-location">---</strong></p>
+    </div>
+    
+    <div class="nav-tabs">
+      <div class="nav-item active" onclick="switchTab('punch')">定位打卡</div>
+      <div class="nav-item" onclick="switchTab('schedule')">班表查詢</div>
+      <div class="nav-item" onclick="switchTab('leave')">請假申請</div>
     </div>
 
-    <div id="main-view" class="hidden">
-        <div class="card" style="background: #e9ecef;">
-            <h3 id="welcome-text">歡迎回來</h3>
-            <p>固定案場：<span id="assigned-loc" style="font-weight:bold;">-</span></p>
-            <button onclick="logout()" style="background:#6c757d; padding: 6px; width: auto; font-size: 12px;">登出</button>
-        </div>
-
-        <div class="card">
-            <h3>📍 行動定位打卡</h3>
-            <select id="punch-type">
-                <option value="上班">上班打卡</option>
-                <option value="下班">下班打卡</option>
-            </select>
-            <button class="btn-success" onclick="startPunch()">進行 GPS 定位打卡</button>
-            <div id="punch-status" style="margin-top:10px; font-weight:bold; text-align:center;"></div>
-        </div>
-
-        <div class="card">
-            <h3>📅 我的當月班表</h3>
-            <div id="schedule-list">暫無班表資料</div>
-        </div>
-
-        <div class="card">
-            <h3>🏖️ 線上請假申請</h3>
-            <select id="leave-type">
-                <option value="事假">事假</option>
-                <option value="病假">病假</option>
-                <option value="特休">特休</option>
-            </select>
-            <label>開始日期</label>
-            <input type="date" id="leave-start">
-            <label>結束日期</label>
-            <input type="date" id="leave-end">
-            <button onclick="submitLeave()" style="background:#ffc107; color:#212529;">送出請假申請</button>
-        </div>
+    <div id="tab-punch">
+      <div class="form-group">
+        <label>打卡類型</label>
+        <select id="punch-type">
+          <option value="上班">上班打卡</option>
+          <option value="下班">下班打卡</option>
+        </select>
+      </div>
+      <button onclick="processPunch()">執行定位打卡</button>
+      <div id="punch-error" class="error-msg"></div>
     </div>
 
-   <script>
-  // ⚠️ 請確保這行程式碼完好如初，前後都有雙引號與結尾分號
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
+    <div id="tab-schedule" class="hidden">
+      <ul id="schedule-list">
+        <li>暫無排班資料</li>
+      </ul>
+    </div>
 
-  // 全域變數，紀錄登入後的員工資訊
-  let currentUser = { id: "", name: "", location: "" };
-        // 假設定義案場的 GPS 座標 (實務上可從後端抓，這裡先示範比對)
-        // 請改成你真實案場的經緯度
-        const LOCATION_COARDS = {
-            "幸福社區": { lat: 25.033964, lng: 121.564468, radius: 200 },
-            "遠東大樓": { lat: 25.040000, lng: 121.500000, radius: 200 }
-        };
+    <div id="tab-leave" class="hidden">
+      <div class="form-group">
+        <label>請假假別</label>
+        <select id="leave-type">
+          <option value="事假">事假</option>
+          <option value="病假">病假</option>
+          <option value="特休">特休</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>開始日期</label>
+        <input type="date" id="leave-start">
+      </div>
+      <div class="form-group">
+        <label>結束日期</label>
+        <input type="date" id="leave-end">
+      </div>
+      <button onclick="submitLeave()">送出請假申請</button>
+      <div id="leave-error" class="error-msg"></div>
+    </div>
+  </div>
 
-        // 功能一：登入驗證與資料載入
-        async function login() {
-            const id = document.getElementById("emp-id").value;
-            const pwd = document.getElementById("emp-pwd").value;
-            const msg = document.getElementById("login-msg");
-            
-            if(!id || !pwd) { msg.innerText = "請填寫工號與密碼"; return; }
-            msg.innerText = "登入中...";
+  <script>
+    // 后端 Google Apps Script 部署網址
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
 
-            try {
-                const response = await fetch(GAS_WEB_APP_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "login", employeeId: id, password: pwd })
-                });
-                const data = await response.json();
+    // 全域變數，紀錄登入後的員工資訊
+    let currentUser = { id: "", name: "", location: "" };
 
-                if (data.success) {
-                    currentUser.id = id;
-                    currentUser.name = data.employeeName;
-                    currentUser.location = data.assignedLocation;
+    function showLoading(btnText) {
+      const btn = document.querySelector('button');
+      if(btn) { btn.disabled = true; btn.innerText = '處理中...'; }
+    }
 
-                    // 切換畫面
-                    document.getElementById("login-view").classList.add("hidden");
-                    document.getElementById("main-view").classList.remove("hidden");
-                    document.getElementById("welcome-text").innerText = `你好，${currentUser.name} 📋`;
-                    document.getElementById("assigned-loc").innerText = currentUser.location;
+    function hideLoading(btnText) {
+      const btn = document.querySelector('button');
+      if(btn) { btn.disabled = false; btn.innerText = btnText; }
+    }
 
-                    // 渲染班表 (後端過濾好只屬於他的班表)
-                    renderSchedules(data.schedules);
-                } else {
-                    msg.innerText = data.message;
-                }
-            } catch (err) {
-                msg.innerText = "連線失敗，請檢查網路或 GAS 網址";
-            }
-        }
-
-        // 渲染班表到畫面上
-        function renderSchedules(schedules) {
-            const container = document.getElementById("schedule-list");
-            if (!schedules || schedules.length === 0) {
-                container.innerText = "本月尚無排班紀錄";
-                return;
-            }
-            container.innerHTML = schedules.map(s => 
-                `<div class="log-item">📅 <b>${s.date}</b> | ${s.location} (${s.shift})</div>`
-            ).join("");
-        }
-
-        // 功能二：定位打卡邏輯
-        function startPunch() {
-            const status = document.getElementById("punch-status");
-            status.style.color = "#333";
-            status.innerText = "正在定位中，請保持連線...";
-
-            if (!navigator.geolocation) {
-                status.innerText = "手機不支援 GPS 定位";
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                const uLat = position.coords.latitude;
-                const uLng = position.coords.longitude;
-                const type = document.getElementById("punch-type").value;
-
-                // 抓取該案場的目標經緯度
-                const target = LOCATION_COARDS[currentUser.location];
-                if(!target) {
-                    status.style.color = "var(--danger)";
-                    status.innerText = `打卡失敗：查無【${currentUser.location}】的座標設定`;
-                    return;
-                }
-
-                // 計算距離
-                const distance = getDistance(uLat, uLng, target.lat, target.lng);
-                let result = "正常";
-                if(distance > target.radius) { result = "範圍外異常"; }
-
-                // 傳送打卡資料去 Google 試算表
-                status.innerText = "正在寫入出勤紀錄...";
-                const res = await fetch(GAS_WEB_APP_URL, {
-                    method: "POST",
-                    body: JSON.stringify({
-                        action: "checkin",
-                        employeeId: currentUser.id,
-                        employeeName: currentUser.name,
-                        type: type,
-                        distance: Math.round(distance),
-                        result: result
-                    })
-                });
-                const resData = await res.json();
-
-                if(resData.success) {
-                    if(result === "正常") {
-                        status.style.color = "var(--success)";
-                        status.innerHTML = `🎉 打卡成功！<br>距離案場：${Math.round(distance)} 公尺`;
-                    } else {
-                        status.style.color = "var(--danger)";
-                        status.innerHTML = `⚠️ 範圍外打卡！距離案場 ${Math.round(distance)} 公尺，已記錄異常。`;
-                    }
-                }
-            }, () => {
-                status.innerText = "定位失敗，請確認手機已開啟 GPS 並允許瀏覽器定位權限。";
-            }, { enableHighAccuracy: true, timeout: 10000 });
-        }
-
-        // 功能三：請假申請
-        async function submitLeave() {
-            const type = document.getElementById("leave-type").value;
-            const start = document.getElementById("leave-start").value;
-            const end = document.getElementById("leave-end").value;
-            if(!start || !end) { alert("請選擇請假日期"); return; }
-
-            const res = await fetch(GAS_WEB_APP_URL, {
-                method: "POST",
-                body: JSON.stringify({
-                    action: "leave",
-                    employeeId: currentUser.id,
-                    employeeName: currentUser.name,
-                    leaveType: type,
-                    startDate: start,
-                    endDate: end
-                })
+    function login() {
+      const empId = document.getElementById('emp-id').value.trim();
+      const password = document.getElementById('emp-password').value.trim();
+      const errorDiv = document.getElementById('login-error');
+      
+      if (!empId || !password) {
+        errorDiv.innerText = "請填寫工號與密碼";
+        errorDiv.style.display = "block";
+        return;
+      }
+      
+      errorDiv.style.display = "none";
+      
+      fetch(GAS_WEB_APP_URL, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'login', employeeId: empId, password: password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          currentUser.id = empId;
+          currentUser.name = data.employeeName;
+          currentUser.location = data.assignedLocation;
+          
+          document.getElementById('user-name').innerText = data.employeeName;
+          document.getElementById('user-location').innerText = data.assignedLocation;
+          
+          // 渲染班表
+          const schedList = document.getElementById('schedule-list');
+          schedList.innerHTML = '';
+          if (data.schedules && data.schedules.length > 0) {
+            data.schedules.forEach(s => {
+              const li = document.createElement('li');
+              li.innerHTML = `📅 <strong>${s.date}</strong><br>📍 ${s.location} (${s.shift})`;
+              schedList.appendChild(li);
             });
-            const data = await res.json();
-            if(data.success) {
-                alert(data.message);
-            }
+          } else {
+            schedList.innerHTML = '<li>本月暫無排班資料</li>';
+          }
+          
+          document.getElementById('login-section').classList.add('hidden');
+          document.getElementById('main-section').classList.remove('hidden');
+        } else {
+          errorDiv.innerText = data.message;
+          errorDiv.style.display = "block";
         }
+      })
+      .catch(err => {
+        errorDiv.innerText = "連線失敗，請檢查網路或 GAS 網址";
+        errorDiv.style.display = "block";
+        console.error(err);
+      });
+    }
 
-        // 輔助：計算地球表面兩點距離 (公尺)
-        function getDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371e3;
-            const p1 = lat1 * Math.PI/180;
-            const p2 = lat2 * Math.PI/180;
-            const dLat = (lat2-lat1) * Math.PI/180;
-            const dLon = (lon2-lon1) * Math.PI/180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dLon/2) * Math.sin(dLon/2);
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        }
+    function switchTab(tabName) {
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      document.getElementById('tab-punch').classList.add('hidden');
+      document.getElementById('tab-schedule').classList.add('hidden');
+      document.getElementById('tab-leave').classList.add('hidden');
+      
+      document.getElementById('tab-' + tabName).classList.remove('hidden');
+    }
 
-        function logout() { location.reload(); }
-    </script>
+    function processPunch() {
+      const type = document.getElementById('punch-type').value;
+      const errorDiv = document.getElementById('punch-error');
+      errorDiv.style.display = "none";
+      
+      if (!navigator.geolocation) {
+        errorDiv.innerText = "您的瀏覽器不支援定位功能";
+        errorDiv.style.display = "block";
+        return;
+      }
+      
+      navigator.geolocation.getCurrentPosition(position => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        
+        fetch(GAS_WEB_APP_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({
+            action: 'checkin',
+            employeeId: currentUser.id,
+            employeeName: currentUser.name,
+            type: type,
+            distance: "手機GPS定位",
+            result: `經度:${lng.toFixed(4)}, 緯度:${lat.toFixed(4)}`
+          })
+        })
+        .then(res => res.json())
+        .then(data => {
+          alert(data.message);
+        })
+        .catch(err => {
+          alert("打卡傳送失敗");
+          console.error(err);
+        });
+      }, err => {
+        errorDiv.innerText = "無法取得定位權限，請開啟手機定位";
+        errorDiv.style.display = "block";
+      });
+    }
+
+    function submitLeave() {
+      const type = document.getElementById('leave-type').value;
+      const start = document.getElementById('leave-start').value;
+      const end = document.getElementById('leave-end').value;
+      
+      if(!start || !end) {
+        alert("請選擇請假起訖日期");
+        return;
+      }
+      
+      fetch(GAS_WEB_APP_URL, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          action: 'leave',
+          employeeId: currentUser.id,
+          employeeName: currentUser.name,
+          leaveType: type,
+          startDate: start,
+          endDate: end
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message);
+      })
+      .catch(err => {
+        alert("請假送出失敗");
+      });
+    }
+  </script>
 </body>
 </html>
