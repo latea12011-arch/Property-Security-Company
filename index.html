@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>物業考勤系統 - 員工端</title>
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
+        // 🚀 請在此處貼上您的 GAS 部署網址
+        const GAS_URL = "請貼上你的GAS部署網址";
+        
         let globalEmployeeId = "";
         let globalEmployeeName = "";
         let globalAssignedLocation = ""; // 儲存員工所屬案場
@@ -13,6 +15,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-4 flex flex-col items-center justify-start">
+
     <div id="login-box" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md my-auto">
         <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">物業考勤系統 (員工登入)</h2>
         <div class="space-y-4">
@@ -25,29 +28,65 @@
                 <input type="password" id="password" class="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入密碼">
             </div>
             <button onclick="login()" id="login-btn" class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition">登入</button>
-            <p id="error-msg" class="text-red-500 text-center text-sm hidden mt-2"></p>
         </div>
     </div>
 
     <div id="main-panel" class="w-full max-w-md space-y-6 hidden">
+        
         <div class="bg-white p-6 rounded-2xl shadow-xl flex justify-between items-center">
             <div>
-                <h2 id="welcome-title" class="text-xl font-bold text-gray-800">你好</h2>
+                <h2 id="welcome-title" class="text-xl font-bold text-gray-800">您好</h2>
                 <p id="location-tag" class="text-sm text-blue-600 font-medium"></p>
             </div>
-            <button onclick="window.location.reload()" class="text-sm bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg">登出</button>
+            <button onclick="window.location.reload()" class="text-sm bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-300">登出</button>
         </div>
 
         <div class="bg-white p-6 rounded-2xl shadow-xl space-y-4">
-            <h3 class="font-semibold text-gray-700">📌 即時考勤打卡</h3>
+            <h3 class="font-semibold text-gray-700 flex items-center">📌 即時考勤打卡</h3>
             <div class="grid grid-cols-2 gap-4">
-                <button onclick="checkIn('上班')" class="bg-green-500 text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:bg-green-600 active:scale-95 transition">上班打卡</button>
-                <button onclick="checkIn('下班')" class="bg-amber-500 text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:bg-amber-600 active:scale-95 transition">下班打卡</button>
+                <button onclick="checkIn('上班')" class="bg-green-500 text-white py-4 rounded-2xl font-bold text-lg shadow-md hover:bg-green-600 active:scale-95 transition">上班打卡</button>
+                <button onclick="checkIn('下班')" class="bg-amber-500 text-white py-4 rounded-2xl font-bold text-lg shadow-md hover:bg-amber-600 active:scale-95 transition">下班打卡</button>
             </div>
         </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-xl space-y-4">
+            <h3 class="font-semibold text-gray-700">📅 線上請假申請表單</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">選擇請假假別</label>
+                    <select id="leave-type" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                        <option value="事假">事假</option>
+                        <option value="病事">病假</option>
+                        <option value="特休">特休（年假）</option>
+                        <option value="婚假/喪假">婚假 / 喪假</option>
+                        <option value="公假">公假</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">請假開始日期</label>
+                        <input type="date" id="leave-start" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">請假結束日期</label>
+                        <input type="date" id="leave-end" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <button onclick="submitLeave()" id="leave-btn" class="w-full bg-blue-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-blue-700 transition">送出請假申請</button>
+                <p id="leave-msg" class="text-sm font-medium text-center mt-1"></p>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-xl space-y-3">
+            <h3 class="font-semibold text-gray-700">📢 最新公告</h3>
+            <div id="announcement-list" class="space-y-2">
+                </div>
+        </div>
+
     </div>
 
     <script>
+        // 【員工登入連線】
         async function login() {
             const id = document.getElementById("empId").value.trim();
             const pass = document.getElementById("password").value.trim();
@@ -55,21 +94,36 @@
             
             document.getElementById("login-btn").innerText = "驗證中...";
             try {
-                const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action:"login", employeeId:id, password:pass })});
+                const res = await fetch(GAS_URL, { 
+                    method: "POST", 
+                    body: JSON.stringify({ action: "login", employeeId: id, password: pass })
+                });
                 const r = await res.json();
                 if(r.success) {
                     globalEmployeeId = id;
                     globalEmployeeName = r.employeeName;
                     globalAssignedLocation = r.assignedLocation;
+                    
+                    // 切換顯示畫面
                     document.getElementById("login-box").classList.add("hidden");
                     document.getElementById("main-panel").classList.remove("hidden");
+                    
+                    // 填入資訊
                     document.getElementById("welcome-title").innerText = `${r.employeeName}，您好`;
                     document.getElementById("location-tag").innerText = `所屬案場：${r.assignedLocation}`;
-                } else { alert(r.message); }
-            } catch(e) { alert("連線失敗"); }
+                    
+                    // 渲染最新公告
+                    renderAnnouncements(r.announcements);
+                } else { 
+                    alert(r.message); 
+                }
+            } catch(e) { 
+                alert("連線失敗，請檢查網路或 GAS URL 部署網址是否正確"); 
+            }
             document.getElementById("login-btn").innerText = "登入";
         }
 
+        // 【員工線上打卡發送】
         async function checkIn(type) {
             try {
                 const res = await fetch(GAS_URL, {
@@ -79,12 +133,80 @@
                         employeeId: globalEmployeeId,
                         employeeName: globalEmployeeName,
                         type: type,
-                        location: globalAssignedLocation // 🚀 自動附帶案場名稱送出
+                        location: globalAssignedLocation // 🚀 自動抓取所屬案場寫入試算表 F 欄
                     })
                 });
                 const r = await res.json();
                 alert(r.message);
-            } catch(e) { alert("打卡連線失敗"); }
+            } catch(e) { 
+                alert("打卡連線失敗"); 
+            }
+        }
+
+        // 【員工線上請假申請送出】
+        async function submitLeave() {
+            const leaveType = document.getElementById("leave-type").value;
+            const startDate = document.getElementById("leave-start").value;
+            const endDate = document.getElementById("leave-end").value;
+            const msgEl = document.getElementById("leave-msg");
+
+            if (!startDate || !endDate) {
+                msgEl.className = "text-sm text-red-500 text-center";
+                msgEl.innerText = "請填寫完整的請假開始與結束日期！";
+                return;
+            }
+
+            document.getElementById("leave-btn").disabled = true;
+            document.getElementById("leave-btn").innerText = "送出申請中...";
+            
+            try {
+                const res = await fetch(GAS_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "leave",
+                        employeeId: globalEmployeeId,
+                        employeeName: globalEmployeeName,
+                        leaveType: leaveType,
+                        startDate: startDate,
+                        endDate: endDate
+                    })
+                });
+                const r = await res.json();
+                if (r.success) {
+                    msgEl.className = "text-sm text-green-600 text-center";
+                    msgEl.innerText = r.message || "已成功送出請假申請！";
+                    document.getElementById("leave-start").value = "";
+                    document.getElementById("leave-end").value = "";
+                } else {
+                    msgEl.className = "text-sm text-red-500 text-center";
+                    msgEl.innerText = "申請失敗：" + r.message;
+                }
+            } catch(e) {
+                msgEl.className = "text-sm text-red-500 text-center";
+                msgEl.innerText = "連線伺服器失敗";
+            }
+            document.getElementById("leave-btn").disabled = false;
+            document.getElementById("leave-btn").innerText = "送出請假申請";
+        }
+
+        // 【動態渲染公告欄】
+        function renderAnnouncements(list) {
+            const container = document.getElementById("announcement-list");
+            container.innerHTML = "";
+            if(!list || list.length === 0) { 
+                container.innerHTML = `<p class="text-gray-400 text-sm text-center py-2">目前尚無公司發布的最新公告</p>`; 
+                return; 
+            }
+            list.forEach(item => {
+                container.innerHTML += `
+                    <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-100">
+                        <div class="flex justify-between items-center mb-1">
+                            <h4 class="font-bold text-sm text-gray-800">${item.title}</h4>
+                            <span class="text-xs text-gray-400">${item.date}</span>
+                        </div>
+                        <p class="text-xs text-gray-600">${item.content}</p>
+                    </div>`;
+            });
         }
     </script>
 </body>
