@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>紘嘉物業保全行動考勤系統</title>
+  <title>物業行動考勤系統</title>
   <link rel="manifest" href="manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="物業考勤">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="物業考勤">
   <style>
     :root { --primary-color: #007bff; --bg-color: #f4f6f9; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -25,7 +25,15 @@
     .nav-tabs { display: flex; border-bottom: 1px solid #dee2e6; margin-bottom: 20px; flex-wrap: wrap; }
     .nav-item { flex: 1; text-align: center; padding: 12px 3px; cursor: pointer; font-weight: 500; border-bottom: 2px solid transparent; font-size: 13px; }
     .nav-item.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
-    .info-box { background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; line-height: 1.5; }
+    .info-box { background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; line-height: 1.5; }
+    
+    /* 📢 公司公告專用外觀 */
+    .announcement-box { background: #e8f4fd; color: #1d6fa5; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #2196f3; font-size: 13px; }
+    .announcement-title { font-weight: bold; font-size: 14px; margin-bottom: 6px; display: flex; align-items: center; }
+    .announcement-item { padding: 6px 0; border-bottom: 1px dashed #bce0fd; }
+    .announcement-item:last-child { border-bottom: none; }
+    .announcement-date { font-size: 11px; color: #5dade2; margin-right: 6px; font-weight: bold; }
+
     ul { list-style: none; }
     li { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; line-height: 1.4; }
     li:last-child { border-bottom: none; }
@@ -40,9 +48,8 @@
 </head>
 <body>
 
-  <!-- 1. 登入區塊 -->
   <div id="login-section" class="card">
-    <h2>紘嘉物業保全考勤系統登入</h2>
+    <h2>物業考勤系統登入</h2>
     <div class="form-group">
       <input type="text" id="emp-id" placeholder="請輸入員工編號">
     </div>
@@ -53,8 +60,12 @@
     <div id="login-error" class="error-msg">連線失敗，請檢查網路或 GAS 網址</div>
   </div>
 
-  <!-- 2. 主功能區塊 -->
   <div id="main-section" class="card hidden">
+    <div class="announcement-box">
+      <div class="announcement-title">📢 公司重要公告</div>
+      <div id="announcement-list">暫無任何公司公告</div>
+    </div>
+
     <div class="info-box">
       <p>歡迎，<strong id="user-name">---</strong></p>
       <p>今日指派案場：<strong id="user-location">---</strong></p>
@@ -68,7 +79,6 @@
       <div class="nav-item" onclick="switchTab('leavestatus')">假單進度</div>
     </div>
 
-    <!-- 打卡分頁 -->
     <div id="tab-punch">
       <div class="form-group">
         <label>打卡類型</label>
@@ -78,29 +88,24 @@
         </select>
       </div>
       <button onclick="processPunch()">執行定位打卡</button>
-      <div id="punch-error" class="error-msg"></div>
     </div>
 
-    <!-- 班表分頁 -->
     <div id="tab-schedule" class="hidden">
       <div class="month-select-container">
         <label style="font-size: 13px; margin-bottom: 4px;">選擇查詢月份：</label>
         <select id="schedule-month-select" onchange="changeScheduleMonth()">
-          <!-- 自動動態生成 -->
-        </select>
+          </select>
       </div>
       <ul id="schedule-list">
         <li>載入中...</li>
       </ul>
     </div>
 
-    <!-- 請假分頁 -->
     <div id="tab-leave" class="hidden">
       <div class="leave-summary-card">
         <div class="leave-summary-title">📊 今年度已請假累計 (含待審核)</div>
         <div id="leave-summary-content">載入統計中...</div>
       </div>
-
       <div class="form-group">
         <label>請假假別</label>
         <select id="leave-type">
@@ -113,17 +118,16 @@
         </select>
       </div>
       <div class="form-group">
-        <label>開始時間 (日期與時分)</label>
+        <label>開始時間</label>
         <input type="datetime-local" id="leave-start">
       </div>
       <div class="form-group">
-        <label>結束時間 (日期與時分)</label>
+        <label>結束時間</label>
         <input type="datetime-local" id="leave-end">
       </div>
       <button onclick="submitLeave()">送出請假申請</button>
     </div>
 
-    <!-- 假單進度分頁 -->
     <div id="tab-leavestatus" class="hidden">
       <ul id="leave-status-list">
         <li>暫無請假紀錄</li>
@@ -132,19 +136,14 @@
   </div>
 
   <script>
-    // ⚠️ 請記得把這裡換成你剛剛在 GAS 重新部署產生的最新網址！
+    // ⚠️ 請記得檢查此網址是否為您最新部署產生的網址！
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
     
     let currentUser = { id: "", name: "", location: "" };
     let globalLeaveSummary = {};
     let allowedSpecialLeaveHours = 0; 
 
-    const LAW_LIMITS = {
-      "事假": 14 * 8, 
-      "病假": 30 * 8,
-      "婚假": 8 * 8,
-      "喪假": 8 * 8
-    };
+    const LAW_LIMITS = { "事假": 14 * 8, "病假": 30 * 8, "婚假": 8 * 8, "喪假": 8 * 8 };
 
     function login() {
       const empId = document.getElementById('emp-id').value.trim();
@@ -174,6 +173,7 @@
           buildMonthSelect(data.availableMonths);
           renderSchedules(data.schedules);
           renderLeaveStatus(data.leaves);
+          renderAnnouncements(data.announcements); // 渲染公告
           
           globalLeaveSummary = data.leaveSummary || {};
           allowedSpecialLeaveHours = (data.allowedSpecialLeaveDays || 0) * 8; 
@@ -188,11 +188,27 @@
       .catch(err => { errorDiv.innerText = "連線失敗"; errorDiv.style.display = "block"; });
     }
 
+    function renderAnnouncements(list) {
+      const box = document.getElementById('announcement-list');
+      if (!list || list.length === 0) {
+        box.innerHTML = "<div>暫無任何公司公告</div>";
+        return;
+      }
+      let html = "";
+      list.forEach(item => {
+        html += `<div class="announcement-item">
+          <span class="announcement-date">[${item.date}]</span>
+          <strong>${item.title}</strong>
+          <div style="color:#555; margin-top:2px; padding-left:5px;">${item.content}</div>
+        </div>`;
+      });
+      box.innerHTML = html;
+    }
+
     function renderLeaveSummary(summary, allowedSpecialDays) {
       const container = document.getElementById('leave-summary-content');
       let html = "";
       const targetLeaves = ["事假", "病假", "特休", "婚假", "喪假"];
-      
       targetLeaves.forEach(type => {
         const info = summary[type] || { totalHours: 0, display: "0 天 0 小時" };
         let limitText = "";
@@ -201,7 +217,6 @@
         if (type === "特休") limitText = ` / 依年資您有 ${allowedSpecialDays} 天`;
         if (type === "婚假") limitText = " / 上限 8 天";
         if (type === "喪假") limitText = " / 上限 8 天";
-        
         html += `📌 <strong>${type}</strong>：${info.display}${limitText}<br>`;
       });
       container.innerHTML = html;
@@ -214,8 +229,7 @@
         months.forEach(m => {
           const opt = document.createElement('option');
           opt.value = m;
-          const displayLabel = m.replace('-', ' 年 ') + ' 月';
-          opt.innerText = displayLabel;
+          opt.innerText = m.replace('-', ' 年 ') + ' 月';
           select.appendChild(opt);
         });
       }
@@ -230,9 +244,7 @@
           li.innerHTML = `📅 <strong>${s.date}</strong> ： ${s.shift}`;
           schedList.appendChild(li);
         });
-      } else {
-        schedList.innerHTML = '<li>該月份暫無排班資料</li>';
-      }
+      } else { schedList.innerHTML = '<li>該月份暫無排班資料</li>'; }
     }
 
     function changeScheduleMonth() {
@@ -268,9 +280,7 @@
 
     function switchTab(tabName) {
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      if(window.event && window.event.target) {
-         window.event.target.classList.add('active');
-      }
+      if(window.event && window.event.target) window.event.target.classList.add('active');
       document.getElementById('tab-punch').classList.add('hidden');
       document.getElementById('tab-schedule').classList.add('hidden');
       document.getElementById('tab-leave').classList.add('hidden');
@@ -299,25 +309,18 @@
       const startObj = new Date(start);
       const endObj = new Date(end);
       const newRequestHours = (endObj.getTime() - startObj.getTime()) / (1000 * 60 * 60);
-      
       if (newRequestHours <= 0) { alert("結束時間必須大於開始時間"); return; }
       
       let currentLimitHours = 0;
       let isChecking = false;
-      
-      if (type === "特休") {
-        currentLimitHours = allowedSpecialLeaveHours;
-        isChecking = true;
-      } else if (LAW_LIMITS[type] !== undefined) {
-        currentLimitHours = LAW_LIMITS[type];
-        isChecking = true;
-      }
+      if (type === "特休") { currentLimitHours = allowedSpecialLeaveHours; isChecking = true; } 
+      else if (LAW_LIMITS[type] !== undefined) { currentLimitHours = LAW_LIMITS[type]; isChecking = true; }
       
       if (isChecking) {
         const alreadyHours = globalLeaveSummary[type] ? globalLeaveSummary[type].totalHours : 0;
         if (alreadyHours + newRequestHours > currentLimitHours) {
           const overDays = Math.ceil(((alreadyHours + newRequestHours) - currentLimitHours) / 8);
-          const confirmLeave = confirm(`⚠️ 額度超額警告：\n您的【${type}】可請上限為 ${currentLimitHours/8} 天。\n您先前已累積請了 ${Math.round(alreadyHours/8)} 天，本次加總後將超出上限約 ${overDays} 天。\n\n您確定仍要送出申請，交由主管審核嗎？`);
+          const confirmLeave = confirm(`⚠️ 額度超額警告：\n您的【${type}】可請上限為 ${currentLimitHours/8} 天。\n確定仍要送出申請嗎？`);
           if (!confirmLeave) return;
         }
       }
