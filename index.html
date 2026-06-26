@@ -95,12 +95,12 @@
         </select>
       </div>
       <div class="form-group">
-        <label>開始日期</label>
-        <input type="date" id="leave-start">
+        <label>開始時間 (日期與時分)</label>
+        <input type="datetime-local" id="leave-start">
       </div>
       <div class="form-group">
-        <label>結束日期</label>
-        <input type="date" id="leave-end">
+        <label>結束時間 (日期與時分)</label>
+        <input type="datetime-local" id="leave-end">
       </div>
       <button onclick="submitLeave()">送出請假申請</button>
     </div>
@@ -140,7 +140,6 @@
           document.getElementById('user-name').innerText = data.employeeName;
           document.getElementById('user-location').innerText = data.assignedLocation;
           
-          // 自動渲染選單
           buildMonthSelect(data.availableMonths);
           renderSchedules(data.schedules);
           renderLeaveStatus(data.leaves);
@@ -154,16 +153,13 @@
       .catch(err => { errorDiv.innerText = "連線失敗"; errorDiv.style.display = "block"; });
     }
 
-    // 核心新增：自動建立下拉選單內容
     function buildMonthSelect(months) {
       const select = document.getElementById('schedule-month-select');
       select.innerHTML = '<option value="Schedules">當月最新班表</option>';
-      
       if (months && months.length > 0) {
         months.forEach(m => {
           const opt = document.createElement('option');
           opt.value = m;
-          // 格式化顯示，把 2026-08 改成更好看的 2026年08月
           const displayLabel = m.replace('-', ' 年 ') + ' 月';
           opt.innerText = displayLabel;
           select.appendChild(opt);
@@ -216,7 +212,7 @@
           let badgeClass = "badge-wait";
           if(l.status === "已核准" || l.status === "核准") badgeClass = "badge-pass";
           if(l.status === "不核准" || l.status === "駁回") badgeClass = "badge-fail";
-          li.innerHTML = `🏷️ <strong>${l.type}</strong> <span class="badge ${badgeClass}">${l.status}</span><br>⏳ ${l.start} ~ ${l.end}`;
+          li.innerHTML = `🏷️ <strong>${l.type}</strong> <span class="badge ${badgeClass}">${l.status}</span><br>⏳ ${l.start} ~ <br>${l.end}`;
           leaveList.appendChild(li);
         });
       } else { leaveList.innerHTML = '<li>暫無請假紀錄</li>'; }
@@ -232,7 +228,6 @@
       document.getElementById('tab-' + tabName).classList.remove('hidden');
     }
 
-    /* 打卡與請假維持原樣不變 */
     function processPunch() {
       const type = document.getElementById('punch-type').value;
       if (!navigator.geolocation) { alert("不支援定位"); return; }
@@ -249,7 +244,8 @@
       const type = document.getElementById('leave-type').value;
       const start = document.getElementById('leave-start').value;
       const end = document.getElementById('leave-end').value;
-      if(!start || !end) { alert("請選擇請假起訖日期"); return; }
+      if(!start || !end) { alert("請選擇請假起訖時間"); return; }
+      
       fetch(GAS_WEB_APP_URL, {
         method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ action: 'leave', employeeId: currentUser.id, employeeName: currentUser.name, leaveType: type, startDate: start, endDate: end })
