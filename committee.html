@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>物業管理-主委專區</title>
+  <style>
+    :root { --primary-color: #28a745; --bg-color: #f8f9fa; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background-color: var(--bg-color); padding: 20px; display: flex; justify-content: center; }
+    .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
+    h2 { text-align: center; margin-bottom: 20px; color: #333; }
+    input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; }
+    button { width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+    .hidden { display: none; }
+    .info-box { background: #e2f0d9; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; color: #385723; }
+    .section-title { font-weight: bold; margin: 15px 0 8px 0; border-left: 4px solid var(--primary-color); padding-left: 8px; }
+    ul { list-style: none; }
+    li { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+    .ann-box { background: #f1f9f1; padding: 10px; border-radius: 6px; margin-bottom: 8px; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+  <div id="login-box" class="card">
+    <h2>案場主委/管理端登入</h2>
+    <input type="text" id="username" placeholder="請輸入主委專屬帳號">
+    <input type="password" id="password" placeholder="請輸入密碼">
+    <button onclick="login()">登入系統</button>
+  </div>
+
+  <div id="main-box" class="card hidden">
+    <div class="info-box">🏠 案場：<span id="loc-name">---</span> 管理專區</div>
+    
+    <div class="section-title">📢 最新公告</div>
+    <div id="ann-list">載入中...</div>
+    
+    <div class="section-title">👮 今日現場出勤動態</div>
+    <ul id="att-list">
+      <li>今日尚無打卡紀錄</li>
+    </ul>
+  </div>
+
+  <script>
+    const GAS_URL = "您的GAS網址";
+    
+    function login() {
+      const u = document.getElementById('username').value.trim();
+      const p = document.getElementById('password').value.trim();
+      
+      fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'committeeLogin', username: u, password: p })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.success) {
+          document.getElementById('login-box').classList.add('hidden');
+          document.getElementById('main-box').classList.remove('hidden');
+          document.getElementById('loc-name').innerText = data.location;
+          
+          // 渲染公告
+          let annHtml = "";
+          if(data.announcements.length > 0) {
+            data.announcements.forEach(a => {
+              annHtml += `<div class="ann-box"><strong>[${a.date}] ${a.title}</strong><br>${a.content}</div>`;
+            });
+          } else { annHtml = "暫無公告"; }
+          document.getElementById('ann-list').innerHTML = annHtml;
+          
+          // 渲染當日出勤
+          let attHtml = "";
+          if(data.attendance.length > 0) {
+            data.attendance.forEach(at => {
+              attHtml += `<li>⏱️ <strong>${at.time}</strong> - ${at.name} (${at.type})</li>`;
+            });
+          } else { attHtml = "<li>今日現場尚無人員打卡上班</li>"; }
+          document.getElementById('att-list').innerHTML = attHtml;
+        } else { alert(data.message); }
+      });
+    }
+  </script>
+</body>
+</html>
