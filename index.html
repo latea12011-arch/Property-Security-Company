@@ -36,6 +36,7 @@
 </head>
 <body>
 
+  <!-- 1. 登入區塊 -->
   <div id="login-section" class="card">
     <h2>物業考勤系統登入</h2>
     <div class="form-group">
@@ -48,10 +49,12 @@
     <div id="login-error" class="error-msg">連線失敗，請檢查網路或 GAS 網址</div>
   </div>
 
+  <!-- 2. 主功能區塊 -->
   <div id="main-section" class="card hidden">
     <div class="info-box">
       <p>歡迎，<strong id="user-name">---</strong></p>
       <p>今日指派案場：<strong id="user-location">---</strong></p>
+      <p style="font-size:12px; color:#666; margin-top:5px;">系統偵測到職日：<span id="detected-hire-date">---</span></p>
     </div>
     
     <div class="nav-tabs">
@@ -61,6 +64,7 @@
       <div class="nav-item" onclick="switchTab('leavestatus')">假單進度</div>
     </div>
 
+    <!-- 打卡分頁 -->
     <div id="tab-punch">
       <div class="form-group">
         <label>打卡類型</label>
@@ -73,17 +77,20 @@
       <div id="punch-error" class="error-msg"></div>
     </div>
 
+    <!-- 班表分頁 -->
     <div id="tab-schedule" class="hidden">
       <div class="month-select-container">
         <label style="font-size: 13px; margin-bottom: 4px;">選擇查詢月份：</label>
         <select id="schedule-month-select" onchange="changeScheduleMonth()">
-          </select>
+          <!-- 自動動態生成 -->
+        </select>
       </div>
       <ul id="schedule-list">
         <li>載入中...</li>
       </ul>
     </div>
 
+    <!-- 請假分頁 -->
     <div id="tab-leave" class="hidden">
       <div class="leave-summary-card">
         <div class="leave-summary-title">📊 今年度已請假累計 (含待審核)</div>
@@ -97,7 +104,7 @@
           <option value="病假">病假 (勞基法上限30天)</option>
           <option value="特休">特休 (依到職年資動態計算)</option>
           <option value="婚假">婚假 (上限8天)</option>
-          <option value="喪假">喪假 (依勞基法對象上限8天)</option>
+          <option value="喪假">喪假 (上限8天)</option>
           <option value="公假">公假</option>
         </select>
       </div>
@@ -112,6 +119,7 @@
       <button onclick="submitLeave()">送出請假申請</button>
     </div>
 
+    <!-- 假單進度分頁 -->
     <div id="tab-leavestatus" class="hidden">
       <ul id="leave-status-list">
         <li>暫無請假紀錄</li>
@@ -120,14 +128,13 @@
   </div>
 
   <script>
-    // ⚠️ 請記得把這裡換成你剛剛在 GAS「全新部署」得到的網址喔！
+    // ⚠️ 請記得把這裡換成你剛剛在 GAS 重新部署產生的最新網址！
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
     
     let currentUser = { id: "", name: "", location: "" };
     let globalLeaveSummary = {};
     let allowedSpecialLeaveHours = 0; 
 
-    // 法定請假時數上限定義（天數 * 8小時）
     const LAW_LIMITS = {
       "事假": 14 * 8, 
       "病假": 30 * 8,
@@ -158,6 +165,7 @@
           
           document.getElementById('user-name').innerText = data.employeeName;
           document.getElementById('user-location').innerText = data.assignedLocation;
+          document.getElementById('detected-hire-date').innerText = data.hireDateDetected || "未填寫";
           
           buildMonthSelect(data.availableMonths);
           renderSchedules(data.schedules);
@@ -256,8 +264,8 @@
 
     function switchTab(tabName) {
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      if(event && event.target) {
-         event.target.classList.add('active');
+      if(window.event && window.event.target) {
+         window.event.target.classList.add('active');
       }
       document.getElementById('tab-punch').classList.add('hidden');
       document.getElementById('tab-schedule').classList.add('hidden');
