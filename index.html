@@ -75,9 +75,7 @@
       <div class="month-select-container">
         <label style="font-size: 13px; margin-bottom: 4px;">選擇查詢月份：</label>
         <select id="schedule-month-select" onchange="changeScheduleMonth()">
-          <option value="Schedules">當月最新班表</option>
-          <option value="2026-07">2026 年 07 月</option>
-        </select>
+          </select>
       </div>
       <ul id="schedule-list">
         <li>載入中...</li>
@@ -115,7 +113,6 @@
   </div>
 
   <script>
-    // 修正點：網址格式確保前後有英文字元引號包住
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
     let currentUser = { id: "", name: "", location: "" };
 
@@ -143,6 +140,8 @@
           document.getElementById('user-name').innerText = data.employeeName;
           document.getElementById('user-location').innerText = data.assignedLocation;
           
+          // 自動渲染選單
+          buildMonthSelect(data.availableMonths);
           renderSchedules(data.schedules);
           renderLeaveStatus(data.leaves);
           
@@ -153,6 +152,23 @@
         }
       })
       .catch(err => { errorDiv.innerText = "連線失敗"; errorDiv.style.display = "block"; });
+    }
+
+    // 核心新增：自動建立下拉選單內容
+    function buildMonthSelect(months) {
+      const select = document.getElementById('schedule-month-select');
+      select.innerHTML = '<option value="Schedules">當月最新班表</option>';
+      
+      if (months && months.length > 0) {
+        months.forEach(m => {
+          const opt = document.createElement('option');
+          opt.value = m;
+          // 格式化顯示，把 2026-08 改成更好看的 2026年08月
+          const displayLabel = m.replace('-', ' 年 ') + ' 月';
+          opt.innerText = displayLabel;
+          select.appendChild(opt);
+        });
+      }
     }
 
     function renderSchedules(schedules) {
@@ -216,6 +232,7 @@
       document.getElementById('tab-' + tabName).classList.remove('hidden');
     }
 
+    /* 打卡與請假維持原樣不變 */
     function processPunch() {
       const type = document.getElementById('punch-type').value;
       if (!navigator.geolocation) { alert("不支援定位"); return; }
