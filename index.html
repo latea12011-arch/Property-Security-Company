@@ -1,167 +1,169 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>物業考勤系統 - 員工端</title>
-    <script>
-        // 🚀 請在此處貼上您的 GAS 部署網址
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
-        
-        let globalEmployeeId = "";
-        let globalEmployeeName = "";
-        let globalAssignedLocation = ""; 
-    </script>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>紘嘉物業保全考勤系統 - 員工端</title>
+  <style>
+    :root {
+      --primary-color: #28a745;
+      --warning-color: #ff9800;
+      --bg-color: #f8f9fa;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background-color: var(--bg-color); padding: 20px; display: flex; justify-content: center; }
+    .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0,05); width: 100%; max-width: 450px; margin-bottom: 20px; }
+    h2 { text-align: center; margin-bottom: 20px; color: #333; }
+    .form-group { margin-bottom: 15px; }
+    input, select { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+    button { width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; }
+    button.btn-clockin { background: #28a745; }
+    button.btn-clockout { background: var(--warning-color); }
+    .hidden { display: none; }
+    
+    /* 新增：提示區塊樣式 */
+    .info-box { background: #e2f0d9; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; color: #385723; }
+    .law-box { background: #fff3cd; color: #856404; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; line-height: 1.5; border-left: 4px solid #ffc107; }
+    .btn-group { display: flex; gap: 15px; margin-bottom: 20px; }
+    .ann-box { background: #f1f9ff; padding: 10px; border-radius: 6px; margin-bottom: 8px; font-size: 13px; border-left: 4px solid #007bff; }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 flex flex-col items-center justify-start">
+<body>
 
-    <div id="login-box" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md my-auto">
-        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">物業考勤系統 (員工登入)</h2>
-        <div class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">員工工號</label>
-                <input type="text" id="empId" class="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入工號">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">登入密碼</label>
-                <input type="password" id="password" class="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入密碼">
-            </div>
-            <button onclick="login()" id="login-btn" class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition">登入</button>
-        </div>
+  <div id="login-section" class="card">
+    <h2>紘嘉物業保全考勤系統登入</h2>
+    <div class="form-group">
+      <input type="text" id="emp-id" placeholder="請輸入員工編號">
+    </div>
+    <div class="form-group">
+      <input type="password" id="emp-password" placeholder="請輸入密碼">
+    </div>
+    <button onclick="login()">登入系統</button>
+  </div>
+
+  <div id="main-section" class="card hidden">
+    <div class="info-box" id="welcome-msg">歡迎，員工</div>
+    
+    <h3>📌 即時考勤打卡</h3>
+    <div class="btn-group" style="margin-top:10px;">
+      <button class="btn-clockin" onclick="clockIn()">上班打卡</button>
+      <button class="btn-clockout" onclick="clockOut()">下班打卡</button>
     </div>
 
-    <div id="main-panel" class="w-full max-w-md space-y-6 hidden">
-        
-        <div class="bg-white p-6 rounded-2xl shadow-xl flex justify-between items-center">
-            <div>
-                <h2 id="welcome-title" class="text-xl font-bold text-gray-800">您好</h2>
-                <p id="location-tag" class="text-sm text-blue-600 font-medium"></p>
-            </div>
-            <button onclick="window.location.reload()" class="text-sm bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-300">登出</button>
-        </div>
-
-        <div class="bg-white p-6 rounded-2xl shadow-xl space-y-4">
-            <h3 class="font-semibold text-gray-700">📌 即時考勤打卡</h3>
-            <div class="grid grid-cols-2 gap-4">
-                <button onclick="checkIn('上班')" class="bg-green-500 text-white py-4 rounded-2xl font-bold text-lg shadow-md hover:bg-green-600 transition">上班打卡</button>
-                <button onclick="checkIn('下班')" class="bg-amber-500 text-white py-4 rounded-2xl font-bold text-lg shadow-md hover:bg-amber-600 transition">下班打卡</button>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-2xl shadow-xl space-y-4">
-            <h3 class="font-semibold text-gray-700">📅 線上請假申請表單</h3>
-            <!-- 加上勞基法與特休提示區 -->
-<div id="leave-info-box" style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; margin-bottom: 12px; font-size: 14px;">
-  💡 <strong>勞基法特休說明：</strong>半年享3天，1年享7天，2年享10天。<br>
-  📊 您目前特休狀態：<strong>總共 <span id="lv-total">--</span> 天 / 已請 <span id="lv-used">--</span> 天 / 剩餘 <span id="lv-rem">--</span> 天</strong>
-</div>
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">選擇請假假別</label>
-                    <select id="leave-type" class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
-                        <option value="事假">事假</option>
-                        <option value="病假">病假</option>
-                        <option value="特休">特休（年假）</option>
-                        <option value="婚假/喪假">婚假 / 喪假</option>
-                        <option value="公假">公假</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">請假開始日期</label>
-                        <input type="date" id="leave-start" class="w-full px-3 py-2 border rounded-xl text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">請假結束日期</label>
-                        <input type="date" id="leave-end" class="w-full px-3 py-2 border rounded-xl text-sm">
-                    </div>
-                </div>
-                <button onclick="submitLeave()" id="leave-btn" class="w-full bg-blue-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-blue-700 transition">送出請假申請</button>
-                <p id="leave-msg" class="text-sm font-medium text-center mt-1"></p>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-2xl shadow-xl space-y-3">
-            <h3 class="font-semibold text-gray-700">📢 最新公告</h3>
-            <div id="announcement-list" class="space-y-2"></div>
-        </div>
-
+    <h3>📅 線上請假申請單</h3>
+    <div class="law-box">
+      ⚖️ <strong>勞基法特休規定：</strong>年資滿半年享3天；1年享7天；2年享10天；3年以上依規定遞增。<br>
+      📊 <strong>您目前的特休狀態：</strong><br>
+      應有總天數：<span id="lv-total" style="font-weight:bold; color:#d9534f;">--</span> 天 / 
+      已請(含審核中)：<span id="lv-used" style="font-weight:bold;">--</span> 天<br>
+      剩餘可請特休：<span id="lv-rem" style="font-weight:bold; color:#28a745; font-size:15px;">--</span> 天
     </div>
 
-    <script>
-        async function login() {
-            const id = document.getElementById("empId").value.trim();
-            const pass = document.getElementById("password").value.trim();
-            if(!id || !pass) return;
+    <div class="form-group">
+      <label>選擇請假假別：</label>
+      <select id="leave-type" onchange="checkLeaveType()">
+        <option value="事假">事假 (勞基法上限14天)</option>
+        <option value="病假">病假 (勞基法上限30天)</option>
+        <option value="特休">特休 (依同仁年資計算)</option>
+        <option value="婚假">婚假 (上限8天)</option>
+        <option value="喪假">喪假 (依親等上限8天)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>請假開始日期時間：</label>
+      <input type="datetime-local" id="leave-start">
+    </div>
+    <div class="form-group">
+      <label>請假結束日期時間：</label>
+      <input type="datetime-local" id="leave-end">
+    </div>
+    <button onclick="submitLeave()" style="background:#007bff; margin-bottom:20px;">送出請假申請</button>
+
+    <h3>📢 最新公告</h3>
+    <div id="announcements-container" style="margin-top:10px;"></div>
+  </div>
+
+  <script>
+    // 請將此處替換為你部署完 GAS 後得到的 Web App URL
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/XXXXX/exec"; 
+    
+    let currentEmpId = "";
+    let currentEmpName = "";
+    let currentLoc = "";
+    let remainingLeaveDays = 0;
+
+    function login() {
+      const id = document.getElementById('emp-id').value;
+      const pwd = document.getElementById('emp-password').value;
+      if(!id || !pwd) return alert('請輸入帳號密碼');
+
+      fetch(`${GAS_WEB_APP_URL}?action=login&employeeId=${id}&password=${pwd}`)
+        .then(res => res.json())
+        .then(data => {
+          if(data.success) {
+            currentEmpId = id;
+            currentEmpName = data.employeeName;
+            currentLoc = data.assignedLocation;
+            remainingLeaveDays = data.annualLeaveRemaining;
+
+            document.getElementById('welcome-msg').innerText = `${currentEmpName} ，您好\n所屬案場：${currentLoc}`;
             
-            document.getElementById("login-btn").innerText = "驗證中...";
-            try {
-                const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "login", employeeId: id, password: pass })});
-                const r = await res.json();
-                if(r.success) {
-                    globalEmployeeId = id;
-                    globalEmployeeName = r.employeeName;
-                    globalAssignedLocation = r.assignedLocation;
-                    
-                    document.getElementById("login-box").classList.add("hidden");
-                    document.getElementById("main-panel").classList.remove("hidden");
-                    document.getElementById("welcome-title").innerText = `${r.employeeName}，您好`;
-                    document.getElementById("location-tag").innerText = `所屬案場：${r.assignedLocation}`;
-                    renderAnnouncements(r.announcements);
-                } else { alert(r.message); }
-            } catch(e) { alert("連線失敗"); }
-            document.getElementById("login-btn").innerText = "登入";
-        }
+            // 填入特休天數
+            document.getElementById('lv-total').innerText = data.annualLeaveTotal;
+            document.getElementById('lv-used').innerText = data.annualLeaveUsed;
+            document.getElementById('lv-rem').innerText = data.annualLeaveRemaining;
 
-        async function checkIn(type) {
-            try {
-                const res = await fetch(GAS_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "checkin", employeeId: globalEmployeeId, employeeName: globalEmployeeName, type: type, location: globalAssignedLocation })
-                });
-                const r = await res.json();
-                alert(r.message);
-            } catch(e) { alert("打卡連線失敗"); }
-        }
-
-        async function submitLeave() {
-            const leaveType = document.getElementById("leave-type").value;
-            const startDate = document.getElementById("leave-start").value;
-            const endDate = document.getElementById("leave-end").value;
-            const msgEl = document.getElementById("leave-msg");
-
-            if (!startDate || !endDate) {
-                msgEl.className = "text-sm text-red-500 text-center";
-                msgEl.innerText = "請填寫完整的請假日期！";
-                return;
-            }
-
-            document.getElementById("leave-btn").disabled = true;
-            try {
-                const res = await fetch(GAS_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "leave", employeeId: globalEmployeeId, employeeName: globalEmployeeName, leaveType: leaveType, startDate: startDate, endDate: endDate })
-                });
-                const r = await res.json();
-                if (r.success) {
-                    msgEl.className = "text-sm text-green-600 text-center";
-                    msgEl.innerText = "已成功送出請假申請！";
-                    document.getElementById("leave-start").value = "";
-                    document.getElementById("leave-end").value = "";
-                } else { alert(r.message); }
-            } catch(e) { alert("連線失敗"); }
-            document.getElementById("leave-btn").disabled = false;
-        }
-
-        function renderAnnouncements(list) {
-            const container = document.getElementById("announcement-list");
-            container.innerHTML = "";
-            if(!list || list.length === 0) { container.innerHTML = `<p class="text-gray-400 text-sm text-center py-2">目前尚無最新公告</p>`; return; }
-            list.forEach(item => {
-                container.innerHTML += `<div class="bg-blue-50/50 p-3 rounded-xl border border-blue-100"><div class="flex justify-between items-center mb-1"><h4 class="font-bold text-sm text-gray-800">${item.title}</h4><span class="text-xs text-gray-400">${item.date}</span></div><p class="text-xs text-gray-600">${item.content}</p></div>`;
+            // 渲染公告
+            let annHtml = "";
+            data.announcements.forEach(a => {
+              annHtml += `<div class="ann-box"><strong>${a.title}</strong> (${a.date})<br>${a.content}</div>`;
             });
-        }
-    </script>
+            document.getElementById('announcements-container').innerHTML = annHtml;
+
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('main-section').classList.remove('hidden');
+          } else {
+            alert(data.message);
+          }
+        });
+    }
+
+    function checkLeaveType() {
+      const type = document.getElementById('leave-type').value;
+      if(type === '特休' && remainingLeaveDays <= 0) {
+        alert('警告：您的剩餘特休天數為 0 天，請選擇其他假別或確認特休額度！');
+      }
+    }
+
+    function clockIn() {
+      fetch(`${GAS_WEB_APP_URL}?action=clockIn&employeeId=${currentEmpId}&employeeName=${currentEmpName}&location=${currentLoc}`)
+        .then(res => res.json())
+        .then(data => alert(data.message));
+    }
+
+    function clockOut() {
+      fetch(`${GAS_WEB_APP_URL}?action=clockOut&employeeId=${currentEmpId}&employeeName=${currentEmpName}&location=${currentLoc}`)
+        .then(res => res.json())
+        .then(data => alert(data.message));
+    }
+
+    function submitLeave() {
+      const type = document.getElementById('leave-type').value;
+      const start = document.getElementById('leave-start').value;
+      const end = document.getElementById('leave-end').value;
+      
+      if(!start || !end) return alert('請填寫完整請假時間');
+      if(type === '特休' && remainingLeaveDays <= 0) {
+        return alert('特休額度不足，無法送出申請！');
+      }
+
+      fetch(`${GAS_WEB_APP_URL}?action=submitLeave&employeeId=${currentEmpId}&employeeName=${currentEmpName}&location=${currentLoc}&leaveType=${type}&startTime=${start}&endTime=${end}`)
+        .then(res => res.json())
+        .then(data => {
+          alert(data.message);
+          if(data.success) location.reload(); // 重新整理網頁更新特休狀態
+        });
+    }
+  </script>
 </body>
 </html>
