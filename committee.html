@@ -17,7 +17,7 @@
     @media (max-width: 600px) { .grid-layout { grid-template-columns: 1fr; } }
     .section-title { font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 12px; }
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th { background: #f9fafb; padding: 10px; font-weight: 600; border-bottom: 1px solid #e5e7eb; text-align: center; }
+    th { background: #f9fafb; padding: 10px; font-weight: 600; border-bottom: 1px solid #e5e7eb; }
     td { padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center; }
     .badge { padding: 4px 8px; border-radius: 9999px; font-size: 12px; }
     .badge-in { background: #dcfce7; color: #15803d; }
@@ -54,9 +54,7 @@
           <div class="section-title">📌 今日案場打卡動態</div>
           <table>
             <thead><tr><th>員工</th><th>狀態</th><th>時間</th></tr></thead>
-            <tbody id="attendance-list">
-              <tr><td colspan="3" class="no-data">暫無打卡數據</td></tr>
-            </tbody>
+            <tbody id="attendance-list"><tr><td colspan="3" class="no-data">暫無打卡數據</td></tr></tbody>
           </table>
         </div>
 
@@ -64,9 +62,7 @@
           <div class="section-title">📅 本社區員工請假狀態申請</div>
           <table>
             <thead><tr><th>員工</th><th>假別</th><th>狀態</th></tr></thead>
-            <tbody id="leave-list">
-              <tr><td colspan="3" class="no-data">暫無請假申請</td></tr>
-            </tbody>
+            <tbody id="leave-list"><tr><td colspan="3" class="no-data">暫無請假申請</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -74,7 +70,7 @@
   </div>
 
   <script>
-    // ⚠️ 記得更換成您最新部署的 GAS 網址
+    // 💡 填入你剛剛複製的最新 GAS 部署網址
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec"; 
 
     function login() {
@@ -89,7 +85,6 @@
             document.getElementById('committee-welcome').innerText = `${data.committeeName || user} 主委，您好`;
             document.getElementById('committee-location').innerText = `🏠 監督案場：${data.location}`;
 
-            // 1. 渲染打卡動態（由後端依據主委案場精準過濾）
             let attHtml = "";
             if(data.attendance && data.attendance.length > 0) {
               data.attendance.forEach(a => {
@@ -97,11 +92,8 @@
                 attHtml += `<tr><td><strong>${a.name}</strong></td><td><span class="${bClass}">${a.type}</span></td><td>${a.time}</td></tr>`;
               });
               document.getElementById('attendance-list').innerHTML = attHtml;
-            } else {
-              document.getElementById('attendance-list').innerHTML = "<tr><td colspan='3' class='no-data'>今日尚無本社區人員打卡</td></tr>";
-            }
+            } else { document.getElementById('attendance-list').innerHTML = "<tr><td colspan='3' class='no-data'>今日尚無本社區人員打卡</td></tr>"; }
 
-            // 2. 渲染請假名單（嚴格隔離隱私，非本案場員工絕不外洩）
             let leaveHtml = "";
             if(data.leaves && data.leaves.length > 0) {
               data.leaves.forEach(l => {
@@ -109,16 +101,12 @@
                 leaveHtml += `<tr><td><strong>${l.name}</strong></td><td>${l.type}</td><td><span class="${bClass}">${l.status}</span></td></tr>`;
               });
               document.getElementById('leave-list').innerHTML = leaveHtml;
-            } else {
-              document.getElementById('leave-list').innerHTML = "<tr><td colspan='3' class='no-data'>目前無任何請假紀錄</td></tr>";
-            }
+            } else { document.getElementById('leave-list').innerHTML = "<tr><td colspan='3' class='no-data'>目前無任何請假紀錄</td></tr>"; }
 
             document.getElementById('login-box').classList.add('hidden');
             document.getElementById('dashboard').classList.remove('hidden');
-          } else {
-            alert(data.message);
-          }
-        }).catch(err => alert("後端系統對接失敗，請檢查 GAS 網址與設定。"));
+          } else { alert(data.message); }
+        }).catch(err => alert("網址可能填錯或權限未開，連線失敗！"));
     }
   </script>
 </body>
