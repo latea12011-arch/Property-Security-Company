@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>物業考勤系統 - 員工端</title>
+    <title>物業考勤系統</title>
     <script>
         // 🚀 替換為你最新的 GAS 部署網址
         const GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
@@ -11,19 +11,24 @@
         let globalEmployeeId = "";
         let globalEmployeeName = "";
         let globalAssignedLocation = ""; 
-        let globalTotalAnnualLeave = 0;
+        let currentLoginMode = "emp"; // "emp" = 員工, "com" = 主委
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-4 flex flex-col items-center justify-start">
 
-    <!-- 登入卡片 -->
     <div id="login-box" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md my-auto">
-        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">物業考勤系統 (員工登入)</h2>
+        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">物業考勤系統</h2>
+        
+        <div class="flex bg-gray-100 rounded-lg p-1 mb-6">
+            <button id="tab-emp" onclick="switchMode('emp')" class="w-1/2 py-2 rounded-md bg-white shadow text-sm font-bold text-blue-600 transition">員工登入</button>
+            <button id="tab-com" onclick="switchMode('com')" class="w-1/2 py-2 rounded-md text-sm font-bold text-gray-500 hover:bg-gray-200 transition">主委登入</button>
+        </div>
+
         <div class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">員工工號</label>
-                <input type="text" id="empId" class="w-full px-4 py-3 border rounded-xl" placeholder="請輸入工號">
+                <label id="label-id" class="block text-sm font-medium text-gray-700 mb-1">員工工號</label>
+                <input type="text" id="userId" class="w-full px-4 py-3 border rounded-xl" placeholder="請輸入帳號">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">登入密碼</label>
@@ -33,10 +38,8 @@
         </div>
     </div>
 
-    <!-- 員工操作主面板 -->
     <div id="main-panel" class="w-full max-w-md space-y-4 hidden">
         
-        <!-- 員工資訊 Header (模仿截圖樣式) -->
         <div class="bg-[#E6EBEF] p-4 rounded-lg flex justify-between items-start text-gray-800">
             <div>
                 <p class="text-sm">歡迎，<span id="welcome-name" class="font-bold"></span></p>
@@ -46,10 +49,7 @@
             <button onclick="window.location.reload()" class="text-xs bg-white text-gray-600 px-2 py-1 rounded shadow-sm">登出</button>
         </div>
 
-        <!-- 假單專區 -->
         <div class="bg-white p-5 rounded-xl shadow-md space-y-4">
-            
-            <!-- 📊 黃色累計看板 (完美復刻) -->
             <div class="bg-[#FFF8D6] rounded-lg p-4 border border-yellow-200">
                 <h3 class="font-bold text-gray-800 text-sm border-b border-dashed border-yellow-400 pb-2 mb-3 flex items-center">
                     📊 今年度已請假累計 (含待審核)
@@ -66,7 +66,6 @@
                 </p>
             </div>
 
-            <!-- 請假表單 -->
             <div class="space-y-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">請假假別</label>
@@ -93,7 +92,6 @@
             </div>
         </div>
 
-        <!-- 打卡專區 -->
         <div class="bg-white p-5 rounded-xl shadow-md space-y-4">
             <h3 class="font-bold text-gray-700 border-b pb-2">📌 即時考勤打卡</h3>
             <div class="grid grid-cols-2 gap-4">
@@ -101,10 +99,66 @@
                 <button onclick="checkIn('下班')" class="bg-amber-500 text-white py-3 rounded-lg font-bold shadow hover:bg-amber-600">下班打卡</button>
             </div>
         </div>
+        
+        <div class="bg-white p-5 rounded-xl shadow-md space-y-3">
+            <h3 class="font-bold text-gray-700 border-b pb-2">📢 最新公告</h3>
+            <div id="emp-announcement-list" class="space-y-2"></div>
+        </div>
+    </div>
 
+    <div id="committee-panel" class="w-full max-w-md space-y-4 hidden">
+        
+        <div class="bg-[#475569] p-4 rounded-lg flex justify-between items-start text-white shadow-lg">
+            <div>
+                <p class="text-sm">歡迎主委，<span id="com-welcome-name" class="font-bold"></span></p>
+                <p class="text-sm mt-1">管轄社區：<span id="com-location-tag" class="font-bold text-yellow-300"></span></p>
+            </div>
+            <button onclick="window.location.reload()" class="text-xs bg-white text-gray-800 px-2 py-1 rounded shadow-sm">登出</button>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-md space-y-3">
+            <h3 class="font-bold text-gray-700 border-b pb-2">📢 公司最新公告</h3>
+            <div id="com-announcement-list" class="space-y-2"></div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-md space-y-3">
+            <h3 class="font-bold text-gray-700 border-b pb-2">👥 今日人員打卡動態</h3>
+            <div id="com-attendance-list" class="space-y-2 max-h-48 overflow-y-auto p-1"></div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-md space-y-3">
+            <h3 class="font-bold text-gray-700 border-b pb-2">📅 近期人員請假紀錄</h3>
+            <div id="com-leave-list" class="space-y-2 max-h-48 overflow-y-auto p-1"></div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-md space-y-3 border-t-4 border-blue-500">
+            <h3 class="font-bold text-gray-700">✉️ 聯繫物業公司 (建議箱)</h3>
+            <input type="text" id="sug-title" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="主旨">
+            <textarea id="sug-content" rows="3" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="請填寫您的建議或需求..."></textarea>
+            <button onclick="submitSuggestion()" id="sug-btn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold text-sm">送出建議</button>
+        </div>
     </div>
 
     <script>
+        // 切換登入身分 UI
+        function switchMode(mode) {
+            currentLoginMode = mode;
+            const tabEmp = document.getElementById("tab-emp");
+            const tabCom = document.getElementById("tab-com");
+            const labelId = document.getElementById("label-id");
+            
+            if (mode === 'emp') {
+                tabEmp.className = "w-1/2 py-2 rounded-md bg-white shadow text-sm font-bold text-blue-600 transition";
+                tabCom.className = "w-1/2 py-2 rounded-md text-sm font-bold text-gray-500 hover:bg-gray-200 transition";
+                labelId.innerText = "員工工號";
+            } else {
+                tabCom.className = "w-1/2 py-2 rounded-md bg-white shadow text-sm font-bold text-blue-600 transition";
+                tabEmp.className = "w-1/2 py-2 rounded-md text-sm font-bold text-gray-500 hover:bg-gray-200 transition";
+                labelId.innerText = "主委登入帳號";
+            }
+        }
+
+        // 更新假別儀表板
         function updateLeaveDashboard(summary) {
             if(!summary) return;
             const fmt = (days) => `${days}天0小時`;
@@ -115,36 +169,84 @@
             document.getElementById("stat-leave-bereavement").innerText = fmt(summary["喪假"] || 0);
         }
 
+        // 渲染公告清單
+        function renderAnnouncements(list, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = "";
+            if(!list || list.length === 0) { 
+                container.innerHTML = `<p class="text-gray-400 text-sm text-center py-2">目前尚無最新公告</p>`; 
+                return; 
+            }
+            list.forEach(item => {
+                container.innerHTML += `<div class="bg-blue-50 p-3 rounded-lg border border-blue-100"><div class="flex justify-between items-center mb-1"><h4 class="font-bold text-sm text-gray-800">${item.title}</h4><span class="text-[10px] text-gray-500">${item.date}</span></div><p class="text-xs text-gray-600">${item.content}</p></div>`;
+            });
+        }
+
+        // 登入功能 (分流員工與主委)
         async function login() {
-            const id = document.getElementById("empId").value.trim();
+            const id = document.getElementById("userId").value.trim();
             const pass = document.getElementById("password").value.trim();
             if(!id || !pass) return;
             
             document.getElementById("login-btn").innerText = "驗證中...";
+            
             try {
-                const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "login", employeeId: id, password: pass })});
+                const actionType = (currentLoginMode === 'emp') ? "login" : "committeeLogin";
+                const payload = { action: actionType, password: pass };
+                if (currentLoginMode === 'emp') payload.employeeId = id;
+                else payload.username = id;
+
+                const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
                 const r = await res.json();
+                
                 if(r.success) {
-                    globalEmployeeId = id;
-                    globalEmployeeName = r.employeeName;
-                    globalAssignedLocation = r.assignedLocation;
-                    globalTotalAnnualLeave = r.totalAnnualLeave;
-                    
                     document.getElementById("login-box").classList.add("hidden");
-                    document.getElementById("main-panel").classList.remove("hidden");
                     
-                    // 填入 Header 資訊
-                    document.getElementById("welcome-name").innerText = r.employeeName;
-                    document.getElementById("location-tag").innerText = r.assignedLocation;
-                    document.getElementById("hire-date-tag").innerText = r.hireDate;
-                    document.getElementById("stat-annual-total").innerText = r.totalAnnualLeave;
-                    
-                    updateLeaveDashboard(r.leaveSummary);
-                } else { alert(r.message); }
-            } catch(e) { alert("連線失敗"); }
+                    if (currentLoginMode === 'emp') {
+                        // 員工登入成功
+                        globalEmployeeId = id;
+                        globalEmployeeName = r.employeeName;
+                        globalAssignedLocation = r.assignedLocation;
+                        
+                        document.getElementById("main-panel").classList.remove("hidden");
+                        document.getElementById("welcome-name").innerText = r.employeeName;
+                        document.getElementById("location-tag").innerText = r.assignedLocation;
+                        document.getElementById("hire-date-tag").innerText = r.hireDate;
+                        document.getElementById("stat-annual-total").innerText = r.totalAnnualLeave;
+                        
+                        updateLeaveDashboard(r.leaveSummary);
+                        renderAnnouncements(r.announcements, "emp-announcement-list");
+                    } else {
+                        // 主委登入成功
+                        globalAssignedLocation = r.location;
+                        globalEmployeeName = r.committeeName;
+                        
+                        document.getElementById("committee-panel").classList.remove("hidden");
+                        document.getElementById("com-welcome-name").innerText = r.committeeName;
+                        document.getElementById("com-location-tag").innerText = r.location;
+                        
+                        renderAnnouncements(r.announcements, "com-announcement-list");
+                        
+                        // 渲染主委打卡紀錄
+                        const attBox = document.getElementById("com-attendance-list");
+                        if(r.attendance.length === 0) attBox.innerHTML = "<p class='text-xs text-gray-400'>今日尚無打卡紀錄</p>";
+                        else attBox.innerHTML = r.attendance.map(a => `<div class="flex justify-between text-sm border-b py-1"><span class="font-medium">${a.name}</span><span class="text-gray-500">${a.type} - ${a.time}</span></div>`).join('');
+                        
+                        // 渲染主委請假紀錄
+                        const leaveBox = document.getElementById("com-leave-list");
+                        if(r.leaves.length === 0) leaveBox.innerHTML = "<p class='text-xs text-gray-400'>無請假紀錄</p>";
+                        else leaveBox.innerHTML = r.leaves.map(l => `<div class="text-sm border-b py-1"><div class="flex justify-between font-medium"><span>${l.name} (${l.type})</span><span class="text-blue-600">${l.status}</span></div><div class="text-xs text-gray-500">${l.start.split('T')[0]} ~ ${l.end.split('T')[0]}</div></div>`).join('');
+                    }
+                } else { 
+                    alert(r.message); 
+                }
+            } catch(e) { 
+                alert("連線失敗，請稍後再試"); 
+            }
             document.getElementById("login-btn").innerText = "登入";
         }
 
+        // 員工打卡
         async function checkIn(type) {
             try {
                 const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "checkin", employeeId: globalEmployeeId, employeeName: globalEmployeeName, type: type, location: globalAssignedLocation }) });
@@ -153,6 +255,7 @@
             } catch(e) { alert("打卡連線失敗"); }
         }
 
+        // 員工請假
         async function submitLeave() {
             const leaveTypeRaw = document.getElementById("leave-type").value;
             const startDate = document.getElementById("leave-start").value;
@@ -164,13 +267,9 @@
                 msgEl.innerText = "請填寫完整的請假日期！";
                 return;
             }
-
             document.getElementById("leave-btn").disabled = true;
             try {
-                const res = await fetch(GAS_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "leave", employeeId: globalEmployeeId, employeeName: globalEmployeeName, leaveType: leaveTypeRaw, startDate: startDate, endDate: endDate })
-                });
+                const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "leave", employeeId: globalEmployeeId, employeeName: globalEmployeeName, leaveType: leaveTypeRaw, startDate: startDate, endDate: endDate }) });
                 const r = await res.json();
                 if (r.success) {
                     msgEl.className = "text-sm text-green-600 text-center";
@@ -179,6 +278,23 @@
                 } else { alert(r.message); }
             } catch(e) { alert("連線失敗"); }
             document.getElementById("leave-btn").disabled = false;
+        }
+
+        // 主委提交建議
+        async function submitSuggestion() {
+            const title = document.getElementById("sug-title").value;
+            const content = document.getElementById("sug-content").value;
+            if(!title || !content) return alert("請填寫主旨與內容");
+            
+            document.getElementById("sug-btn").innerText = "傳送中...";
+            try {
+                const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "submitSuggestion", committeeName: globalEmployeeName, location: globalAssignedLocation, title: title, content: content }) });
+                const r = await res.json();
+                alert(r.message);
+                document.getElementById("sug-title").value = "";
+                document.getElementById("sug-content").value = "";
+            } catch(e) { alert("提交失敗"); }
+            document.getElementById("sug-btn").innerText = "送出建議";
         }
     </script>
 </body>
