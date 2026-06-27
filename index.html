@@ -7,25 +7,22 @@
   <style>
     :root { --primary-color: #28a745; --warning-color: #ff9800; --bg-color: #f4f6f9; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, sans-serif; background-color: var(--bg-color); padding: 20px; display: flex; justify-content: center; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); padding: 20px; display: flex; justify-content: center; }
     .container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 20px; }
     .card { background: white; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     .user-info { display: flex; justify-content: space-between; align-items: center; }
     h2 { font-size: 18px; color: #333; margin-bottom: 4px; }
-    .sub-text { font-size: 13px; color: #666; }
-    .section-title { font-size: 15px; font-weight: bold; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .sub-text { font-size: 13px; color: #666; margin-top: 2px; }
+    .section-title { font-size: 15px; font-weight: bold; margin-bottom: 12px; color: #333; }
     .btn-group { display: flex; gap: 12px; margin-top: 8px; }
-    button { flex: 1; padding: 14px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; }
+    button { flex: 1; padding: 14px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; color: white; cursor: pointer; }
     .btn-in { background: #28a745; }
     .btn-out { background: #ff9800; }
     .btn-submit { background: #3b82f6; width: 100%; margin-top: 10px; }
-    
-    /* 勞基法特休動態提示區 */
     .law-box { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; color: #78350f; line-height: 1.6; }
     .form-group { margin-bottom: 12px; }
     label { display: block; font-size: 13px; color: #4b5563; margin-bottom: 4px; }
     select, input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
-    
     .ann-box { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; }
     .ann-title { font-weight: bold; color: #1e40af; margin-bottom: 2px; }
     .hidden { display: none; }
@@ -36,12 +33,8 @@
   <div class="container">
     <div id="login-section" class="card">
       <h2 style="text-align:center; margin-bottom: 16px;">物業考勤系統登入</h2>
-      <div class="form-group">
-        <input type="text" id="emp-id" placeholder="請輸入員工編號">
-      </div>
-      <div class="form-group">
-        <input type="password" id="emp-password" placeholder="請輸入密碼">
-      </div>
+      <div class="form-group"><input type="text" id="emp-id" placeholder="請輸入員工編號"></div>
+      <div class="form-group"><input type="password" id="emp-password" placeholder="請輸入密碼"></div>
       <button class="btn-submit" onclick="login()">登入系統</button>
     </div>
 
@@ -50,7 +43,7 @@
         <div>
           <h2 id="welcome-msg">歡迎，同仁</h2>
           <div class="sub-text" id="assigned-loc">今日指派案場：載入中...</div>
-          <div class="sub-text" id="arrival-date">系統偵測職日：--</div>
+          <div class="sub-text" id="arrival-date">到職日期：--</div>
         </div>
         <button onclick="location.reload()" style="background:#ef4444; padding:6px 12px; font-size:12px; border-radius:6px; flex:none; width:auto;">登出</button>
       </div>
@@ -65,22 +58,16 @@
 
       <div class="card">
         <div class="section-title">📅 線上請假申請表單</div>
-        
         <div class="law-box">
-          ⚖️ <strong>勞基法特休規定：</strong>滿半年享3天；1年享7天；2年享10天。<br>
-          📊 <strong>您的特休狀態：</strong>
-          應有總額 <span id="lv-total" style="font-weight:bold; color:#ef4444;">--</span> 天 / 
-          剩餘可請 <span id="lv-rem" style="font-weight:bold; color:#10b981;">--</span> 天
+          ⚖️ <strong>勞基法特休規定：</strong>滿半年享3天；1年享7天。<br>
+          📊 <strong>您的特休狀態：</strong>應有總額 <span id="lv-total" style="font-weight:bold; color:#ef4444;">--</span> 天 / 剩餘 <span id="lv-rem" style="font-weight:bold; color:#10b981;">--</span> 天
         </div>
-
         <div class="form-group">
           <label>選擇請假假別</label>
           <select id="leave-type" onchange="checkLeaveType()">
             <option value="事假">事假 (勞基法上限14天)</option>
             <option value="病假">病假 (勞基法上限30天)</option>
             <option value="特休">特休 (依同仁年資計算)</option>
-            <option value="婚假">婚假 (上限8天)</option>
-            <option value="喪假">喪假 (上限8天)</option>
           </select>
         </div>
         <div class="form-group">
@@ -102,13 +89,10 @@
   </div>
 
   <script>
-    // ⚠️ 請記得抽換成您最新部署的 GAS 後端應用程式網址 (/exec 結尾)
+    // 💡 填入你剛剛複製的最新 GAS 部署網址
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec"; 
     
-    let currentEmpId = "";
-    let currentEmpName = "";
-    let currentLoc = "";
-    let remainingLeaveDays = 0;
+    let currentEmpId = "", currentEmpName = "", currentLoc = "", remainingLeaveDays = 0;
 
     function login() {
       const id = document.getElementById('emp-id').value.trim();
@@ -119,42 +103,29 @@
         .then(res => res.json())
         .then(data => {
           if(data.success) {
-            currentEmpId = id;
-            currentEmpName = data.employeeName;
-            currentLoc = data.assignedLocation;
-            remainingLeaveDays = data.annualLeaveRemaining;
-
+            currentEmpId = id; currentEmpName = data.employeeName; currentLoc = data.assignedLocation; remainingLeaveDays = data.annualLeaveRemaining;
             document.getElementById('welcome-msg').innerText = `${currentEmpName} ，您好`;
             document.getElementById('assigned-loc').innerText = `今日指派案場：${currentLoc}`;
             document.getElementById('arrival-date').innerText = `系統偵測到職日：${data.hireDate || '--'}`;
-            
-            // 更新動態特休天數
             document.getElementById('lv-total').innerText = data.annualLeaveTotal || 0;
             document.getElementById('lv-rem').innerText = remainingLeaveDays || 0;
 
-            // 渲染公告
             let annHtml = "";
             if(data.announcements && data.announcements.length > 0) {
               data.announcements.forEach(a => {
-                annHtml += `<div class="ann-box"><div class="ann-title">${a.title} <span style="font-size:11px; color:#666; font-weight:normal;">${a.date}</span></div><div>${a.content}</div></div>`;
+                annHtml += `<div class="ann-box"><div class="ann-title">${a.title} <span style="font-size:11px; color:#666;">${a.date}</span></div><div>${a.content}</div></div>`;
               });
-            } else {
-              annHtml = "<div style='color:#999; font-style:italic; font-size:13px;'>目前暫無公告</div>";
-            }
+            } else { annHtml = "<div style='color:#999; font-style:italic; font-size:13px;'>目前暫無公告</div>"; }
             document.getElementById('announcements-container').innerHTML = annHtml;
-
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('main-section').classList.remove('hidden');
-          } else {
-            alert(data.message);
-          }
-        }).catch(err => alert("系統連線失敗，請確認後端 GAS 網址是否正確。"));
+          } else { alert(data.message); }
+        }).catch(err => alert("網址可能填錯或權限未開，連線失敗！"));
     }
 
     function checkLeaveType() {
-      const type = document.getElementById('leave-type').value;
-      if(type === '特休' && remainingLeaveDays <= 0) {
-        alert('⚠️ 警告：系統偵測您目前的剩餘特休天數為 0 天，將無法送出特休申請！');
+      if(document.getElementById('leave-type').value === '特休' && remainingLeaveDays <= 0) {
+        alert('⚠️ 警告：您目前的剩餘特休天數為 0 天，將無法送出申請！');
       }
     }
 
@@ -172,18 +143,11 @@
       const type = document.getElementById('leave-type').value;
       const start = document.getElementById('leave-start').value;
       const end = document.getElementById('leave-end').value;
-      
-      if(!start || !end) return alert('請填寫完整的請假起訖時間！');
-      if(type === '特休' && remainingLeaveDays <= 0) {
-        return alert('特休額度不足 0 天，系統拒絕送出！');
-      }
+      if(!start || !end) return alert('請填寫完整的時間！');
+      if(type === '特休' && remainingLeaveDays <= 0) return alert('特休額度不足 0 天，系統拒絕送出！');
 
       fetch(`${GAS_WEB_APP_URL}?action=submitLeave&employeeId=${currentEmpId}&employeeName=${encodeURIComponent(currentEmpName)}&location=${encodeURIComponent(currentLoc)}&leaveType=${encodeURIComponent(type)}&startTime=${start}&endTime=${end}`)
-        .then(res => res.json())
-        .then(data => {
-          alert(data.message);
-          if(data.success) location.reload();
-        });
+        .then(res => res.json()).then(data => { alert(data.message); if(data.success) location.reload(); });
     }
   </script>
 </body>
