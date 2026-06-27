@@ -5,116 +5,114 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>物業考勤系統 - 員工端</title>
     <script>
-        // 🚀 請在此處貼上您的 GAS 部署網址
+        // 🚀 替換為你最新的 GAS 部署網址
         const GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
         
         let globalEmployeeId = "";
         let globalEmployeeName = "";
         let globalAssignedLocation = ""; 
+        let globalTotalAnnualLeave = 0;
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-4 flex flex-col items-center justify-start">
 
+    <!-- 登入卡片 -->
     <div id="login-box" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md my-auto">
         <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">物業考勤系統 (員工登入)</h2>
         <div class="space-y-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">員工工號</label>
-                <input type="text" id="empId" class="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入工號">
+                <input type="text" id="empId" class="w-full px-4 py-3 border rounded-xl" placeholder="請輸入工號">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">登入密碼</label>
-                <input type="password" id="password" class="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入密碼">
+                <input type="password" id="password" class="w-full px-4 py-3 border rounded-xl" placeholder="請輸入密碼">
             </div>
-            <button onclick="login()" id="login-btn" class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition">登入</button>
+            <button onclick="login()" id="login-btn" class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold">登入</button>
         </div>
     </div>
 
-    <div id="main-panel" class="w-full max-w-md space-y-6 hidden">
+    <!-- 員工操作主面板 -->
+    <div id="main-panel" class="w-full max-w-md space-y-4 hidden">
         
-        <div class="bg-white p-6 rounded-2xl shadow-xl flex justify-between items-center">
+        <!-- 員工資訊 Header (模仿截圖樣式) -->
+        <div class="bg-[#E6EBEF] p-4 rounded-lg flex justify-between items-start text-gray-800">
             <div>
-                <h2 id="welcome-title" class="text-xl font-bold text-gray-800">您好</h2>
-                <p id="location-tag" class="text-sm text-blue-600 font-medium"></p>
+                <p class="text-sm">歡迎，<span id="welcome-name" class="font-bold"></span></p>
+                <p class="text-sm mt-1">今日指派案場：<span id="location-tag" class="font-bold"></span></p>
+                <p class="text-xs text-gray-500 mt-1">系統偵測到職日：<span id="hire-date-tag"></span></p>
             </div>
-            <button onclick="window.location.reload()" class="text-sm bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-300">登出</button>
+            <button onclick="window.location.reload()" class="text-xs bg-white text-gray-600 px-2 py-1 rounded shadow-sm">登出</button>
         </div>
 
-        <div class="bg-white p-6 rounded-2xl shadow-xl space-y-3">
-            <h3 class="font-semibold text-gray-700 flex items-center">📊 已核准假別天數統計 (今年度)</h3>
-            <div class="grid grid-cols-2 gap-3 text-sm">
-                <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-100">
-                    <span class="text-gray-500 block text-xs">特休（年假）</span>
-                    <span id="stat-leave-annual" class="text-lg font-bold text-blue-600">0 天</span>
+        <!-- 假單專區 -->
+        <div class="bg-white p-5 rounded-xl shadow-md space-y-4">
+            
+            <!-- 📊 黃色累計看板 (完美復刻) -->
+            <div class="bg-[#FFF8D6] rounded-lg p-4 border border-yellow-200">
+                <h3 class="font-bold text-gray-800 text-sm border-b border-dashed border-yellow-400 pb-2 mb-3 flex items-center">
+                    📊 今年度已請假累計 (含待審核)
+                </h3>
+                <div class="space-y-2 text-sm text-gray-800 font-medium">
+                    <p>📌 事假：<span id="stat-leave-personal" class="text-red-600">0天0小時</span> / 上限 14 天</p>
+                    <p>📌 病假：<span id="stat-leave-sick" class="text-red-600">0天0小時</span> / 上限 30 天</p>
+                    <p>📌 特休：<span id="stat-leave-annual" class="text-red-600">0天0小時</span> / 依年資您有 <span id="stat-annual-total" class="text-blue-600 font-bold">0</span> 天</p>
+                    <p>📌 婚假：<span id="stat-leave-marriage" class="text-red-600">0天0小時</span> / 上限 8 天</p>
+                    <p>📌 喪假：<span id="stat-leave-bereavement" class="text-red-600">0天0小時</span> / 上限 8 天</p>
                 </div>
-                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <span class="text-gray-500 block text-xs">事假已請</span>
-                    <span id="stat-leave-personal" class="text-lg font-bold text-gray-700">0 天</span>
-                </div>
-                <div class="bg-red-50/30 p-3 rounded-xl border border-red-100">
-                    <span class="text-gray-500 block text-xs">病假已請</span>
-                    <span id="stat-leave-sick" class="text-lg font-bold text-red-600">0 天</span>
-                </div>
-                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <span class="text-gray-500 block text-xs">其他 (公/婚/喪)</span>
-                    <span id="stat-leave-other" class="text-lg font-bold text-gray-500">0 天</span>
-                </div>
+                <p class="text-[11px] text-gray-500 mt-4 pt-2 border-t border-yellow-300 border-dashed">
+                    ※ 假別天數與上限皆依據勞動基準法(第38條特休)及勞工請假規則之相關條文辦理。
+                </p>
             </div>
-            <p class="text-[10px] text-gray-400 text-center">※ 數據僅統計主委或公司「已核准」之假單時數</p>
-        </div>
 
-        <div class="bg-white p-6 rounded-2xl shadow-xl space-y-4">
-            <h3 class="font-semibold text-gray-700">📌 即時考勤打卡</h3>
-            <div class="grid grid-cols-2 gap-4">
-                <button onclick="checkIn('上班')" class="bg-green-500 text-white py-4 rounded-2xl font-bold text-lg shadow-md hover:bg-green-600 transition">上班打卡</button>
-                <button onclick="checkIn('下班')" class="bg-amber-500 text-white py-4 rounded-2xl font-bold text-lg shadow-md hover:bg-amber-600 transition">下班打卡</button>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-2xl shadow-xl space-y-4">
-            <h3 class="font-semibold text-gray-700">📅 線上請假申請表單</h3>
+            <!-- 請假表單 -->
             <div class="space-y-3">
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">選擇請假假別</label>
-                    <select id="leave-type" class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
-                        <option value="事假">事假</option>
-                        <option value="病假">病假</option>
-                        <option value="特休">特休（年假）</option>
-                        <option value="婚假/喪假">婚假 / 喪假</option>
-                        <option value="公假">公假</option>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">請假假別</label>
+                    <select id="leave-type" class="w-full px-3 py-2 border rounded-lg text-sm bg-white">
+                        <option value="事假">事假 (勞基法上限14天)</option>
+                        <option value="病假">病假 (勞基法上限30天)</option>
+                        <option value="特休">特休 (依年資計算)</option>
+                        <option value="婚假">婚假 (勞工請假規則上限8天)</option>
+                        <option value="喪假">喪假 (依親屬關係最高8天)</option>
                     </select>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">請假開始日期</label>
-                        <input type="date" id="leave-start" class="w-full px-3 py-2 border rounded-xl text-sm">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">開始日期</label>
+                        <input type="date" id="leave-start" class="w-full px-3 py-2 border rounded-lg text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">請假結束日期</label>
-                        <input type="date" id="leave-end" class="w-full px-3 py-2 border rounded-xl text-sm">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">結束日期</label>
+                        <input type="date" id="leave-end" class="w-full px-3 py-2 border rounded-lg text-sm">
                     </div>
                 </div>
-                <button onclick="submitLeave()" id="leave-btn" class="w-full bg-blue-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-blue-700 transition">送出請假申請</button>
+                <button onclick="submitLeave()" id="leave-btn" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold text-sm">送出請假申請</button>
                 <p id="leave-msg" class="text-sm font-medium text-center mt-1"></p>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-2xl shadow-xl space-y-3">
-            <h3 class="font-semibold text-gray-700">📢 最新公告</h3>
-            <div id="announcement-list" class="space-y-2"></div>
+        <!-- 打卡專區 -->
+        <div class="bg-white p-5 rounded-xl shadow-md space-y-4">
+            <h3 class="font-bold text-gray-700 border-b pb-2">📌 即時考勤打卡</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="checkIn('上班')" class="bg-green-500 text-white py-3 rounded-lg font-bold shadow hover:bg-green-600">上班打卡</button>
+                <button onclick="checkIn('下班')" class="bg-amber-500 text-white py-3 rounded-lg font-bold shadow hover:bg-amber-600">下班打卡</button>
+            </div>
         </div>
 
     </div>
 
     <script>
-        // 更新統計看板的 UI 函式
         function updateLeaveDashboard(summary) {
             if(!summary) return;
-            document.getElementById("stat-leave-annual").innerText = `${summary["特休"] || 0} 天`;
-            document.getElementById("stat-leave-personal").innerText = `${summary["事假"] || 0} 天`;
-            document.getElementById("stat-leave-sick").innerText = `${summary["病假"] || 0} 天`;
-            document.getElementById("stat-leave-other").innerText = `${summary["局外"] || summary["其他"] || 0} 天`;
+            const fmt = (days) => `${days}天0小時`;
+            document.getElementById("stat-leave-personal").innerText = fmt(summary["事假"] || 0);
+            document.getElementById("stat-leave-sick").innerText = fmt(summary["病假"] || 0);
+            document.getElementById("stat-leave-annual").innerText = fmt(summary["特休"] || 0);
+            document.getElementById("stat-leave-marriage").innerText = fmt(summary["婚假"] || 0);
+            document.getElementById("stat-leave-bereavement").innerText = fmt(summary["喪假"] || 0);
         }
 
         async function login() {
@@ -130,14 +128,17 @@
                     globalEmployeeId = id;
                     globalEmployeeName = r.employeeName;
                     globalAssignedLocation = r.assignedLocation;
+                    globalTotalAnnualLeave = r.totalAnnualLeave;
                     
                     document.getElementById("login-box").classList.add("hidden");
                     document.getElementById("main-panel").classList.remove("hidden");
-                    document.getElementById("welcome-title").innerText = `${r.employeeName}，您好`;
-                    document.getElementById("location-tag").innerText = `所屬案場：${r.assignedLocation}`;
                     
-                    // 渲染公告與統計看板
-                    renderAnnouncements(r.announcements);
+                    // 填入 Header 資訊
+                    document.getElementById("welcome-name").innerText = r.employeeName;
+                    document.getElementById("location-tag").innerText = r.assignedLocation;
+                    document.getElementById("hire-date-tag").innerText = r.hireDate;
+                    document.getElementById("stat-annual-total").innerText = r.totalAnnualLeave;
+                    
                     updateLeaveDashboard(r.leaveSummary);
                 } else { alert(r.message); }
             } catch(e) { alert("連線失敗"); }
@@ -146,17 +147,14 @@
 
         async function checkIn(type) {
             try {
-                const res = await fetch(GAS_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "checkin", employeeId: globalEmployeeId, employeeName: globalEmployeeName, type: type, location: globalAssignedLocation })
-                });
+                const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "checkin", employeeId: globalEmployeeId, employeeName: globalEmployeeName, type: type, location: globalAssignedLocation }) });
                 const r = await res.json();
                 alert(r.message);
             } catch(e) { alert("打卡連線失敗"); }
         }
 
         async function submitLeave() {
-            const leaveType = document.getElementById("leave-type").value;
+            const leaveTypeRaw = document.getElementById("leave-type").value;
             const startDate = document.getElementById("leave-start").value;
             const endDate = document.getElementById("leave-end").value;
             const msgEl = document.getElementById("leave-msg");
@@ -171,29 +169,16 @@
             try {
                 const res = await fetch(GAS_URL, {
                     method: "POST",
-                    body: JSON.stringify({ action: "leave", employeeId: globalEmployeeId, employeeName: globalEmployeeName, leaveType: leaveType, startDate: startDate, endDate: endDate })
+                    body: JSON.stringify({ action: "leave", employeeId: globalEmployeeId, employeeName: globalEmployeeName, leaveType: leaveTypeRaw, startDate: startDate, endDate: endDate })
                 });
                 const r = await res.json();
                 if (r.success) {
                     msgEl.className = "text-sm text-green-600 text-center";
                     msgEl.innerText = "已成功送出請假申請！";
-                    document.getElementById("leave-start").value = "";
-                    document.getElementById("leave-end").value = "";
-                    
-                    // 提交假單後即時更新 UI 看板
                     updateLeaveDashboard(r.leaveSummary);
                 } else { alert(r.message); }
             } catch(e) { alert("連線失敗"); }
             document.getElementById("leave-btn").disabled = false;
-        }
-
-        function renderAnnouncements(list) {
-            const container = document.getElementById("announcement-list");
-            container.innerHTML = "";
-            if(!list || list.length === 0) { container.innerHTML = `<p class="text-gray-400 text-sm text-center py-2">目前尚無最新公告</p>`; return; }
-            list.forEach(item => {
-                container.innerHTML += `<div class="bg-blue-50/50 p-3 rounded-xl border border-blue-100"><div class="flex justify-between items-center mb-1"><h4 class="font-bold text-sm text-gray-800">${item.title}</h4><span class="text-xs text-gray-400">${item.date}</span></div><p class="text-xs text-gray-600">${item.content}</p></div>`;
-            });
         }
     </script>
 </body>
