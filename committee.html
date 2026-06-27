@@ -1,182 +1,87 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>物業考勤系統 - 主委端</title>
-    
-    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/96/home-building.png">
-    <link class="apple-touch-icon" rel="apple-touch-icon" href="https://img.icons8.com/fluency/96/home-building.png">
-    <meta name="apple-mobile-web-app-image" content="https://img.icons8.com/fluency/96/home-building.png">
-    
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>物業管理-主委專區</title>
+  <style>
+    :root { --primary-color: #28a745; --bg-color: #f8f9fa; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background-color: var(--bg-color); padding: 20px; display: flex; justify-content: center; }
+    .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 500px; }
+    h2 { text-align: center; margin-bottom: 20px; color: #333; }
+    input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; }
+    button { width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    .hidden { display: none; }
+    .info-box { background: #e2f0d9; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; color: #385723; }
+    .section-title { font-weight: bold; margin: 15px 0 8px 0; border-left: 4px solid var(--primary-color); padding-left: 8px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    .badge { background: #ffeb3b; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+    .badge-approved { background: #c8e6c9; color: #256029; }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 flex flex-col items-center justify-start">
+<body>
 
-    <script>
-        // 🚀 請在此處貼上您的 GAS 部署網址
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
-        let globalCommitteeName = "";
-        let globalLocation = "";
-    </script>
+  <div id="login-box" class="card">
+    <h2>案場主委/管理端登入</h2>
+    <input type="text" id="username" placeholder="請輸入主委專屬帳號">
+    <input type="password" id="password" placeholder="請輸入密碼">
+    <button onclick="login()">登入系統</button>
+  </div>
 
-    <div id="login-box" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md my-auto">
-        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">物業考勤系統 (主委登入)</h2>
-        <div class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">主委帳號</label>
-                <input type="text" id="username" class="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="請輸入主委帳號">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">登入密碼</label>
-                <input type="password" id="password" class="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="請輸入密碼">
-            </div>
-            <button onclick="login()" id="login-btn" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition">登入系統</button>
-        </div>
-    </div>
+  <div id="dashboard" class="card hidden">
+    <div class="info-box" id="committee-welcome">陳曉明主委，您好</div>
+    
+    <div class="section-title">📌 今日案場打卡動態</div>
+    <table>
+      <thead><tr><th>員工</th><th>狀態</th><th>時間</th></tr></thead>
+      <tbody id="attendance-list"></tbody>
+    </table>
 
-    <div id="main-panel" class="w-full max-w-3xl space-y-6 hidden">
-        <div class="bg-white p-6 rounded-2xl shadow-xl flex justify-between items-center">
-            <div>
-                <h2 id="welcome-title" class="text-xl font-bold text-gray-800">歡迎主委</h2>
-                <p id="location-tag" class="text-sm text-indigo-600 font-medium"></p>
-            </div>
-            <button onclick="window.location.reload()" class="text-sm bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg">登出</button>
-        </div>
+    <div class="section-title">📝 員工請假狀態申請 (限本社區同仁)</div>
+    <table>
+      <thead><tr><th>員工</th><th>假別</th><th>狀態</th></tr></thead>
+      <tbody id="leave-list"></tbody>
+    </table>
+  </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-white p-6 rounded-2xl shadow-xl">
-                <h3 class="font-semibold text-gray-700 mb-3 flex items-center">📌 今日案場打卡動態</h3>
-                <div class="bg-gray-50 rounded-xl p-4 overflow-x-auto max-h-[250px]">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="text-xs text-gray-500 border-b">
-                                <th class="pb-2">員工</th>
-                                <th class="pb-2">狀態</th>
-                                <th class="pb-2">時間</th>
-                            </tr>
-                        </thead>
-                        <tbody id="attendance-list" class="text-sm text-gray-700 divide-y"></tbody>
-                    </table>
-                    <p id="no-attendance" class="text-gray-400 text-center py-4 text-sm hidden">今日此案場尚無人員打卡</p>
-                </div>
-            </div>
+  <script>
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/XXXXX/exec"; 
 
-            <div class="bg-white p-6 rounded-2xl shadow-xl">
-                <h3 class="font-semibold text-gray-700 mb-3 flex items-center">📅 員工請假狀態申請</h3>
-                <div class="bg-gray-50 rounded-xl p-4 overflow-x-auto max-h-[250px]">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="text-xs text-gray-500 border-b">
-                                <th class="pb-2">員工</th>
-                                <th class="pb-2">假別</th>
-                                <th class="pb-2">狀態</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leave-list" class="text-sm text-gray-700 divide-y"></tbody>
-                    </table>
-                    <p id="no-leaves" class="text-gray-400 text-center py-4 text-sm hidden">目前尚無請假申請紀錄</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-2xl shadow-xl">
-            <h3 class="font-semibold text-gray-700 mb-3">✍️ 填寫社區反映與建議事項</h3>
-            <div class="space-y-3">
-                <input type="text" id="suggest-title" class="w-full px-4 py-2.5 border rounded-xl text-sm" placeholder="請輸入建議主旨">
-                <textarea id="suggest-content" rows="3" class="w-full px-4 py-2.5 border rounded-xl text-sm" placeholder="請詳細說明建議內容..."></textarea>
-                <button onclick="submitSuggestion()" id="suggest-btn" class="bg-indigo-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition">提交反映項目</button>
-                <p id="suggest-msg" class="text-sm font-medium mt-1"></p>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-2xl shadow-xl">
-            <h3 class="font-semibold text-gray-700 mb-2">📢 最新公告</h3>
-            <div id="announcement-list" class="space-y-2"></div>
-        </div>
-    </div>
-
-    <script>
-        async function login() {
-            const user = document.getElementById("username").value.trim();
-            const pass = document.getElementById("password").value.trim();
-            if(!user || !pass) return;
-
-            document.getElementById("login-btn").innerText = "驗證中...";
-            try {
-                const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "committeeLogin", username: user, password: pass })});
-                const r = await res.json();
-                if(r.success) {
-                    globalCommitteeName = r.committeeName;
-                    globalLocation = r.location;
-                    document.getElementById("login-box").classList.add("hidden");
-                    document.getElementById("main-panel").classList.remove("hidden");
-                    document.getElementById("welcome-title").innerText = `${r.committeeName}，您好`;
-                    document.getElementById("location-tag").innerText = `監管案場：${r.location}`;
-                    
-                    renderAttendance(r.attendance);
-                    renderLeaves(r.leaves);
-                    renderAnnouncements(r.announcements);
-                } else { alert(r.message || "帳密錯誤"); }
-            } catch (err) { alert("連線失敗"); }
-            document.getElementById("login-btn").innerText = "登入系統";
-        }
-
-        function renderAttendance(list) {
-            const container = document.getElementById("attendance-list");
-            const noData = document.getElementById("no-attendance");
-            container.innerHTML = "";
-            if(!list || list.length === 0) { noData.classList.remove("hidden"); return; }
-            noData.classList.add("hidden");
-            list.forEach(item => {
-                const badge = item.type === "上班" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800";
-                container.innerHTML += `<tr><td class="py-2 font-medium">${item.name}</td><td class="py-2"><span class="px-2 py-0.5 rounded text-xs ${badge}">${item.type}</span></td><td class="py-2 text-gray-500">${item.time}</td></tr>`;
+    function login() {
+      const user = document.getElementById('username').value;
+      const pwd = document.getElementById('password').value;
+      
+      fetch(`${GAS_WEB_APP_URL}?action=committeeLogin&username=${user}&password=${pwd}`)
+        .then(res => res.json())
+        .then(data => {
+          if(data.success) {
+            document.getElementById('committee-welcome').innerText = `${user} 主委，您好\n監督案場：${data.location}`;
+            
+            // 1. 渲染今日打卡動態
+            let attHtml = "";
+            data.attendance.forEach(a => {
+              attHtml += `<tr><td>${a.name}</td><td>${a.type}</td><td>${a.time}</td></tr>`;
             });
-        }
+            document.getElementById('attendance-list').innerHTML = attHtml || "<tr><td colspan='3'>今日尚無打卡紀錄</td></tr>";
 
-        function renderLeaves(list) {
-            const container = document.getElementById("leave-list");
-            const noData = document.getElementById("no-leaves");
-            container.innerHTML = "";
-            if(!list || list.length === 0) { noData.classList.remove("hidden"); return; }
-            noData.classList.add("hidden");
-            list.forEach(item => {
-                let badge = "bg-gray-100 text-gray-800";
-                if(item.status === "准假" || item.status === "已核准") badge = "bg-blue-100 text-blue-800";
-                if(item.status === "待審核") badge = "bg-rose-100 text-rose-800 animate-pulse";
-                container.innerHTML += `<tr><td class="py-2 font-medium">${item.name}</td><td class="py-2 text-xs text-gray-600">${item.type}</td><td class="py-2"><span class="px-2 py-0.5 rounded text-xs ${badge}">${item.status}</span></td></tr>`;
+            // 2. 渲染【已過濾、嚴格僅限該社區】的請假申請
+            let leaveHtml = "";
+            data.leaves.forEach(l => {
+              let badgeClass = l.status === '已核準' ? 'badge badge-approved' : 'badge';
+              leaveHtml += `<tr><td>${l.name}</td><td>${l.type}</td><td><span class="${badgeClass}">${l.status}</span></td></tr>`;
             });
-        }
+            document.getElementById('leave-list').innerHTML = leaveHtml || "<tr><td colspan='3'>目前無任何請假申請紀錄</td></tr>";
 
-        async function submitSuggestion() {
-            const title = document.getElementById("suggest-title").value.trim();
-            const content = document.getElementById("suggest-content").value.trim();
-            const msgEl = document.getElementById("suggest-msg");
-            if (!title || !content) { msgEl.innerText = "請填寫完整！"; return; }
-
-            document.getElementById("suggest-btn").disabled = true;
-            try {
-                const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "submitSuggestion", committeeName: globalCommitteeName, location: globalLocation, title: title, content: content })});
-                const r = await res.json();
-                if (r.success) {
-                    msgEl.className = "text-sm text-green-600"; msgEl.innerText = r.message;
-                    document.getElementById("suggest-title").value = ""; document.getElementById("suggest-content").value = "";
-                }
-            } catch (e) { msgEl.innerText = "提交失敗"; }
-            document.getElementById("suggest-btn").disabled = false;
-        }
-
-        function renderAnnouncements(list) {
-            const container = document.getElementById("announcement-list");
-            container.innerHTML = "";
-            if(!list || list.length === 0) { container.innerHTML = `<p class="text-gray-400 text-sm">目前無公告</p>`; return; }
-            list.forEach(item => {
-                container.innerHTML += `<div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100"><div class="flex justify-between items-center mb-1"><h4 class="font-bold text-sm text-gray-800">${item.title}</h4><span class="text-xs text-gray-400">${item.date}</span></div><p class="text-xs text-gray-600">${item.content}</p></div>`;
-            });
-        }
-    </script>
+            document.getElementById('login-box').add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+          } else {
+            alert(data.message);
+          }
+        });
+    }
+  </script>
 </body>
 </html>
