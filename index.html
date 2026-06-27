@@ -41,6 +41,29 @@
             <button onclick="window.location.reload()" class="text-sm bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-300">登出</button>
         </div>
 
+        <div class="bg-white p-6 rounded-2xl shadow-xl space-y-3">
+            <h3 class="font-semibold text-gray-700 flex items-center">📊 已核准假別天數統計 (今年度)</h3>
+            <div class="grid grid-cols-2 gap-3 text-sm">
+                <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-100">
+                    <span class="text-gray-500 block text-xs">特休（年假）</span>
+                    <span id="stat-leave-annual" class="text-lg font-bold text-blue-600">0 天</span>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <span class="text-gray-500 block text-xs">事假已請</span>
+                    <span id="stat-leave-personal" class="text-lg font-bold text-gray-700">0 天</span>
+                </div>
+                <div class="bg-red-50/30 p-3 rounded-xl border border-red-100">
+                    <span class="text-gray-500 block text-xs">病假已請</span>
+                    <span id="stat-leave-sick" class="text-lg font-bold text-red-600">0 天</span>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <span class="text-gray-500 block text-xs">其他 (公/婚/喪)</span>
+                    <span id="stat-leave-other" class="text-lg font-bold text-gray-500">0 天</span>
+                </div>
+            </div>
+            <p class="text-[10px] text-gray-400 text-center">※ 數據僅統計主委或公司「已核准」之假單時數</p>
+        </div>
+
         <div class="bg-white p-6 rounded-2xl shadow-xl space-y-4">
             <h3 class="font-semibold text-gray-700">📌 即時考勤打卡</h3>
             <div class="grid grid-cols-2 gap-4">
@@ -85,6 +108,15 @@
     </div>
 
     <script>
+        // 更新統計看板的 UI 函式
+        function updateLeaveDashboard(summary) {
+            if(!summary) return;
+            document.getElementById("stat-leave-annual").innerText = `${summary["特休"] || 0} 天`;
+            document.getElementById("stat-leave-personal").innerText = `${summary["事假"] || 0} 天`;
+            document.getElementById("stat-leave-sick").innerText = `${summary["病假"] || 0} 天`;
+            document.getElementById("stat-leave-other").innerText = `${summary["局外"] || summary["其他"] || 0} 天`;
+        }
+
         async function login() {
             const id = document.getElementById("empId").value.trim();
             const pass = document.getElementById("password").value.trim();
@@ -103,7 +135,10 @@
                     document.getElementById("main-panel").classList.remove("hidden");
                     document.getElementById("welcome-title").innerText = `${r.employeeName}，您好`;
                     document.getElementById("location-tag").innerText = `所屬案場：${r.assignedLocation}`;
+                    
+                    // 渲染公告與統計看板
                     renderAnnouncements(r.announcements);
+                    updateLeaveDashboard(r.leaveSummary);
                 } else { alert(r.message); }
             } catch(e) { alert("連線失敗"); }
             document.getElementById("login-btn").innerText = "登入";
@@ -144,6 +179,9 @@
                     msgEl.innerText = "已成功送出請假申請！";
                     document.getElementById("leave-start").value = "";
                     document.getElementById("leave-end").value = "";
+                    
+                    // 提交假單後即時更新 UI 看板
+                    updateLeaveDashboard(r.leaveSummary);
                 } else { alert(r.message); }
             } catch(e) { alert("連線失敗"); }
             document.getElementById("leave-btn").disabled = false;
