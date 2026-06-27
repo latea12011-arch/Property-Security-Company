@@ -3,84 +3,131 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>物業管理-主委專區</title>
+  <title>紘嘉物業保全考勤系統 - 主委專區</title>
   <style>
-    :root { --primary-color: #28a745; --bg-color: #f8f9fa; }
+    :root { --primary-color: #2c3e50; --accent-color: #1abc9c; --bg-color: #ecf0f1; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: sans-serif; background-color: var(--bg-color); padding: 20px; display: flex; justify-content: center; }
-    .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 500px; }
-    h2 { text-align: center; margin-bottom: 20px; color: #333; }
-    input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; }
-    button { width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg-color); padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 480px; }
+    h2 { text-align: center; margin-bottom: 20px; color: var(--primary-color); font-size: 20px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 14px; }
+    input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; }
+    button { width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+    button:hover { background: #34495e; }
     .hidden { display: none; }
-    .info-box { background: #e2f0d9; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; color: #385723; }
-    .section-title { font-weight: bold; margin: 15px 0 8px 0; border-left: 4px solid var(--primary-color); padding-left: 8px; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
-    .badge { background: #ffeb3b; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
-    .badge-approved { background: #c8e6c9; color: #256029; }
+    .info-box { background: #e8f8f5; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; color: #16a085; border-left: 5px solid var(--accent-color); font-size: 15px; }
+    .section-title { font-weight: bold; margin: 20px 0 10px 0; border-left: 4px solid var(--primary-color); padding-left: 8px; color: var(--primary-color); }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; background: #fff; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+    th { background-color: #f8f9fa; color: #333; font-weight: bold; }
+    .badge { background: #ffeaa7; color: #d63031; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+    .badge-approved { background: #badc58; color: #27ae60; }
+    .no-data { text-align: center; color: #999; padding: 15px; font-style: italic; }
   </style>
 </head>
 <body>
 
   <div id="login-box" class="card">
-    <h2>案場主委/管理端登入</h2>
-    <input type="text" id="username" placeholder="請輸入主委專屬帳號">
-    <input type="password" id="password" placeholder="請輸入密碼">
-    <button onclick="login()">登入系統</button>
+    <h2>紘嘉物業管理 - 主委專區</h2>
+    <div class="form-group">
+      <label>管理端帳號</label>
+      <input type="text" id="username" placeholder="請輸入主委專屬帳號">
+    </div>
+    <div class="form-group">
+      <label>登入密碼</label>
+      <input type="password" id="password" placeholder="請輸入密碼">
+    </div>
+    <button onclick="login()">確認登入</button>
   </div>
 
   <div id="dashboard" class="card hidden">
-    <div class="info-box" id="committee-welcome">陳曉明主委，您好</div>
+    <div class="info-box" id="committee-welcome">主委，您好</div>
     
-    <div class="section-title">📌 今日案場打卡動態</div>
+    <div class="section-title">👮 今日現場人員出勤動態</div>
     <table>
-      <thead><tr><th>員工</th><th>狀態</th><th>時間</th></tr></thead>
-      <tbody id="attendance-list"></tbody>
+      <thead>
+        <tr>
+          <th>同仁姓名</th>
+          <th>打卡類型</th>
+          <th>打卡時間</th>
+        </tr>
+      </thead>
+      <tbody id="attendance-list">
+        <tr><td colspan="3" class="no-data">資料載入中...</td></tr>
+      </tbody>
     </table>
 
-    <div class="section-title">📝 員工請假狀態申請 (限本社區同仁)</div>
+    <div class="section-title">📝 本社區同仁請假申請狀態</div>
     <table>
-      <thead><tr><th>員工</th><th>假別</th><th>狀態</th></tr></thead>
-      <tbody id="leave-list"></tbody>
+      <thead>
+        <tr>
+          <th>同仁姓名</th>
+          <th>請假假別</th>
+          <th>審核狀態</th>
+        </tr>
+      </thead>
+      <tbody id="leave-list">
+        <tr><td colspan="3" class="no-data">資料載入中...</td></tr>
+      </tbody>
     </table>
   </div>
 
   <script>
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/XXXXX/exec"; 
+    // ⚠️ 記得把這裡換成您「最新部署」的 GAS 網址 (結尾必須是 /exec)
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbywQ-9b_C_8_6_GXZU_6-NlR_j_example/exec"; 
 
     function login() {
-      const user = document.getElementById('username').value;
-      const pwd = document.getElementById('password').value;
+      const user = document.getElementById('username').value.trim();
+      const pwd = document.getElementById('password').value.trim();
       
-      fetch(`${GAS_WEB_APP_URL}?action=committeeLogin&username=${user}&password=${pwd}`)
-        .then(res => res.json())
-        .then(data => {
-          if(data.success) {
-            document.getElementById('committee-welcome').innerText = `${user} 主委，您好\n監督案場：${data.location}`;
-            
-            // 1. 渲染今日打卡動態
-            let attHtml = "";
+      if(!user || !pwd) return alert('請填寫帳號與密碼！');
+      
+      // 使用 POST 呼叫後端，確保安全與隔離
+      fetch(GAS_WEB_APP_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "committeeLogin",
+          username: user,
+          password: pwd
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.success) {
+          document.getElementById('committee-welcome').innerText = `🏠 案場：${data.location}\n歡迎 ${data.committeeName || user} 主委查閱`;
+          
+          // 1. 渲染【只限該社區】的今日出勤動態
+          let attHtml = "";
+          if(data.attendance && data.attendance.length > 0) {
             data.attendance.forEach(a => {
-              attHtml += `<tr><td>${a.name}</td><td>${a.type}</td><td>${a.time}</td></tr>`;
+              attHtml += `<tr><td><strong>${a.name}</strong></td><td>${a.type}</td><td>${a.time}</td></tr>`;
             });
-            document.getElementById('attendance-list').innerHTML = attHtml || "<tr><td colspan='3'>今日尚無打卡紀錄</td></tr>";
-
-            // 2. 渲染【已過濾、嚴格僅限該社區】的請假申請
-            let leaveHtml = "";
-            data.leaves.forEach(l => {
-              let badgeClass = l.status === '已核準' ? 'badge badge-approved' : 'badge';
-              leaveHtml += `<tr><td>${l.name}</td><td>${l.type}</td><td><span class="${badgeClass}">${l.status}</span></td></tr>`;
-            });
-            document.getElementById('leave-list').innerHTML = leaveHtml || "<tr><td colspan='3'>目前無任何請假申請紀錄</td></tr>";
-
-            document.getElementById('login-box').add('hidden');
-            document.getElementById('dashboard').classList.remove('hidden');
           } else {
-            alert(data.message);
+            attHtml = "<tr><td colspan='3' class='no-data'>今日現場尚無打卡紀錄</td></tr>";
           }
-        });
+          document.getElementById('attendance-list').innerHTML = attHtml;
+
+          // 2. 渲染【嚴格後端隔離】的本社區請假名單
+          let leaveHtml = "";
+          if(data.leaves && data.leaves.length > 0) {
+            data.leaves.forEach(l => {
+              let badgeClass = l.status === '已核准' ? 'badge badge-approved' : 'badge';
+              leaveHtml += `<tr><td><strong>${l.name}</strong></td><td>${l.type}</td><td><span class="${badgeClass}">${l.status}</span></td></tr>`;
+            });
+          } else {
+            leaveHtml = "<tr><td colspan='3' class='no-data'>目前無任何請假申請紀錄</td></tr>";
+          }
+          document.getElementById('leave-list').innerHTML = leaveHtml;
+
+          // 切換畫面顯示
+          document.getElementById('login-box').classList.add('hidden');
+          document.getElementById('dashboard').classList.remove('hidden');
+        } else {
+          alert(data.message);
+        }
+      })
+      .catch(err => alert("系統連線失敗，請檢查網路或 GAS 網址是否正確。"));
     }
   </script>
 </body>
