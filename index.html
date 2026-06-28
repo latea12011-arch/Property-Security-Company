@@ -51,10 +51,9 @@
       <strong>到職日期：</strong><span id="showHireDate">--</span>
     </div>
 
-    <div class="history-title">⚖️ 勞基法特休規定</div>
-    <div class="law-box">
-      滿半年享 3 天；1 年享 7 天；2 年享 10 天。<br>
-      📊 <strong>您的特休狀態：</strong>應有總額 <span id="showLeaveTotal" style="font-weight:bold;color:#ef4444;">0</span> 天 / 剩餘 <span id="showLeaveRemaining" style="font-weight:bold;color:#10b981;">0</span> 天
+    <div class="history-title">⚖️ 勞基法特休與請假額度狀態</div>
+    <div class="law-box" id="leaveSummaryBox">
+      📊 載入您的請假累計額度中...
     </div>
     
     <div class="history-title">📢 最新公告</div>
@@ -80,15 +79,15 @@
     <div class="history-title">🌴 我的請假紀錄與審核狀態</div>
     <div class="log-list" id="empLeaveStatusList"></div>
 
-    <div class="history-title">✍️ 線上請假申請</div>
+    <div class="history-title">✍️ 線上請假申請 (設有勞基法上限阻攔)</div>
     <div class="form-group">
       <select id="leaveType">
-              <option value="事假">事假 (勞基法上限14天)</option>
-              <option value="病假">病假 (勞基法上限30天)</option>
-              <option value="公假">公假 (依公司規定請假)</option>
-              <option value="婚假">婚假 (勞基法上限08天)</option>
-              <option value="喪假">喪假 (勞基法上限08天)</option>
-              <option value="特休">特休 (依同仁年資計算)</option>
+        <option value="事假">事假 (勞基法上限14天)</option>
+        <option value="病假">病假 (勞基法上限30天)</option>
+        <option value="婚假">婚假 (勞基法上限8天)</option>
+        <option value="喪假">喪假 (勞基法上限8天)</option>
+        <option value="公假">公假 (依公司規定)</option>
+        <option value="特休">特休（依同仁年資計算）</option>
       </select>
     </div>
     <div class="form-group"><label>請假開始時間</label><input type="datetime-local" id="leaveStart"></div>
@@ -118,8 +117,8 @@
           document.getElementById('showEmpLocation').innerText = data.assignedLocation;
           document.getElementById('showHireDate').innerText = data.hireDate;
           
-          document.getElementById('showLeaveTotal').innerText = data.annualLeaveTotal;
-          document.getElementById('showLeaveRemaining').innerText = data.annualLeaveRemaining;
+          // 顯示包含各假別已請天數的綜合狀態面板
+          updateLeaveSummaryBox();
 
           const annBox = document.getElementById('announcementBox');
           annBox.innerHTML = data.announcements.length ? "" : "<div style='font-size:12px;color:#9ca3af;'>暫無最新公告</div>";
@@ -132,6 +131,18 @@
           renderLeaveStatusList('empLeaveStatusList', data.leaves);
         } else { alert(data.message); }
       }).catch(err => alert("連線失敗！請檢查網址設定是否正確。"));
+  }
+
+  function updateLeaveSummaryBox() {
+    if(!currentEmployeeData) return;
+    const stats = currentEmployeeData.leaveStats;
+    document.getElementById('leaveSummaryBox').innerHTML = `
+      🌴 <strong>特休狀態：</strong>應有 ${currentEmployeeData.annualLeaveTotal} 天 / 剩餘 <span style="color:#10b981;font-weight:bold;">${currentEmployeeData.annualLeaveRemaining}</span> 天<br>
+      💼 <strong>今年事假累計：</strong>${stats['事假'] || 0} 天 (上限 14 天)<br>
+      🤒 <strong>今年病假累計：</strong>${stats['病假'] || 0} 天 (上限 30 天)<br>
+      💍 <strong>今年婚假累計：</strong>${stats['婚假'] || 0} 天 (上限 8 天)<br>
+      🖤 <strong>今年喪假累計：</strong>${stats['喪假'] || 0} 天 (上限 8 天)
+    `;
   }
 
   function queryEmployeeHistory() {
@@ -189,13 +200,49 @@
 
   function handleLeaveSubmit() {
     const type = document.getElementById('leaveType').value;
-    const start = document.getElementById('leaveStart').value;
-    const end = document.getElementById('leaveEnd').value;
-    if(!start || !end) return alert("請選擇請假時間");
-    if (type === "特休" && parseInt(currentEmployeeData.annualLeaveRemaining) <= 0) {
-      return alert("⚠️ 警告：您目前的剩餘特休天數為 0 天，將無法送出申請！");
+    const startStr = document.getElementById('leaveStart').value;
+    const endStr = document.getElementById('leaveEnd').value;
+    
+    if(!startStr || !endStr) return alert("請選擇請假開始與結束時間！");
+    
+    // 1. 前端計算本次請假天數 (以 24 小時為 1 天計算防呆)
+    const startTime = new Date(startStr);
+    const endTime = new Date(endStr);
+    if(endTime <= startTime) return alert("結束時間必須大於開始時間！");
+    
+    const diffMs = endTime - startTime;
+    const reqDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24)); // 本次申請天數
+
+    // 2. 讀取目前該假別在試算表中「已核准」的累計天數
+    const historyStats = currentEmployeeData.leaveStats;
+    const alreadyUsed = historyStats[type] || 0;
+    const totalPotential = alreadyUsed + reqDays; // 如果通過，累計會變成幾天
+
+    // 3. 核心功能：各假別勞基法上限精確阻斷攔截
+    if (type === "特休") {
+      if (reqDays > parseInt(currentEmployeeData.annualLeaveRemaining)) {
+        return alert(`❌ 申請失敗：您的剩餘特休僅剩 ${currentEmployeeData.annualLeaveRemaining} 天，本次擬請 ${reqDays} 天 已超過上限！無法送出，請向主管請示。`);
+      }
+    } else if (type === "事假") {
+      if (totalPotential > 14) {
+        return alert(`❌ 攔截限制：您今年事假已請 ${alreadyUsed} 天，本次擬請 ${reqDays} 天。合計已超過勞基法年度上限（14天）！無法線上送出，請改向主管親自請示。`);
+      }
+    } else if (type === "病假") {
+      if (totalPotential > 30) {
+        return alert(`❌ 攔截限制：您今年病假已請 ${alreadyUsed} 天，本次擬請 ${reqDays} 天。合計已超過勞基法年度上限（30天）！無法線上送出，請改向主管親自請示。`);
+      }
+    } else if (type === "婚假") {
+      if (totalPotential > 8) {
+        return alert(`❌ 攔截限制：您的婚假累計將超過法定上限（8天）！無法線上送出，請改向主管親自請示。`);
+      }
+    } else if (type === "喪假") {
+      if (totalPotential > 8) {
+        return alert(`❌ 攔截限制：您的喪假累計將超過法定上限（8天）！無法線上送出，請改向主管親自請示。`);
+      }
     }
-    fetch(`${GAS_WEB_APP_URL}?action=submitLeave&employeeId=${encodeURIComponent(document.getElementById('empId').value)}&employeeName=${encodeURIComponent(currentEmployeeData.employeeName)}&location=${encodeURIComponent(currentEmployeeData.assignedLocation)}&leaveType=${encodeURIComponent(type)}&startTime=${start}&endTime=${end}`)
+
+    // 通過防呆，送出申請
+    fetch(`${GAS_WEB_APP_URL}?action=submitLeave&employeeId=${encodeURIComponent(document.getElementById('empId').value)}&employeeName=${encodeURIComponent(currentEmployeeData.employeeName)}&location=${encodeURIComponent(currentEmployeeData.assignedLocation)}&leaveType=${encodeURIComponent(type)}&startTime=${startStr}&endTime=${endStr}`)
       .then(res => res.json()).then(data => { alert(data.message); handleEmployeeLogin(); });
   }
 </script>
