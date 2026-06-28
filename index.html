@@ -30,7 +30,7 @@
 
     .log-list { max-height: 180px; overflow-y: auto; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; padding: 5px; }
     .log-item { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 8px; border-bottom: 1px solid #edf2f7; }
-    .announcement-item { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 6px; padding: 8px; margin-bottom: 8px; font-size: 12px; }
+    .announcement-item { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 6px; padding: 8px; margin-bottom: 8px; font-size: 12px; line-height: 1.5; color: #1f2937; }
   </style>
 </head>
 <body>
@@ -117,15 +117,15 @@
           document.getElementById('showEmpLocation').innerText = data.assignedLocation;
           document.getElementById('showHireDate').innerText = data.hireDate;
           
-          // 顯示包含各假別已請天數的綜合狀態面板
           updateLeaveSummaryBox();
 
+          // 📢 修正後的完整公告渲染（含內容）
           const annBox = document.getElementById('announcementBox');
-annBox.innerHTML = data.announcements.length ? "" : "<div style='font-size:12px;color:#9ca3af;'>暫無最新公告</div>";
-data.announcements.forEach(a => { 
-  // 💡 修正：把 a.content (公告內容) 完整放進 HTML 裡面顯示
-  annBox.innerHTML += `<div class="announcement-item"><strong>[${a.date}] ${a.title}</strong><br>${a.content}</div>`; 
-});
+          annBox.innerHTML = data.announcements.length ? "" : "<div style='font-size:12px;color:#9ca3af;'>暫無最新公告</div>";
+          data.announcements.forEach(a => { 
+            annBox.innerHTML += `<div class="announcement-item"><strong>[${a.date}] ${a.title}</strong><br>${a.content}</div>`; 
+          });
+
           const select = document.getElementById('empLocationSelect');
           select.innerHTML = data.isRoamingUser ? data.allLocations.map(l => `<option value="${l}">${l} (機動支援)</option>`).join('') : `<option value="${data.assignedLocation}">${data.assignedLocation}</option>`;
 
@@ -184,7 +184,7 @@ data.announcements.forEach(a => {
       list.innerHTML += `
         <div class="log-item">
           <div>
-            <strong>👤 ${lv.name || currentEmployeeData.employeeName}</strong> <span style="color:#6b7280;">(${lv.type})</span><br>
+            <strong>👤 ${currentEmployeeData.employeeName}</strong> <span style="color:#6b7280;">(${lv.type})</span><br>
             <span style="font-size:11px;color:#9ca3af;">${lv.duration}</span>
           </div>
           <span style="color:${color}; font-weight:bold; font-size:13px; border:1px solid ${color}; padding:2px 6px; border-radius:4px;">${lv.status}</span>
@@ -207,23 +207,21 @@ data.announcements.forEach(a => {
     
     if(!startStr || !endStr) return alert("請選擇請假開始與結束時間！");
     
-    // 1. 前端計算本次請假天數 (以 24 小時為 1 天計算防呆)
     const startTime = new Date(startStr);
     const endTime = new Date(endStr);
     if(endTime <= startTime) return alert("結束時間必須大於開始時間！");
     
     const diffMs = endTime - startTime;
-    const reqDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24)); // 本次申請天數
+    const reqDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24)); 
 
-    // 2. 讀取目前該假別在試算表中「已核准」的累計天數
     const historyStats = currentEmployeeData.leaveStats;
     const alreadyUsed = historyStats[type] || 0;
-    const totalPotential = alreadyUsed + reqDays; // 如果通過，累計會變成幾天
+    const totalPotential = alreadyUsed + reqDays; 
 
-    // 3. 核心功能：各假別勞基法上限精確阻斷攔截
+    // 核心上限攔截阻斷
     if (type === "特休") {
       if (reqDays > parseInt(currentEmployeeData.annualLeaveRemaining)) {
-        return alert(`❌ 申請失敗：您的剩餘特休僅剩 ${currentEmployeeData.annualLeaveRemaining} 天，本次擬請 ${reqDays} 天 已超過上限！無法送出，請向主管請示。`);
+        return alert(`❌ 申請失敗：您的剩餘特休僅剩 ${currentEmployeeData.annualLeaveRemaining} 天，本次擬請 ${reqDays} 天已超過上限！無法線上送出，請改向主管親自請示。`);
       }
     } else if (type === "事假") {
       if (totalPotential > 14) {
@@ -243,7 +241,6 @@ data.announcements.forEach(a => {
       }
     }
 
-    // 通過防呆，送出申請
     fetch(`${GAS_WEB_APP_URL}?action=submitLeave&employeeId=${encodeURIComponent(document.getElementById('empId').value)}&employeeName=${encodeURIComponent(currentEmployeeData.employeeName)}&location=${encodeURIComponent(currentEmployeeData.assignedLocation)}&leaveType=${encodeURIComponent(type)}&startTime=${startStr}&endTime=${endStr}`)
       .then(res => res.json()).then(data => { alert(data.message); handleEmployeeLogin(); });
   }
