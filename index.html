@@ -2,552 +2,418 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>紘嘉物業同仁打卡端</title>
-  <!-- 載入 Google Fonts 與 FontAwesome 圖示 -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>紘嘉物業管理 - 行動辦公端</title>
   <style>
-    * { box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; margin: 0; padding: 0; }
-    body { background-color: #f5f7fb; color: #333; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding-bottom: 30px; }
+    :root { 
+      --primary-color: #4f46e5; 
+      --primary-hover: #4338ca;
+      --bg-color: #f3f4f6; 
+      --card-bg: #ffffff;
+      --text-main: #1f2937;
+      --border-color: #e5e7eb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); padding: 12px; display: flex; justify-content: center; color: var(--text-main); }
+    .container { width: 100%; max-width: 480px; display: flex; flex-direction: column; min-height: calc(100vh - 24px); padding-bottom: 30px; }
     
-    /* 頂部藍條 */
-    .top-bar { width: 100%; background: linear-gradient(135deg, #4e54c8, #8f94fb); height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; color: white; font-weight: bold; font-size: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    .logout-btn { background: rgba(255,255,255,0.2); border: none; padding: 6px 12px; color: white; border-radius: 20px; font-size: 14px; cursor: pointer; transition: 0.3s; }
-    .logout-btn:hover { background: rgba(255,255,255,0.4); }
-
-    /* 登入卡片容器 */
-    .login-container { background: white; width: 90%; max-width: 450px; margin-top: 80px; padding: 30px 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; }
-    .login-container h2 { font-size: 24px; color: #1a1a1a; margin-bottom: 25px; font-weight: 700; letter-spacing: 1px; }
+    .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); margin-bottom: 12px; }
+    #login-box { margin: 40px auto 0 auto; width: 100%; text-align: center; background: white; }
+    #login-box h2 { font-size: 20px; margin-bottom: 24px; font-weight: bold; color: #111827; }
     
-    .input-group { position: relative; margin-bottom: 20px; }
-    .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: 18px; }
-    .input-group input { width: 100%; padding: 15px 15px 15px 45px; border: 1px solid #e0e0e0; border-radius: 14px; font-size: 16px; background-color: #fafafa; transition: 0.3s; }
-    .input-group input:focus { border-color: #4e54c8; background-color: #fff; outline: none; box-shadow: 0 0 0 4px rgba(78,84,200,0.1); }
-
-    .btn-primary { width: 100%; padding: 15px; background: linear-gradient(135deg, #4e54c8, #8f94fb); border: none; border-radius: 14px; color: white; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(78,84,200,0.3); }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(78,84,200,0.4); }
-
-    /* 主面板外觀 */
-    .main-panel { width: 92%; max-width: 500px; margin-top: 20px; display: none; }
+    input, select, textarea { width: 100%; padding: 14px; margin-bottom: 14px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 15px; outline: none; transition: all 0.2s; background: #f9fafb; font-family: inherit; }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary-color); background: #fff; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
     
-    /* 同仁基本資料卡 */
-    .user-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); margin-bottom: 15px; position: relative; }
-    .user-info h3 { font-size: 20px; color: #222; margin-bottom: 6px; }
-    .user-info p { font-size: 14px; color: #666; display: flex; align-items: center; gap: 6px; }
-
-    /* 功能導覽列 */
-    .nav-tabs { display: flex; background: #eef2f7; padding: 6px; border-radius: 16px; margin-bottom: 15px; gap: 5px; }
-    .tab-item { flex: 1; text-align: center; padding: 12px 0; border-radius: 12px; font-size: 14px; font-weight: 500; color: #666; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .tab-item i { font-size: 18px; }
-    .tab-item.active { background: white; color: #4e54c8; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-
-    /* 功能區塊通用樣式 */
-    .section-card { background: white; padding: 22px; border-radius: 20px; box-shadow: 0 4px 25px rgba(0,0,0,0.04); display: none; }
-    .section-card.active { display: block; }
-    .section-title { font-size: 16px; font-weight: bold; color: #444; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-
-    /* 案場綁定區塊 */
-    .location-box { background: #f8f9fa; border-left: 4px solid #4e54c8; padding: 15px; border-radius: 0 12px 12px 0; margin-bottom: 20px; }
-    .location-box label { font-size: 13px; color: #888; display: block; margin-bottom: 5px; font-weight: bold; }
-    .loc-text { font-size: 18px; font-weight: bold; color: #2c3e50; display: flex; align-items: center; gap: 8px; }
-    .select-style { width: 100%; padding: 12px; font-size: 16px; font-weight: bold; border: 1px solid #ddd; border-radius: 10px; color: #2c3e50; background-color: #fff; outline: none; }
-
-    /* 打卡按鈕組 */
-    .punch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-    .punch-btn { padding: 20px; border: none; border-radius: 16px; color: white; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-    .punch-in { background: linear-gradient(135deg, #11998e, #38ef7d); }
-    .punch-out { background: linear-gradient(135deg, #f857a6, #ff5858); }
-    .punch-btn:hover { transform: translateY(-3px); filter: brightness(1.05); }
-    .status-msg { text-align: center; font-size: 14px; font-weight: 500; color: #27ae60; background: #ebfbf2; padding: 10px; border-radius: 10px; display: none; align-items: center; justify-content: center; gap: 6px; }
-
-    /* 請假表單樣式 */
-    .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; font-size: 14px; font-weight: bold; color: #555; margin-bottom: 6px; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 15px; outline: none; }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #4e54c8; }
+    button.btn-main { width: 100%; padding: 14px; background: var(--primary-color); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    button.btn-main:hover { background: var(--primary-hover); }
     
-    /* 請假審核進度清單 */
-    .leave-notice-box { margin-top: 25px; border-top: 2px dashed #e0e0e0; padding-top: 20px; }
-    .leave-notice-title { font-size: 15px; font-weight: bold; color: #333; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-    .leave-table-wrapper { width: 100%; overflow-x: auto; background: #fcfdfe; border: 1px solid #eaeaea; border-radius: 12px; }
-    .leave-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
-    .leave-table th { background: #f1f3f7; color: #555; padding: 10px; font-weight: bold; border-bottom: 1px solid #eaeaea; }
-    .leave-table td { padding: 10px; border-bottom: 1px solid #eaeaea; color: #444; }
+    .app-header { display: flex; justify-content: space-between; align-items: center; background: white; }
+    .app-title { font-size: 18px; font-weight: bold; color: #111827; }
+    .location-tag { color: var(--primary-color); font-weight: bold; font-size: 13px; margin-top: 3px; }
+    .btn-logout { width: auto; padding: 6px 12px; background: #fee2e2; color: #ef4444; font-size: 12px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; }
     
-    /* 狀態標籤美化 */
-    .status-badge { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; display: inline-block; }
-    .status-pending { background-color: #fff7e6; color: #d46b08; border: 1px solid #ffd591; }
-    .status-approved { background-color: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
-    .status-rejected { background-color: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; }
+    .clock-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+    .btn-clock { padding: 20px 10px; border: none; border-radius: 14px; font-size: 17px; font-weight: bold; color: white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .btn-in { background: #10b981; } 
+    .btn-out { background: #f59e0b; } 
+    
+    .status-text { text-align: center; font-size: 13px; color: #6b7280; margin-top: 12px; font-weight: 500; }
+    .hidden { display: none !important; }
+    .label-title { font-size: 15px; font-weight: bold; color: #374151; margin-bottom: 8px; display: block; }
+    
+    /* 🌟 重置與強化功能標籤切換鈕 (確保手機上可以輕鬆點選) */
+    .tab-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; position: relative; z-index: 10; }
+    .tab-btn { padding: 12px 2px; background: #e5e7eb; border: none; border-radius: 10px; font-size: 14px; font-weight: bold; color: #4b5563; cursor: pointer; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.2s; }
+    .tab-btn.active { background: var(--primary-color) !important; color: white !important; font-weight: 800; }
+    
+    .announcement-item { padding: 14px 0; border-bottom: 1px solid #f3f4f6; }
+    .announcement-item:last-child { border-bottom: none; }
+    .annoc-meta { font-size: 12px; color: #9ca3af; margin-bottom: 4px; }
+    .annoc-title { font-weight: bold; font-size: 15px; color: #111827; line-height: 1.4; }
+    
+    .schedule-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px; }
+    .schedule-table th, .schedule-table td { border: 1px solid #e5e7eb; padding: 10px; text-align: center; }
+    .schedule-table th { background: #f9fafb; font-weight: bold; }
+    
+    .info-box { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 14px; line-height: 1.5; }
 
-    /* 排班表樣式 */
-    .sched-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 15px; }
-    .sched-table th, .sched-table td { border: 1px solid #eef2f5; padding: 12px; text-align: center; }
-    .sched-table th { background-color: #f8fafc; color: #666; font-weight: bold; }
-    .off-day { background-color: #fff1f0; color: #f5222d; font-weight: bold; padding: 4px 8px; border-radius: 6px; display: inline-block; }
-
-    /* 公告系統樣式 */
-    .ann-item { border-bottom: 1px solid #f0f2f5; padding: 12px 0; }
-    .ann-item:last-child { border-bottom: none; }
-    .ann-meta { font-size: 12px; color: #999; margin-bottom: 4px; display: flex; justify-content: space-between; }
-    .ann-content { font-size: 14px; color: #333; font-weight: 500; line-height: 1.5; }
-
-    /* 勞基法權益面板 */
-    .rights-card { background: #eef2f7; border-radius: 12px; padding: 12px 15px; margin-bottom: 15px; font-size: 13px; color: #555; line-height: 1.6; }
-    .rights-card strong { color: #222; }
-
-    /* 全域 Loading 遮罩 */
-    .loader-mask { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.85); display:none; justify-content:center; align-items:center; z-index:9999; flex-direction:column; gap:10px; }
-    .spinner { width: 45px; height: 45px; border: 5px solid #f3f3f3; border-top: 5px solid #4e54c8; border-radius: 50%; animation: spin 1s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    /* 自訂精美彈出視窗 UI */
+    .custom-modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
+    .custom-modal-card { background: white; width: 100%; max-width: 360px; border-radius: 20px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); text-align: center; animation: popUp 0.25s ease-out; }
+    .modal-icon { font-size: 40px; margin-bottom: 12px; }
+    .modal-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #111827; }
+    .modal-body { font-size: 14px; color: #4b5563; margin-bottom: 20px; line-height: 1.5; white-space: pre-line; }
+    .modal-btn { width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
+    @keyframes popUp { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   </style>
 </head>
 <body>
 
-  <!-- 全域讀取畫面 -->
-  <div class="loader-mask" id="loaderMask">
-    <div class="spinner"></div>
-    <p style="font-weight:bold; color:#4e54c8;">通訊中，請稍候...</p>
+  <div id="custom-modal" class="custom-modal-overlay hidden">
+    <div class="custom-modal-card">
+      <div id="modal-icon" class="modal-icon">💡</div>
+      <div id="modal-title" class="modal-title">系統提示</div>
+      <div id="modal-body" class="modal-body">提示內容</div>
+      <button class="modal-btn" onclick="closeModal()">確定</button>
+    </div>
   </div>
 
-  <!-- 頂部導覽 -->
-  <div class="top-bar" id="topNav" style="display:none;">
-    <span>紘嘉行動考勤系統</span>
-    <button class="logout-btn" onclick="logout()">登出</button>
-  </div>
-
-  <!-- 1. 登入介面 -->
-  <div class="login-container" id="loginBox">
-    <h2>紘嘉物業同仁打卡端</h2>
-    <div class="input-group">
-      <i class="fa-solid fa-user"></i>
-      <input type="text" id="empId" placeholder="請輸入您的員工編號" inputmode="numeric">
-    </div>
-    <div class="input-group" style="display:none;" id="pwdGroup">
-      <i class="fa-solid fa-lock"></i>
-      <input type="password" id="empPwd" placeholder="請輸入驗證密碼" value="123456">
-    </div>
-    <button class="btn-primary" id="loginBtn" onclick="checkUserRow()">驗證登入</button>
-  </div>
-
-  <!-- 2. 主面板介面 -->
-  <div class="main-panel" id="mainPanel">
-    
-    <!-- 同仁資訊卡 -->
-    <div class="user-card">
-      <div class="user-info">
-        <h3 id="showName">讀取中...</h3>
-        <p><i class="fa-solid fa-briefcase"></i> 身分類別：<span id="showIdentity" style="font-weight:bold; color:#4e54c8;">-</span></p>
-      </div>
-    </div>
-
-    <!-- 功能頁籤切換器 -->
-    <div class="nav-tabs">
-      <div class="tab-item active" id="tab-punch" onclick="switchTab('punch')"><i class="fa-solid fa-clock"></i>打卡</div>
-      <div class="tab-item" id="tab-schedule" onclick="switchTab('schedule'); loadSchedule();"><i class="fa-solid fa-calendar-days"></i>排班</div>
-      <div class="tab-item" id="tab-leave" onclick="switchTab('leave')"><i class="fa-solid fa-file-signature"></i>請假</div>
-      <div class="tab-item" id="tab-ann" onclick="switchTab('ann'); loadAnnouncements();"><i class="fa-solid fa-bullhorn"></i>公告</div>
-    </div>
-
-    <!-- 區塊 A: 打卡首頁 -->
-    <div class="section-card active" id="sec-punch">
-      <div class="section-title"><i class="fa-solid fa-location-dot" style="color:#ff5858;"></i>本次打卡執行案場</div>
+  <div class="container">
+    <div id="login-box" class="card">
+      <h2 style="color:var(--primary-color);">橫嘉物業同仁行動端</h2>
+      <div style="text-align: left; margin-bottom: 6px; font-size: 14px; font-weight: bold; color: #4b5563;">員工工號</div>
+      <input type="text" id="employeeId" placeholder="請輸入員工編號">
       
-      <div class="location-box">
-        <label id="locLabel">綁定案場</label>
-        <div id="locWrapper">
-          <span class="loc-text" id="fixedLocText"><i class="fa-solid fa-building"></i> 讀取中...</span>
+      <div style="text-align: left; margin-bottom: 6px; font-size: 14px; font-weight: bold; color: #4b5563;">登入密碼</div>
+      <input type="password" id="employeePassword" placeholder="請輸入密碼">
+      
+      <button class="btn-main" onclick="login()">驗證登入</button>
+    </div>
+
+    <div id="dashboard" class="hidden">
+      
+      <div class="card app-header">
+        <div>
+          <div class="app-title" id="emp-welcome">同仁，您好</div>
+          <div class="location-tag" id="emp-identity">💼 身分類別：載入中...</div>
+        </div>
+        <button class="btn-logout" onclick="logout()">登出</button>
+      </div>
+
+      <div class="tab-bar">
+        <button id="tab0" class="tab-btn active" onclick="switchTab(0)">⏰ 打卡</button>
+        <button id="tab1" class="tab-btn" onclick="switchTab(1)">📅 排班</button>
+        <button id="tab2" class="tab-btn" onclick="switchTab(2)">📝 請假</button>
+        <button id="tab3" class="tab-btn" onclick="switchTab(3)">📢 公告</button>
+      </div>
+
+      <div id="panel-0" class="tab-panel">
+        <div class="card">
+          <label class="label-title">📍 本次打卡執行案場</label>
+          <div id="fixed-location-box" class="location-tag" style="font-size:16px; padding: 4px 0; color:#111827;">載入中...</div>
+          <select id="roaming-location-select" class="hidden"></select>
+        </div>
+        <div class="card">
+          <label class="label-title">📅 今日考勤簽到退</label>
+          <div class="clock-grid">
+            <button class="btn-clock btn-in" onclick="clockAction('clockIn')">🌅 上班打卡</button>
+            <button class="btn-clock btn-out" onclick="clockAction('clockOut')">🌇 下班打卡</button>
+          </div>
+          <div id="status-msg" class="status-text">請確定已抵達案場指定範圍再點選打卡</div>
         </div>
       </div>
 
-      <div class="punch-grid">
-        <button class="punch-btn punch-in" onclick="doPunch('clockIn')">
-          <i class="fa-solid fa-sun fa-lg"></i>上班打卡
-        </button>
-        <button class="punch-btn punch-out" onclick="doPunch('clockOut')">
-          <i class="fa-solid fa-moon fa-lg"></i>下班打卡
-        </button>
-      </div>
-      
-      <div class="status-msg" id="lastPunchBox">
-        <i class="fa-solid fa-circle-check"></i> <span id="lastPunchText">-</span>
-      </div>
-    </div>
-
-    <!-- 區塊 B: 個人當月排班計畫 -->
-    <div class="section-card" id="sec-schedule">
-      <div class="section-title"><i class="fa-solid fa-calendar-week" style="color:#4e54c8;"></i>個人當月排班計畫</div>
-      <table class="sched-table">
-        <thead>
-          <tr>
-            <th style="width:35%;">日期</th>
-            <th style="width:30%;">案場社區</th>
-            <th style="width:35%;">班別/狀態</th>
-          </tr>
-        </thead>
-        <tbody id="scheduleBody"></tbody>
-      </table>
-    </div>
-
-    <!-- 區塊 C: 線上請假申請表 -->
-    <div class="section-card" id="sec-leave">
-      <div class="section-title"><i class="fa-solid fa-calculator" style="color:#f39c12;"></i>勞基法休假相關規定與您的權益</div>
-      <div class="rights-card">
-        📅 <strong>您的到職日期：</strong> <span id="lblJoinDate">未登錄</span><br>
-        ⚖️ <strong>勞基法特休權益：</strong> 您目前年資核算本年度享有特休總天數為 <span id="lblAnnualTotal" style="font-weight:bold; color:#e74c3c;">0</span> 天。<br>
-        <span style="font-size:11px; color:#999;">*特休請假將送交管理部，依核准狀況自總額扣減。</span>
-      </div>
-
-      <div class="section-title"><i class="fa-solid fa-file-invoice" style="color:#4e54c8;"></i>線上請假申請表</div>
-      
-      <div class="form-group">
-        <label>選擇假別</label>
-        <select id="leaveType">
-          <option value="特休 (依同仁年資計算)">特休 (依同仁年資計算)</option>
-          <option value="事假 (勞基法上限14天 - 不支薪)">事假 (勞基法上限14天 - 不支薪)</option>
-          <option value="普通傷病假 (內政部規定上限30天 - 半薪)">普通傷病假 (內政部規定上限30天 - 半薪)</option>
-          <option value="公假 (依法給假 - 照給薪資)">公假 (依法給假 - 照給薪資)</option>
-          <option value="婚假 (依法給假8天 - 照給薪資)">婚假 (依法給假8天 - 照給薪資)</option>
-          <option value="喪假 (依親等規定3~8天 - 照給薪資)">喪假 (依親等規定3~8天 - 照給薪資)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>請假開始時間</label>
-        <input type="datetime-local" id="leaveStart">
-      </div>
-      <div class="form-group">
-        <label>請假結束時間</label>
-        <input type="datetime-local" id="leaveEnd">
-      </div>
-      <div class="form-group">
-        <label>請假事由 / 備註說明</label>
-        <textarea id="leaveReason" rows="3" placeholder="請簡述請假具體原因..."></textarea>
-      </div>
-      <button class="btn-primary" onclick="submitLeaveForm()">送出請假申請</button>
-
-      <!-- 🔔 請假審核進度查詢區塊 -->
-      <div class="leave-notice-box">
-        <div class="leave-notice-title">
-          <i class="fa-solid fa-bell" style="color:#f1c40f;"></i> 請假審核進度通知
-        </div>
-        <div class="leave-table-wrapper">
-          <table class="leave-table">
-            <thead>
-              <tr>
-                <th>假別</th>
-                <th>請假時間</th>
-                <th>最新審核狀態</th>
-              </tr>
-            </thead>
-            <tbody id="leaveStatusBody">
-              <tr>
-                <td colspan="3" style="text-align:center; color:#999; padding:15px;">暫無請假申請紀錄</td>
-              </tr>
-            </tbody>
-          </table>
+      <div id="panel-1" class="tab-panel hidden">
+        <div class="card">
+          <label class="label-title">🔍 選擇排班月份計畫</label>
+          <select id="schedule-month-select" onchange="changeScheduleMonth()">
+            </select>
+          
+          <div style="overflow-x: auto;">
+            <table class="schedule-table">
+              <thead>
+                <tr><th>日期</th><th>班別狀態</th></tr>
+              </thead>
+              <tbody id="schedule-tbody">
+                <tr><td colspan="2" style="color:#9ca3af;">正在讀取排班數據...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- 區塊 D: 紘嘉管理部公告系統 -->
-    <div class="section-card" id="sec-ann">
-      <div class="section-title"><i class="fa-solid fa-bullhorn" style="color:#e74c3c;"></i>最新重要公告</div>
-      <div id="annContainer"></div>
-    </div>
+      <div id="panel-2" class="tab-panel hidden">
+        <div class="card">
+          <label class="label-title">⚖️ 勞基法休假相關規定與您的權益</label>
+          <div id="leave-entitlement-box" class="info-box">
+            正在計算您的年資與法定特休額度...
+          </div>
 
+          <span style="font-size:13px; font-weight:bold; color:#4b5563;">選擇假別</span>
+          <select id="leave-type">
+            <option value="特休">特休 (依同仁年資額度扣減)</option>
+            <option value="事假">事假 (勞基法上限14天 - 不支薪)</option>
+            <option value="病假">病假 (勞基法上限30天 - 半薪)</option>
+            <option value="公假">公假 (依公司任務派遣)</option>
+            <option value="婚假">婚假 (勞基法規定8天 - 全薪)</option>
+            <option value="喪假">喪假 (依親等規定3~8天 - 全薪)</option>
+          </select>
+
+          <span style="font-size:13px; font-weight:bold; color:#4b5563;">請假開始時間</span>
+          <input type="datetime-local" id="leave-start">
+
+          <span style="font-size:13px; font-weight:bold; color:#4b5563;">請假結束時間</span>
+          <input type="datetime-local" id="leave-end">
+
+          <span style="font-size:13px; font-weight:bold; color:#4b5563;">請假事由 / 備註說明</span>
+          <textarea id="leave-reason" rows="3" placeholder="請填寫具體請假原因..."></textarea>
+
+          <button class="btn-main" onclick="submitLeaveForm()">送出請假申請</button>
+        </div>
+      </div>
+
+      <div id="panel-3" class="tab-panel hidden">
+        <div class="card">
+          <label class="label-title">📢 紘嘉管理部最新公告</label>
+          <div id="announcement-container">
+            <div style="color:#9ca3af; text-align:center; padding:20px;">載入公告中...</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <script>
-    // ⚠️ 請在下方換成您最新的 Google Apps Script 部署出來的 Web App 網址 ⚠️
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
+    // 🔗 後端部署網址
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec"; 
 
-    let globalUser = {
-      id: "", name: "", location: "", identity: "", allLocations: [], leaveRecords: []
-    };
+    window.addEventListener('DOMContentLoaded', () => {
+      initMonthDropdown();
+      checkLocalLogin();
+    });
 
-    function showLoader() { document.getElementById("loaderMask").style.display = "flex"; }
-    function hideLoader() { document.getElementById("loaderMask").style.display = "none"; }
+    function openModal(title, text, icon = "💡") {
+      document.getElementById('modal-icon').innerText = icon;
+      document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-body').innerText = text;
+      document.getElementById('custom-modal').classList.remove('hidden');
+    }
+    function closeModal() { document.getElementById('custom-modal').classList.add('hidden'); }
 
-    function checkUserRow() {
-      const empId = document.getElementById("empId").value.trim();
-      const pwdGroup = document.getElementById("pwdGroup");
-      const empPwd = document.getElementById("empPwd").value.trim();
-
-      if (!empId) { alert("請輸入員工編號！"); return; }
-
-      if (pwdGroup.style.display === "none") {
-        pwdGroup.style.display = "block";
-        document.getElementById("loginBtn").innerText = "確認密碼登入";
-        return;
+    // 初始化月份下拉選單 (當月與前兩個月)
+    function initMonthDropdown() {
+      const select = document.getElementById('schedule-month-select');
+      if(!select) return;
+      select.innerHTML = "";
+      const now = new Date();
+      for (let i = 0; i < 3; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const val = `${yyyy}-${mm}`;
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.innerText = i === 0 ? `📅 ${yyyy}年${mm}月 (當月)` : `📅 ${yyyy}年${mm}月`;
+        select.appendChild(opt);
       }
-
-      showLoader();
-      
-      // 🌟 使用 JSONP 防止跨網域卡死、無窮轉圈圈
-      const script = document.createElement("script");
-      script.src = `${GAS_WEB_APP_URL}?action=login&employeeId=${encodeURIComponent(empId)}&password=${encodeURIComponent(empPwd)}&callback=onLoginResponse`;
-      document.body.appendChild(script);
-      document.body.removeChild(script);
     }
 
-    function onLoginResponse(res) {
-      hideLoader();
-      if (!res.success) { alert(res.message); return; }
-
-      globalUser.id = document.getElementById("empId").value.trim();
-      globalUser.name = res.employeeName;
-      globalUser.location = res.assignedLocation;
-      globalUser.identity = res.identityType; 
-      globalUser.allLocations = res.allLocations || [];
-      globalUser.leaveRecords = (res.leaveSummary && res.leaveSummary.allRecords) ? res.leaveSummary.allRecords : [];
-
-      document.getElementById("showName").innerText = `${globalUser.name} (${globalUser.id}) 同仁，您好`;
-      document.getElementById("showIdentity").innerText = globalUser.identity;
+    // 🌟 核心分頁切換函數 (修正切換邏輯，移除了任何可能被卡住的 class 判定)
+    function switchTab(idx) {
+      console.log("切換至分頁：", idx);
+      for(let i = 0; i < 4; i++) {
+        const btn = document.getElementById(`tab${i}`);
+        const panel = document.getElementById(`panel-${i}`);
+        if(btn) btn.classList.remove('active');
+        if(panel) panel.classList.add('hidden');
+      }
       
-      document.getElementById("lblJoinDate").innerText = res.joinDate || "未登錄";
-      document.getElementById("lblAnnualTotal").innerText = res.annualLeaveTotal || 0;
-
-      renderLocationBlock();
-      renderLeaveStatusTable();
-
-      document.getElementById("loginBox").style.display = "none";
-      document.getElementById("topNav").style.display = "flex";
-      document.getElementById("mainPanel").style.display = "block";
+      const activeBtn = document.getElementById(`tab${idx}`);
+      const activePanel = document.getElementById(`panel-${idx}`);
+      if(activeBtn) activeBtn.classList.add('active');
+      if(activePanel) activePanel.classList.remove('hidden');
     }
 
-    function renderLocationBlock() {
-      const wrapper = document.getElementById("locWrapper");
-      const label = document.getElementById("locLabel");
-      wrapper.innerHTML = ""; 
+    function checkLocalLogin() {
+      const savedId = localStorage.getItem('emp_id');
+      const savedName = localStorage.getItem('emp_name');
+      const savedLocation = localStorage.getItem('emp_location');
+      const identityType = localStorage.getItem('emp_identity_type') || '正職';
+      const allLocs = JSON.parse(localStorage.getItem('emp_all_locations') || '[]');
 
-      // 判斷身分中是否包含「機動」二字（解決「機動人員人員」的問題）
-      if (globalUser.identity.indexOf("機動") !== -1) {
-        label.innerText = "本次打卡執行案場 (機動自選)";
-        
-        const select = document.createElement("select");
-        select.id = "punchLocationSelect";
-        select.className = "select-style";
+      if (savedId && savedName) {
+        showDashboard(savedId, savedName, savedLocation, identityType, allLocs);
+        fetchSchedule(savedId, document.getElementById('schedule-month-select').value);
+        fetchAnnouncements();
+      }
+    }
 
-        if (globalUser.allLocations.length === 0) {
-          const opt = document.createElement("option");
-          opt.text = "⚠️ 資料庫無案場清單";
-          select.add(opt);
-        } else {
-          globalUser.allLocations.forEach(loc => {
-            const opt = document.createElement("option");
-            opt.value = loc;
-            opt.text = `🏢 ${loc}`;
-            if (loc === globalUser.location) { opt.selected = true; }
-            select.add(opt);
-          });
-        }
-        wrapper.appendChild(select);
+    function showDashboard(id, name, location, identityType, allLocs) {
+      document.getElementById('emp-welcome').innerText = `${name} (${id}) 同仁，您好`;
+      document.getElementById('emp-identity').innerText = `💼 身分類別：${identityType}人員`;
+      
+      if (identityType === '機動') {
+        document.getElementById('fixed-location-box').classList.add('hidden');
+        const selectEl = document.getElementById('roaming-location-select');
+        selectEl.innerHTML = "";
+        allLocs.forEach(loc => {
+          const opt = document.createElement('option');
+          opt.value = loc; opt.innerText = `🏢 ${loc}`;
+          selectEl.appendChild(opt);
+        });
+        selectEl.classList.remove('hidden');
       } else {
-        label.innerText = "綁定案場";
-        wrapper.innerHTML = `<span class="loc-text" id="fixedLocText"><i class="fa-solid fa-building"></i> 綁定案場：${globalUser.location}</span>`;
+        document.getElementById('roaming-location-select').classList.add('hidden');
+        document.getElementById('fixed-location-box').innerText = `🏠 綁定案場：${location}`;
+        document.getElementById('fixed-location-box').classList.remove('hidden');
       }
+      
+      const joinDate = localStorage.getItem('emp_join_date') || '未登錄';
+      const totalAnnual = localStorage.getItem('emp_annual_total') || '0';
+      document.getElementById('leave-entitlement-box').innerHTML = `
+        📅 <b>您的到職日期：</b>${joinDate}<br>
+        ⚖️ <b>勞基法特休權益：</b>您目前年資核算本年度享有特休總天數為 <b>${totalAnnual}</b> 天。<br>
+        <span style="font-size:11px; color:#6b7280;">*特休請假將送交管理部，依核准狀況自總額扣減。</span>
+      `;
+
+      document.getElementById('login-box').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
     }
 
-    function renderLeaveStatusTable() {
-      const tbody = document.getElementById("leaveStatusBody");
-      tbody.innerHTML = "";
+    function login() {
+      const empId = document.getElementById('employeeId').value.trim();
+      const empPwd = document.getElementById('employeePassword').value.trim();
+      if(!empId || !empPwd) return openModal("系統提示", "請輸入工號與密碼！", "⚠️");
 
-      if (globalUser.leaveRecords.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding:15px;">暫無請假申請紀錄</td></tr>`;
-        return;
-      }
+      fetch(`${GAS_WEB_APP_URL}?action=login&employeeId=${encodeURIComponent(empId)}&password=${encodeURIComponent(empPwd)}`)
+        .then(res => res.json())
+        .then(data => {
+          if(data.success) {
+            localStorage.setItem('emp_id', empId);
+            localStorage.setItem('emp_name', data.employeeName);
+            localStorage.setItem('emp_location', data.assignedLocation);
+            localStorage.setItem('emp_identity_type', data.identityType);
+            localStorage.setItem('emp_join_date', data.joinDate);
+            localStorage.setItem('emp_annual_total', data.annualLeaveTotal);
+            localStorage.setItem('emp_all_locations', JSON.stringify(data.allLocations || []));
 
-      globalUser.leaveRecords.forEach(rec => {
-        const tr = document.createElement("tr");
-        let shortType = rec.leaveType.split(" ")[0];
-        let displayTime = `${rec.startTime.replace("T", " ")} ~<br>${rec.endTime.replace("T", " ")}`;
+            showDashboard(empId, data.employeeName, data.assignedLocation, data.identityType, data.allLocations || []);
+            fetchSchedule(empId, document.getElementById('schedule-month-select').value);
+            fetchAnnouncements();
+            openModal("登入成功", `歡迎回來，${data.employeeName} 同仁`, "🎉");
+          } else {
+            openModal("驗證失敗", data.message || "密碼或工號錯誤！", "❌");
+          }
+        }).catch(err => openModal("網路異常", "無法連接考勤伺服器", "❌"));
+    }
 
-        let badgeClass = "status-pending";
-        if (rec.status === "已核准" || rec.status === "同意" || rec.status === "通過") {
-          badgeClass = "status-approved";
-        } else if (rec.status === "不核准" || rec.status === "不同意" || rec.status === "駁回") {
-          badgeClass = "status-rejected";
+    function changeScheduleMonth() {
+      const empId = localStorage.getItem('emp_id');
+      const selectedMonth = document.getElementById('schedule-month-select').value;
+      fetchSchedule(empId, selectedMonth);
+    }
+
+    function fetchSchedule(empId, monthStr) {
+      const tbody = document.getElementById('schedule-tbody');
+      if(!tbody) return;
+      tbody.innerHTML = `<tr><td colspan="2" style="color:#9ca3af;">正在加載 ${monthStr} 排班資料...</td></tr>`;
+      
+      fetch(`${GAS_WEB_APP_URL}?action=fetchSchedule&employeeId=${encodeURIComponent(empId)}&month=${monthStr}`)
+        .then(res => res.json())
+        .then(data => {
+          if(data.success && data.schedule && data.schedule.length > 0) {
+            tbody.innerHTML = "";
+            data.schedule.forEach(item => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `<td><b>${item.date} 日</b></td><td>${item.shift}</td>`;
+              tbody.appendChild(tr);
+            });
+          } else {
+            tbody.innerHTML = `<tr><td colspan="2" style="color:#9ca3af;">⚠️ 試算表中尚未建立此月份(${monthStr})的排班資料</td></tr>`;
+          }
+        }).catch(e => {
+          tbody.innerHTML = `<tr><td colspan="2" style="color:#ef4444;">排班加載失敗，請檢查網路。</td></tr>`;
+        });
+    }
+
+    function fetchAnnouncements() {
+      fetch(`${GAS_WEB_APP_URL}?action=fetchAnnouncements`)
+        .then(res => res.json())
+        .then(data => {
+          const container = document.getElementById('announcement-container');
+          if(!container) return;
+          if(data.success && data.announcements.length > 0) {
+            container.innerHTML = "";
+            data.announcements.forEach(ann => {
+              const div = document.createElement('div');
+              div.className = "announcement-item";
+              div.innerHTML = `<div class="annoc-meta">${ann.date} | ${ann.unit}</div><div class="annoc-title">📌 ${ann.content}</div>`;
+              container.appendChild(div);
+            });
+          } else {
+            container.innerHTML = `<div style="color:#9ca3af; text-align:center; padding:20px;">目前尚無發布官方公告。</div>`;
+          }
+        }).catch(e => {});
+    }
+
+    function submitLeaveForm() {
+      const id = localStorage.getItem('emp_id');
+      const name = localStorage.getItem('emp_name');
+      const type = document.getElementById('leave-type').value;
+      const start = document.getElementById('leave-start').value;
+      const end = document.getElementById('leave-end').value;
+      const reason = document.getElementById('leave-reason').value;
+      let loc = localStorage.getItem('emp_location');
+      if(localStorage.getItem('emp_identity_type') === '機動') loc = "機動支援組";
+
+      if(!start || !end) return openModal("提示", "請完整填寫請假起迄時間", "⚠️");
+
+      const url = `${GAS_WEB_APP_URL}?action=submitLeave&employeeId=${encodeURIComponent(id)}&employeeName=${encodeURIComponent(name)}&location=${encodeURIComponent(loc)}&leaveType=${encodeURIComponent(type)}&startTime=${start}&endTime=${end}&reason=${encodeURIComponent(reason)}`;
+      
+      fetch(url).then(res => res.json()).then(data => {
+        if(data.success) {
+          openModal("申請成功", "請假單已成功寫入資料庫，請靜候管理部審核。", "✅");
+          document.getElementById('leave-start').value = "";
+          document.getElementById('leave-end').value = "";
+          document.getElementById('leave-reason').value = "";
+        } else {
+          openModal("送出失敗", data.message, "❌");
         }
-
-        tr.innerHTML = `
-          <td style="font-weight:bold; color:#333;">${shortType}</td>
-          <td style="color:#666; font-size:12px; line-height:1.4;">${displayTime}</td>
-          <td><span class="status-badge ${badgeClass}">${rec.status}</span></td>
-        `;
-        tbody.appendChild(tr);
       });
     }
 
-    function getSelectedPunchLocation() {
-      const selectEl = document.getElementById("punchLocationSelect");
-      return selectEl ? selectEl.value : globalUser.location;
-    }
+    function clockAction(actionType) {
+      const empId = localStorage.getItem('emp_id');
+      const empName = localStorage.getItem('emp_name');
+      const identityType = localStorage.getItem('emp_identity_type');
+      let targetLocation = identityType === '機動' ? document.getElementById('roaming-location-select').value : localStorage.getItem('emp_location');
 
-    function doPunch(actionType) {
-      if (!navigator.geolocation) {
-        alert("您的手機/瀏覽器不支援 GPS 定位，無法完成打卡。");
-        return;
-      }
-
-      const activeLocation = getSelectedPunchLocation();
-      showLoader();
+      if (!empId || !targetLocation) return openModal("憑證失效", "請重新登入", "❌");
+      const actionName = actionType === 'clockIn' ? '上班' : '下班';
+      document.getElementById('status-msg').innerText = `⏳ GPS 衛星精確定位中...`;
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
+          const url = `${GAS_WEB_APP_URL}?action=${actionType}&employeeId=${encodeURIComponent(empId)}&employeeName=${encodeURIComponent(empName)}&location=${encodeURIComponent(targetLocation)}&lat=${lat}&lng=${lng}`;
 
-          const script = document.createElement("script");
-          script.src = `${GAS_WEB_APP_URL}?action=${actionType}&employeeId=${encodeURIComponent(globalUser.id)}&employeeName=${encodeURIComponent(globalUser.name)}&location=${encodeURIComponent(activeLocation)}&lat=${lat}&lng=${lng}&callback=onPunchResponse`;
-          document.body.appendChild(script);
-          document.body.removeChild(script);
+          fetch(url).then(res => res.json()).then(data => {
+            if(data.success) {
+              openModal(`${actionName}打卡成功`, `案場：${targetLocation}\n位置誤差公尺：${data.message.split('誤差')[1] || '經緯度核對通過'}`, "🎉");
+              document.getElementById('status-msg').innerText = `✅ 上次打卡：${targetLocation} (${actionName})`;
+            } else {
+              openModal("打卡拒絕", data.message, "❌");
+            }
+          });
         },
-        (error) => {
-          hideLoader();
-          if (error.code === error.PERMISSION_DENIED) {
-            alert("❌ 打卡失敗：請允許手機與瀏覽器的「GPS位置存取權限」。");
-          } else {
-            alert("❌ 定位訊號取得失敗，請移至收訊良好處重試。");
-          }
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
+        (error) => openModal("定位失敗", "請確認手機已開啟 GPS 定位服務並授權瀏覽器權限。", "❌"),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     }
 
-    function onPunchResponse(res) {
-      hideLoader();
-      alert(res.message);
-      if (res.success) {
-        const lastPunchBox = document.getElementById("lastPunchBox");
-        const lastPunchText = document.getElementById("lastPunchText");
-        lastPunchText.innerText = `上次打卡成功於：${getSelectedPunchLocation()}`;
-        lastPunchBox.style.display = "flex";
-      }
-    }
-
-    function submitLeaveForm() {
-      const leaveType = document.getElementById("leaveType").value;
-      const startTime = document.getElementById("leaveStart").value;
-      const endTime = document.getElementById("leaveEnd").value;
-      const reason = document.getElementById("leaveReason").value.trim();
-
-      if (!startTime || !endTime) { alert("請完整填寫請假的『開始』與『結束』時間！"); return; }
-      if (!reason) { alert("請填寫請假原因或備註事由。"); return; }
-
-      showLoader();
-      const script = document.createElement("script");
-      script.src = `${GAS_WEB_APP_URL}?action=submitLeave&employeeId=${encodeURIComponent(globalUser.id)}&employeeName=${encodeURIComponent(globalUser.name)}&location=${encodeURIComponent(globalUser.location)}&leaveType=${encodeURIComponent(leaveType)}&startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}&reason=${encodeURIComponent(reason)}&callback=onLeaveResponse`;
-      document.body.appendChild(script);
-      document.body.removeChild(script);
-    }
-
-    function onLeaveResponse(res) {
-      hideLoader();
-      if (res.success) {
-        alert("🎉 請假單已成功送交管理部！審核進度將更新於下方列表中。");
-        document.getElementById("leaveStart").value = "";
-        document.getElementById("leaveEnd").value = "";
-        document.getElementById("leaveReason").value = "";
-        
-        const tbody = document.getElementById("leaveStatusBody");
-        if (globalUser.leaveRecords.length === 0) tbody.innerHTML = "";
-        
-        const newRecord = {
-          leaveType: document.getElementById("leaveType").value,
-          startTime: "剛剛送出",
-          endTime: "處理中",
-          status: "待審核"
-        };
-        globalUser.leaveRecords.unshift(newRecord);
-        renderLeaveStatusTable();
-      } else {
-        alert("❌ 提交失敗：" + res.message);
-      }
-    }
-
-    function loadSchedule() {
-      const tbody = document.getElementById("scheduleBody");
-      tbody.innerHTML = '<tr><td colspan="3" style="color:#888;">班表加載中...</td></tr>';
-      
-      const now = new Date();
-      const monthStr = `${now.getFullYear()}_${("0" + (now.getMonth() + 1)).slice(-2)}`;
-
-      const script = document.createElement("script");
-      script.src = `${GAS_WEB_APP_URL}?action=fetchSchedule&employeeId=${encodeURIComponent(globalUser.id)}&month=${encodeURIComponent(monthStr)}&callback=onScheduleResponse`;
-      document.body.appendChild(script);
-      document.body.removeChild(script);
-    }
-
-    function onScheduleResponse(res) {
-      const tbody = document.getElementById("scheduleBody");
-      tbody.innerHTML = "";
-      
-      if (!res.success || !res.schedule || res.schedule.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" style="color:#e74c3c; padding:15px;">${res.message || "本月尚無您的排班安排"}</td></tr>`;
-        return;
-      }
-
-      res.schedule.forEach(item => {
-        const tr = document.createElement("tr");
-        let shiftHtml = item.shift;
-        if (item.shift.indexOf("休") !== -1 || item.shift.indexOf("放假") !== -1) {
-          shiftHtml = `<span class="off-day">${item.shift}</span>`;
-        }
-
-        tr.innerHTML = `
-          <td style="font-weight:500;">${item.date}</td>
-          <td style="font-size:14px; color:#555;">${item.shift.indexOf("休") !== -1 ? "-" : (globalUser.location)}</td>
-          <td>${shiftHtml}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function loadAnnouncements() {
-      const container = document.getElementById("annContainer");
-      container.innerHTML = '<p style="color:#888; text-align:center;">公告讀取中...</p>';
-
-      const script = document.createElement("script");
-      script.src = `${GAS_WEB_APP_URL}?action=fetchAnnouncements&callback=onAnnouncementsResponse`;
-      document.body.appendChild(script);
-      document.body.removeChild(script);
-    }
-
-    function onAnnouncementsResponse(res) {
-      const container = document.getElementById("annContainer");
-      container.innerHTML = "";
-
-      if (!res.success || !res.announcements || res.announcements.length === 0) {
-        container.innerHTML = '<p style="color:#999; text-align:center; padding:20px;">目前尚無重要系統公告。</p>';
-        return;
-      }
-
-      res.announcements.forEach(item => {
-        const div = document.createElement("div");
-        div.className = "ann-item";
-        div.innerHTML = `
-          <div class="ann-meta">
-            <span>📅 發布日期：${item.date}</span>
-            <span style="background:#eef2f7; padding:2px 6px; border-radius:4px; font-weight:bold;">📌 ${item.unit}</span>
-          </div>
-          <div class="ann-content">${item.content}</div>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    function switchTab(tabName) {
-      document.querySelectorAll(".tab-item").forEach(el => el.classList.remove("active"));
-      document.querySelectorAll(".section-card").forEach(el => el.classList.remove("active"));
-      
-      document.getElementById(`tab-${tabName}`).classList.add("active");
-      document.getElementById(`sec-${tabName}`).classList.add("active");
-    }
-
-    function logout() {
-      location.reload();
-    }
+    function logout() { localStorage.clear(); location.reload(); }
   </script>
 </body>
 </html>
