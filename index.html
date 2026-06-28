@@ -26,14 +26,17 @@
     .btn-clock-in { background: #10b981; color: white; padding: 15px; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
     .btn-clock-out { background: #ef4444; color: white; padding: 15px; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
     .history-title { font-weight: bold; margin-top: 15px; color: #374151; font-size: 14px; border-left: 3px solid var(--primary-color); padding-left: 6px; margin-bottom: 8px; }
-    .log-list { max-height: 200px; overflow-y: auto; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; padding: 5px; }
+    
+    /* 📅 排班表格專用樣式 */
+    .schedule-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 260px; overflow-y: auto; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; padding: 8px; }
+    .schedule-card { background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+    .sch-date { font-size: 11px; color: #6b7280; font-weight: bold; margin-bottom: 4px; }
+    .sch-shift { font-size: 13px; font-weight: bold; color: #1f2937; }
+    .shift-rest { color: #ef4444 !important; } /* 休假變紅色字 */
+
+    .log-list { max-height: 150px; overflow-y: auto; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; padding: 5px; }
     .log-item { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 8px; border-bottom: 1px solid #edf2f7; }
-    .badge { padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; }
-    .badge-in { background: #e6fffa; color: #047481; }
-    .badge-out { background: #fde8e8; color: #c81e1e; }
     .announcement-item { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 6px; padding: 8px; margin-bottom: 8px; font-size: 12px; }
-    .download-box { background: #edf2f7; padding: 12px; border-radius: 8px; margin-top: 10px; text-align: center; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .btn-download { background: #4f46e5; color: white; padding: 10px; font-size: 13px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -76,15 +79,8 @@
         <button class="btn-clock-out" onclick="handleClock('clockOut')">下班打卡</button>
       </div>
 
-      <div class="history-title">📅 點選查詢歷史班表紀錄 (Schedules)</div>
-      <div class="form-group">
-        <select id="empMonthQuerySelect" onchange="queryEmployeeHistory()">
-          <option value="0">📅 查詢：本月班表紀錄</option>
-          <option value="1">📅 查詢：上個月班表紀錄</option>
-          <option value="2">📅 查詢：前兩個月班表紀錄</option>
-        </select>
-      </div>
-      <div class="log-list" id="empHistoryList"></div>
+      <div class="history-title">📅 當月個人排班表 (Schedules)</div>
+      <div class="schedule-grid" id="empScheduleGrid"></div>
 
       <div class="history-title">🌴 我的請假審核狀態查閱</div>
       <div class="log-list" id="empLeaveStatusList"></div>
@@ -118,24 +114,16 @@
         <strong>歡迎主委：</strong><span id="showCommName">--</span><br>
         <strong>管轄社區：</strong><span id="showCommLocation">--</span>
       </div>
-      <div class="history-title">📥 下載社區排班表檔案</div>
-      <div class="download-box">
-        <button class="btn-download" onclick="downloadReport(0)">📥 下載當月排班表</button>
-        <button class="btn-download" style="background:#312e81;" onclick="downloadReport(1)">📥 下載前一月排班表</button>
-      </div>
       <div class="history-title">📊 社區人員當月打卡速覽</div>
       <div class="log-list" id="commAttendanceList"></div>
-      <div class="history-title">📩 社區同仁請假審核狀態查閱</div>
-      <div class="log-list" id="commLeaveList"></div>
     </div>
   </div>
 </div>
 
 <script>
-  // ⚠️ 請確保此處換上您最新部署、以 /exec 結尾的 GAS 網址
+  // ⚠️ 部署完程式碼後，請務必把下方這一行換成您最新的大寫 /exec 網址！
   const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec"; 
   let currentEmployeeData = null;
-  let committeeLocation = "";
 
   function switchTab(target) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -165,7 +153,6 @@
           document.getElementById('showEmpLocation').innerText = data.assignedLocation;
           document.getElementById('showHireDate').innerText = data.hireDate;
           
-          // 渲染特休應有天數與剩餘天數
           document.getElementById('showLeaveTotal').innerText = data.annualLeaveTotal;
           document.getElementById('showLeaveRemaining').innerText = data.annualLeaveRemaining;
 
@@ -176,31 +163,35 @@
           const select = document.getElementById('empLocationSelect');
           select.innerHTML = data.isRoamingUser ? data.allLocations.map(l => `<option value="${l}">${l} (機動支援)</option>`).join('') : `<option value="${data.assignedLocation}">${data.assignedLocation}</option>`;
 
-          queryEmployeeHistory();
+          // 核心：登入後立刻加載並渲染 Schedules 班表
+          loadEmployeeSchedule();
           renderLeaveStatusList('empLeaveStatusList', data.leaves);
         } else { alert(data.message); }
-      }).catch(err => alert("連線失敗！請確認網頁中 GAS 網址與最新部署的網址一致。"));
+      }).catch(err => alert("連線失敗！請確認網頁第132行的 GAS 網址是否已更新為最新部署網址。"));
   }
 
-  function queryEmployeeHistory() {
-    if(!currentEmployeeData) return;
-    const monthsAgo = document.getElementById('empMonthQuerySelect').value;
+  // 渲染排班卡片表
+  function loadEmployeeSchedule() {
     const empId = document.getElementById('empId').value.trim();
-    const histList = document.getElementById('empHistoryList');
-    histList.innerHTML = "<div style='text-align:center;padding:10px;font-size:12px;color:#9ca3af;'>從排班表分頁撈取紀錄中...</div>";
+    const grid = document.getElementById('empScheduleGrid');
+    grid.innerHTML = "<div style='grid-column: span 3; text-align:center; font-size:12px; color:#9ca3af; padding:10px;'>從試算表讀取排班中...</div>";
 
-    fetch(`${GAS_WEB_APP_URL}?action=fetchEmployeeHistory&employeeId=${encodeURIComponent(empId)}&monthsAgo=${monthsAgo}`)
+    fetch(`${GAS_WEB_APP_URL}?action=fetchEmployeeSchedule&employeeId=${encodeURIComponent(empId)}`)
       .then(res => res.json())
       .then(data => {
-        histList.innerHTML = data.logs.length ? "" : "<div style='text-align:center;color:#9ca3af;padding:10px;font-size:12px;'>該月份排班表中尚無打卡紀錄</div>";
-        data.logs.forEach(log => {
-          histList.innerHTML += `
-            <div class="log-item">
-              <span>🟢 ${log.location}</span>
-              <span>${log.time}</span>
-              <span class="badge ${log.type === "上班" ? 'badge-in' : 'badge-out'}">${log.type}</span>
-            </div>`;
-        });
+        if(data.success && data.schedules.length) {
+          grid.innerHTML = "";
+          data.schedules.forEach(item => {
+            const isRest = item.shift.indexOf("休") !== -1;
+            grid.innerHTML += `
+              <div class="schedule-card">
+                <div class="sch-date">${item.date}</div>
+                <div class="sch-shift ${isRest ? 'shift-rest' : ''}">${item.shift}</div>
+              </div>`;
+          });
+        } else {
+          grid.innerHTML = "<div style='grid-column: span 3; text-align:center; font-size:12px; color:#9ca3af; padding:10px;'>尚無您的排班排程</div>";
+        }
       });
   }
 
@@ -213,23 +204,21 @@
       .then(res => res.json())
       .then(data => {
         if(data.success) {
-          committeeLocation = data.location;
           document.getElementById('commLoginForm').style.display = 'none';
           document.getElementById('commMainZone').style.display = 'block';
           document.getElementById('showCommName').innerText = data.committeeName;
           document.getElementById('showCommLocation').innerText = data.location;
 
           const attList = document.getElementById('commAttendanceList');
-          attList.innerHTML = data.attendance.length ? "" : "<div style='text-align:center;color:#9ca3af;padding:10px;font-size:12px;'>本月排班表分頁目前無任何人員紀錄</div>";
+          attList.innerHTML = data.attendance.length ? "" : "<div style='text-align:center;color:#9ca3af;padding:10px;font-size:12px;'>目前尚無任何人員打卡紀錄</div>";
           data.attendance.forEach(log => {
             attList.innerHTML += `
               <div class="log-item">
                 <strong>👤 ${log.name}</strong>
                 <span>${log.time}</span>
-                <span class="badge ${log.type === '上班' ? 'badge-in' : 'badge-out'}">${log.type}</span>
+                <span style="color:#4f46e5;font-weight:bold;">${log.type}</span>
               </div>`;
           });
-          renderLeaveStatusList('commLeaveList', data.leaves);
         } else { alert(data.message); }
       });
   }
@@ -253,16 +242,11 @@
     });
   }
 
-  function downloadReport(monthsAgo) {
-    if(!committeeLocation) return alert("請先登入系統");
-    window.location.href = `${GAS_WEB_APP_URL}?action=downloadCommitteeReport&location=${encodeURIComponent(committeeLocation)}&monthsAgo=${monthsAgo}`;
-  }
-
   function handleClock(type) {
     if(!currentEmployeeData) return;
     navigator.geolocation.getCurrentPosition((pos) => {
-      fetch(`${GAS_WEB_APP_URL}?action=${type}&employeeId=${encodeURIComponent(document.getElementById('empId').value)}&employeeName=${encodeURIComponent(currentEmployeeData.employeeName)}&location=${encodeURIComponent(document.getElementById('empLocationSelect').value)}&lat=${pos.coords.latitude}&lng=${pos.coords.longitude}`)
-        .then(res => res.json()).then(data => { alert(data.message); queryEmployeeHistory(); });
+      fetch(`${GAS_WEB_APP_URL}?action=${type}&employeeId=${encodeURIComponent(document.getElementById('empId').value)}&employeeName=${encodeURIComponent(currentEmployeeData.employeeName)}&location=${encodeURIComponent(document.getElementById('empLocationSelect').value)}`)
+        .then(res => res.json()).then(data => { alert(data.message); });
     }, () => alert("打卡必須取得 GPS 定位權限"));
   }
 
@@ -270,14 +254,10 @@
     const type = document.getElementById('leaveType').value;
     const start = document.getElementById('leaveStart').value;
     const end = document.getElementById('leaveEnd').value;
-    
     if(!start || !end) return alert("請選擇請假時間");
-    
-    // 如果選特休且剩餘天數小於等於 0，攔截警告
     if (type === "特休" && parseInt(currentEmployeeData.annualLeaveRemaining) <= 0) {
       return alert("⚠️ 警告：您目前的剩餘特休天數為 0 天，將無法送出申請！");
     }
-
     fetch(`${GAS_WEB_APP_URL}?action=submitLeave&employeeId=${encodeURIComponent(document.getElementById('empId').value)}&employeeName=${encodeURIComponent(currentEmployeeData.employeeName)}&location=${encodeURIComponent(currentEmployeeData.assignedLocation)}&leaveType=${encodeURIComponent(type)}&startTime=${start}&endTime=${end}`)
       .then(res => res.json()).then(data => { alert(data.message); handleEmployeeLogin(); });
   }
