@@ -23,14 +23,11 @@
     .form-group { margin-bottom: 12px; }
     label { display: block; font-size: 13px; color: #4b5563; margin-bottom: 4px; }
     select, input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
-    
-    /* 公告欄專用排版 */
     .ann-box { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; }
     .ann-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border-bottom: 1px dashed #bfdbfe; padding-bottom: 4px; }
     .ann-title { font-weight: bold; color: #1e40af; font-size: 15px; }
     .ann-date { font-size: 12px; color: #666; font-weight: normal; }
     .ann-content { color: #333; line-height: 1.5; white-space: pre-wrap; margin-top: 4px; }
-    
     .roaming-box { background: #f0fdf4; border: 1px dashed #28a745; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
     .hidden { display: none !important; }
   </style>
@@ -62,7 +59,7 @@
           
           <div id="roaming-selector-block" class="roaming-box hidden">
             <label style="color:#16a34a; font-weight:bold;">🔄 您是機動人員，請選取您目前所在的打卡案場：</label>
-            <select id="current-working-location" style="border-color:#28a745; margin-top:4px; font-weight:bold; color:#16a34a;">
+            <select id="current-working-location">
               </select>
           </div>
 
@@ -110,8 +107,8 @@
   </div>
 
   <script>
-    // ⚠️ 請務必替換成您最新重新部署的 GAS /exec 網址
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwqZ-X9W5n9_A9M_XfHwYV4bY5Tf_WpZ_D_XvI_EX_A/exec"; 
+    // ⚠️ 請在此處換上您剛剛在步驟一複製的最新 GAS 部署 /exec 網址
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec"; 
     
     let currentEmpId = "", currentEmpName = "", baseLoc = "", remainingLeaveDays = 0;
     let isRoamingUser = false;
@@ -131,9 +128,7 @@
             baseLoc = data.assignedLocation; 
             isRoamingUser = data.isRoamingUser; 
             gpsConfig = data.locationGpsConfig || {};
-            
-            // 【修正：將後端傳回的剩餘天數，正確同步賦值給前端的全域變數】
-            remainingLeaveDays = data.annualLeaveRemaining || 0;
+            remainingLeaveDays = Number(data.annualLeaveRemaining) || 0;
             
             document.getElementById('welcome-msg').innerText = `${currentEmpName} ，您好`;
             document.getElementById('assigned-loc').innerText = `目前指派職務：${isRoamingUser ? '機動人員' : baseLoc}`;
@@ -141,7 +136,6 @@
             document.getElementById('lv-total').innerText = data.annualLeaveTotal || 0;
             document.getElementById('lv-rem').innerText = remainingLeaveDays;
 
-            // 機動人員選單
             if (isRoamingUser && data.allLocations && data.allLocations.length > 0) {
               let locOptions = "";
               data.allLocations.forEach(loc => {
@@ -153,7 +147,6 @@
               document.getElementById('roaming-selector-block').classList.add('hidden');
             }
 
-            // 渲染最新公告
             let annHtml = "";
             if(data.announcements && data.announcements.length > 0) {
               data.announcements.forEach(a => {
@@ -189,10 +182,10 @@
       if (!activeLoc || activeLoc === "載入中...") return alert("尚未選取有效案場！");
 
       if (!navigator.geolocation) {
-        return alert("您的瀏覽器或手機不支援GPS定位，無法完成打卡。");
+        return alert("您的瀏覽器或手機不支援GPS定位。");
       }
 
-      alert("⏳ 正在取得您的 GPS 衛星定位，請在跳出權限提示時點擊「允許」...");
+      alert("⏳ 正在取得您的 GPS 定位，請點擊允許權限...");
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -202,29 +195,16 @@
           fetch(`${GAS_WEB_APP_URL}?action=${actionType}&employeeId=${currentEmpId}&employeeName=${encodeURIComponent(currentEmpName)}&location=${encodeURIComponent(activeLoc)}&lat=${lat}&lng=${lng}`)
             .then(res => res.json())
             .then(data => alert(data.message))
-            .catch(err => alert("打卡連線發生錯誤，請重新嘗試。"));
+            .catch(err => alert("打卡連線發生錯誤。"));
         },
         (error) => {
-          switch(error.code) {
-            case error.PERMISSION_DENIED:
-              alert("❌ 打卡失敗：您拒絕了瀏覽器的定位權限。請至手機設定中將瀏覽器定位開啟。");
-              break;
-            case error.POSITION_UNAVAILABLE:
-              alert("❌ 打卡失敗：無法取得位置，請確認手機已開啟GPS功能且收訊良好。");
-              break;
-            case error.TIMEOUT:
-              alert("❌ 打卡失敗：定位逾時，請到空曠處重新打卡。");
-              break;
-            default:
-              alert("❌ 打卡失敗：發生未知的GPS錯誤。");
-          }
+          alert("❌ 無法取得 GPS 定位，請檢查定位服務是否開啟。");
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
     }
 
     function checkLeaveType() {
-      // 【修正：此處判斷將能正確對照最新同步的剩餘特休變數值】
       if(document.getElementById('leave-type').value === '特休' && remainingLeaveDays <= 0) {
         alert('⚠️ 警告：您目前的剩餘特休天數為 0 天，將無法送出申請！');
       }
@@ -237,7 +217,7 @@
       const activeLoc = getTargetLocation();
       
       if(type === '特休' && remainingLeaveDays <= 0) {
-        return alert('❌ 申請失敗：您已無剩餘特休天數可以申請！');
+        return alert('❌ 申請失敗：您已無剩餘特休天數！');
       }
       
       if(!start || !end) return alert('請填寫完整的時間！');
