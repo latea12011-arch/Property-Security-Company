@@ -121,9 +121,11 @@
           updateLeaveSummaryBox();
 
           const annBox = document.getElementById('announcementBox');
-          annBox.innerHTML = data.announcements.length ? "" : "<div style='font-size:12px;color:#9ca3af;'>暫無最新公告</div>";
-          data.announcements.forEach(a => { annBox.innerHTML += `<div class="announcement-item"><strong>[${a.date}] ${a.title}</strong><br>${a.content}</div>`; });
-
+annBox.innerHTML = data.announcements.length ? "" : "<div style='font-size:12px;color:#9ca3af;'>暫無最新公告</div>";
+data.announcements.forEach(a => { 
+  // 💡 修正：把 a.content (公告內容) 完整放進 HTML 裡面顯示
+  annBox.innerHTML += `<div class="announcement-item"><strong>[${a.date}] ${a.title}</strong><br>${a.content}</div>`; 
+});
           const select = document.getElementById('empLocationSelect');
           select.innerHTML = data.isRoamingUser ? data.allLocations.map(l => `<option value="${l}">${l} (機動支援)</option>`).join('') : `<option value="${data.assignedLocation}">${data.assignedLocation}</option>`;
 
