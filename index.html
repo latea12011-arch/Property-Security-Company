@@ -25,8 +25,6 @@
     select, input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
     .ann-box { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; }
     .ann-title { font-weight: bold; color: #1e40af; margin-bottom: 2px; }
-    
-    /* 機動選單高亮區 */
     .roaming-box { background: #f0fdf4; border: 1px dashed #28a745; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
     .hidden { display: none !important; }
   </style>
@@ -34,6 +32,7 @@
 <body>
 
   <div class="container">
+    <!-- 1. 登入卡片 -->
     <div id="login-section" class="card">
       <h2 style="text-align:center; margin-bottom: 16px;">物業考勤系統登入</h2>
       <div class="form-group"><input type="text" id="emp-id" placeholder="請輸入員工編號"></div>
@@ -41,25 +40,30 @@
       <button class="btn-submit" onclick="login()">登入系統</button>
     </div>
 
+    <!-- 2. 主要面板 -->
     <div id="main-section" class="hidden">
       <div style="display: flex; flex-direction: column; gap: 20px;">
         
+        <!-- 歡迎卡 -->
         <div class="card user-info">
           <div>
             <h2 id="welcome-msg">歡迎，同仁</h2>
-            <div class="sub-text" id="assigned-loc">今日指派案場：載入中...</div>
+            <div class="sub-text" id="assigned-loc">今日指派職務：載入中...</div>
             <div class="sub-text" id="arrival-date">到職日期：--</div>
           </div>
           <button onclick="location.reload()" style="background:#ef4444; padding:6px 12px; font-size:12px; border-radius:6px; flex:none; width:auto;">登出</button>
         </div>
 
+        <!-- 即時考勤打卡 -->
         <div class="card">
           <div class="section-title">📌 即時考勤打卡</div>
           
+          <!-- 機動人員專用地點選擇器 -->
           <div id="roaming-selector-block" class="roaming-box hidden">
             <label style="color:#16a34a; font-weight:bold;">🔄 偵測為機動人員，請選擇本次打卡案場：</label>
             <select id="current-working-location" style="border-color:#28a745; margin-top:4px; font-weight:bold; color:#16a34a;">
-              </select>
+              <!-- 後端自動注入 -->
+            </select>
           </div>
 
           <div class="btn-group">
@@ -68,6 +72,7 @@
           </div>
         </div>
 
+        <!-- 請假申請 -->
         <div class="card">
           <div class="section-title">📅 線上請假申請表單</div>
           <div class="law-box">
@@ -93,6 +98,7 @@
           <button class="btn-submit" onclick="submitLeave()">送出請假申請</button>
         </div>
 
+        <!-- 最新公告 -->
         <div class="card">
           <div class="section-title">📢 最新公告</div>
           <div id="announcements-container"></div>
@@ -129,7 +135,7 @@
             document.getElementById('lv-total').innerText = data.annualLeaveTotal || 0;
             document.getElementById('lv-rem').innerText = remainingLeaveDays || 0;
 
-            // 💡 判斷是否為機動人員，若是則渲染並秀出下拉選單
+            // 判斷是否為機動人員
             if (baseLoc === "機動人員" && data.allLocations && data.allLocations.length > 0) {
               isRoamingUser = true;
               let locOptions = "";
@@ -158,7 +164,6 @@
         }).catch(err => alert("連線失敗！請確認您的 GAS 網址與部署權限設定。"));
     }
 
-    // 取得當前打卡到底該用哪個地點 (一般人員用預設案場，機動人員抓下拉選單選的值)
     function getTargetLocation() {
       if (isRoamingUser) {
         return document.getElementById('current-working-location').value;
