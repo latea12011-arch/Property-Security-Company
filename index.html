@@ -3,227 +3,316 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>紘嘉物業保全考勤系統 - 員工端</title>
+  <title>紘嘉物業保全 - 智慧管理系統</title>
   <style>
-    :root { --primary-color: #28a745; --warning-color: #ff9800; --bg-color: #f4f6f9; }
+    :root { --primary-color: #4f46e5; --success-color: #10b981; --bg-color: #f3f4f6; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); padding: 20px; display: flex; justify-content: center; }
-    .container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 20px; }
-    .card { background: white; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-    .user-info { display: flex; justify-content: space-between; align-items: center; }
-    h2 { font-size: 18px; color: #333; margin-bottom: 4px; }
-    .sub-text { font-size: 13px; color: #666; margin-top: 2px; }
-    .section-title { font-size: 15px; font-weight: bold; margin-bottom: 12px; color: #333; }
-    .btn-group { display: flex; gap: 12px; margin-top: 8px; }
-    button { flex: 1; padding: 14px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; color: white; cursor: pointer; }
-    .btn-in { background: #28a745; }
-    .btn-out { background: #ff9800; }
-    .btn-submit { background: #3b82f6; width: 100%; margin-top: 10px; }
-    .law-box { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; color: #78350f; line-height: 1.6; }
-    .form-group { margin-bottom: 12px; }
-    label { display: block; font-size: 13px; color: #4b5563; margin-bottom: 4px; }
-    select, input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
-    .ann-box { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; }
-    .ann-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border-bottom: 1px dashed #bfdbfe; padding-bottom: 4px; }
-    .ann-title { font-weight: bold; color: #1e40af; font-size: 15px; }
-    .ann-date { font-size: 12px; color: #666; font-weight: normal; }
-    .ann-content { color: #333; line-height: 1.5; white-space: pre-wrap; margin-top: 4px; }
-    .roaming-box { background: #f0fdf4; border: 1px dashed #28a745; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
-    .hidden { display: none !important; }
+    body { font-family: -apple-system, sans-serif; background-color: var(--bg-color); color: #333; padding: 12px; display: flex; justify-content: center; }
+    .container { width: 100%; max-width: 480px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); padding: 20px; min-height: 500px; }
+    h2 { text-align: center; margin-bottom: 20px; color: #1f2937; font-size: 20px; font-weight: bold; }
+    .tab-group { display: flex; background: #e5e7eb; border-radius: 8px; padding: 3px; margin-bottom: 20px; }
+    .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; font-weight: bold; cursor: pointer; border-radius: 6px; font-size: 14px; color: #4b5563; }
+    .tab-btn.active { background: white; color: var(--primary-color); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #4b5563; margin-bottom: 5px; }
+    input, select { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+    button.btn-block { width: 100%; padding: 13px; border: none; border-radius: 8px; background: var(--primary-color); color: white; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 5px; }
+    button.btn-block:hover { background: #4338ca; }
+    .info-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; margin-bottom: 15px; font-size: 13px; line-height: 1.6; }
+    .clock-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+    .btn-clock-in { background: #10b981; color: white; padding: 15px; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
+    .btn-clock-out { background: #ef4444; color: white; padding: 15px; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
+    .history-title { font-weight: bold; margin-top: 15px; color: #374151; font-size: 14px; border-left: 3px solid var(--primary-color); padding-left: 6px; margin-bottom: 8px; }
+    .log-list { max-height: 200px; overflow-y: auto; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; padding: 5px; }
+    .log-item { display: flex; justify-content: space-between; font-size: 12px; padding: 8px; border-bottom: 1px solid #edf2f7; }
+    .log-item:last-child { border-bottom: none; }
+    .badge { padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+    .badge-in { background: #e6fffa; color: #047481; }
+    .badge-out { background: #fde8e8; color: #c81e1e; }
+    .announcement-item { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 6px; padding: 8px; margin-bottom: 8px; font-size: 12px; }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <div id="login-section" class="card">
-      <h2 style="text-align:center; margin-bottom: 16px;">物業考勤系統登入</h2>
-      <div class="form-group"><input type="text" id="emp-id" placeholder="請輸入員工編號"></div>
-      <div class="form-group"><input type="password" id="emp-password" placeholder="請輸入密碼"></div>
-      <button class="btn-submit" onclick="login()">登入系統</button>
+<div class="container">
+  <h2>紘嘉物業保全管理系統</h2>
+  
+  <div class="tab-group" id="mainTabs">
+    <button class="tab-btn active" onclick="switchTab('employee')">員工端</button>
+    <button class="tab-btn" onclick="switchTab('committee')">主委端</button>
+  </div>
+
+  <!-- ================= 員工端面板 ================= -->
+  <div id="employeePanel" class="panel active">
+    <!-- 員工登入表單 -->
+    <div id="empLoginForm">
+      <div class="form-group">
+        <label>員工編號</label>
+        <input type="text" id="empId" placeholder="請輸入您的員工編號">
+      </div>
+      <div class="form-group">
+        <label>密碼</label>
+        <input type="password" id="empPassword" placeholder="請輸入密碼">
+      </div>
+      <button class="btn-block" onclick="handleEmployeeLogin()">登入員工系統</button>
     </div>
 
-    <div id="main-section" class="hidden">
-      <div style="display: flex; flex-direction: column; gap: 20px;">
-        
-        <div class="card user-info">
-          <div>
-            <h2 id="welcome-msg">歡迎，同仁</h2>
-            <div class="sub-text" id="assigned-loc">今日指派職務：載入中...</div>
-            <div class="sub-text" id="arrival-date">到職日期：--</div>
-          </div>
-          <button onclick="location.reload()" style="background:#ef4444; padding:6px 12px; font-size:12px; border-radius:6px; flex:none; width:auto;">登出</button>
-        </div>
+    <!-- 員工操作主區 -->
+    <div id="empMainZone" style="display:none;">
+      <div class="info-box">
+        <strong>姓名：</strong><span id="showEmpName">--</span><br>
+        <strong>入職日期：</strong><span id="showHireDate">--</span><br>
+        <strong>勞基法特休：</strong>總共 <span id="showLeaveTotal">0</span> 天 (剩餘 <span id="showLeaveRemaining">0</span> 天)<br>
+        <strong>負責案場：</strong><span id="showEmpLocation">--</span>
+      </div>
+      
+      <!-- 公告欄 -->
+      <div class="history-title">📢 佈告欄最新公告</div>
+      <div id="announcementBox" style="margin-bottom: 15px;"></div>
 
-        <div class="card">
-          <div class="section-title">📌 即時考勤打卡 (含地區GPS限制)</div>
-          
-          <div id="roaming-selector-block" class="roaming-box hidden">
-            <label style="color:#16a34a; font-weight:bold;">🔄 您是機動人員，請選取您目前所在的打卡案場：</label>
-            <select id="current-working-location">
-              </select>
-          </div>
+      <!-- 打卡區 -->
+      <div class="history-title">📍 線上 GPS 定位打卡</div>
+      <div class="form-group" style="margin-top:5px;">
+        <label>選擇目前打卡案場</label>
+        <select id="empLocationSelect"></select>
+      </div>
+      <div class="clock-grid">
+        <button class="btn-clock-in" onclick="handleClock('clockIn')">上班打卡</button>
+        <button class="btn-clock-out" onclick="handleClock('clockOut')">下班打卡</button>
+      </div>
 
-          <div class="btn-group">
-            <button class="btn-in" onclick="triggerClockAction('clockIn')">上班打卡</button>
-            <button class="btn-out" onclick="triggerClockAction('clockOut')">下班打卡</button>
-          </div>
-        </div>
+      <!-- 請假區 -->
+      <div class="history-title">🌴 線上請假申請</div>
+      <div class="form-group" style="margin-top:5px;">
+        <label>假別</label>
+        <select id="leaveType">
+          <option value="事假">事假</option>
+          <option value="病假">病假</option>
+          <option value="特休">特休</option>
+          <option value="婚假/喪假">婚假/喪假</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>開始時間</label>
+        <input type="datetime-local" id="leaveStart">
+      </div>
+      <div class="form-group">
+        <label>結束時間</label>
+        <input type="datetime-local" id="leaveEnd">
+      </div>
+      <button class="btn-block" style="background:#6b7280;" onclick="handleLeaveSubmit()">送出請假申請</button>
 
-        <div class="card">
-          <div class="section-title">📅 線上請假申請表單</div>
-          <div class="law-box">
-            ⚖️ <strong>勞基法特休規定：</strong>滿半年享3天；1年享7天。<br>
-            📊 <strong>您的特休狀態：</strong>應有總額 <span id="lv-total" style="font-weight:bold; color:#ef4444;">--</span> 天 / 剩餘 <span id="lv-rem" style="font-weight:bold; color:#10b981;">--</span> 天
-          </div>
-          <div class="form-group">
-            <label>選擇請假假別</label>
-            <select id="leave-type" onchange="checkLeaveType()">
-              <option value="事假">事假 (勞基法上限14天)</option>
-              <option value="病假">病假 (勞基法上限30天)</option>
-              <option value="公假">公假 (依公司規定請假)</option>
-              <option value="婚假">婚假 (勞基法上限08天)</option>
-              <option value="喪假">喪假 (勞基法上限08天)</option>
-              <option value="特休">特休 (依同仁年資計算)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>請假開始時間</label>
-            <input type="datetime-local" id="leave-start">
-          </div>
-          <div class="form-group">
-            <label>請假結束時間</label>
-            <input type="datetime-local" id="leave-end">
-          </div>
-          <button class="btn-submit" onclick="submitLeave()">送出請假申請</button>
-        </div>
-
-        <div class="card">
-          <div class="section-title">📢 最新公告</div>
-          <div id="announcements-container"></div>
-        </div>
-
+      <!-- 📝 員工歷史班表紀錄 (含當月共3個月) -->
+      <div class="history-title">📅 歷史班表與打卡紀錄 (含當月共3個月)</div>
+      <div class="log-list" id="empHistoryList">
+        <div style="text-align:center;color:#9ca3af;padding:10px;font-size:12px;">尚無打卡歷史紀錄</div>
       </div>
     </div>
   </div>
 
-  <script>
-    // ⚠️ 請在此處換上您剛剛在步驟一複製的最新 GAS 部署 /exec 網址
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec"; 
+  <!-- ================= 主委端面板 ================= -->
+  <div id="committeePanel" class="panel">
+    <div id="commLoginForm">
+      <div class="form-group">
+        <label>主委管理帳號</label>
+        <input type="text" id="commUser" placeholder="請輸入社區管理帳號">
+      </div>
+      <div class="form-group">
+        <label>密碼</label>
+        <input type="password" id="commPassword" placeholder="請輸入密碼">
+      </div>
+      <button class="btn-block" style="background:#4f46e5;" onclick="handleCommitteeLogin()">登入管理後台</button>
+    </div>
+
+    <div id="commMainZone" style="display:none;">
+      <div class="info-box" style="background:#eeebff; border-color:#dcd7ff;">
+        <strong>歡迎主委：</strong><span id="showCommName">--</span><br>
+        <strong>管轄社區：</strong><span id="showCommLocation">--</span>
+      </div>
+
+      <!-- 📝 主委歷史班表紀錄 (含當月共2個月) -->
+      <div class="history-title">📊 社區人員歷史班表紀錄 (含當月共2個月)</div>
+      <div class="log-list" id="commAttendanceList" style="max-height: 250px;">
+        <div style="text-align:center;color:#9ca3af;padding:10px;font-size:12px;">目前無任何人員打卡紀錄</div>
+      </div>
+
+      <div class="history-title">📩 待審核請假流程</div>
+      <div class="log-list" id="commLeaveList">
+        <div style="text-align:center;color:#9ca3af;padding:10px;font-size:12px;">暫無請假審核申請</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ⚠️ 請換上您最新部署的 GAS 網址 (/exec 結尾)
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec"; 
+
+  let currentEmployeeData = null;
+
+  function switchTab(target) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    if(target === 'employee') {
+      document.querySelectorAll('.tab-btn')[0].classList.add('active');
+      document.getElementById('employeePanel').classList.add('active');
+    } else {
+      document.querySelectorAll('.tab-btn')[1].classList.add('active');
+      document.getElementById('committeePanel').classList.add('active');
+    }
+  }
+
+  // 員工登入
+  function handleEmployeeLogin() {
+    const id = document.getElementById('empId').value.trim();
+    const pw = document.getElementById('empPassword').value.trim();
+    if(!id || !pw) return alert("請輸入員工編號與密碼");
+
+    fetch(`${GAS_WEB_APP_URL}?action=login&employeeId=${encodeURIComponent(id)}&password=${encodeURIComponent(pw)}`)
+      .then(res => res.json())
+      .then(data => {
+        if(data.success) {
+          currentEmployeeData = data;
+          document.getElementById('empLoginForm').style.display = 'none';
+          document.getElementById('empMainZone').style.display = 'block';
+          
+          document.getElementById('showEmpName').innerText = data.employeeName;
+          document.getElementById('showHireDate').innerText = data.hireDate;
+          document.getElementById('showLeaveTotal').innerText = data.annualLeaveTotal;
+          document.getElementById('showLeaveRemaining').innerText = data.annualLeaveRemaining;
+          document.getElementById('showEmpLocation').innerText = data.assignedLocation;
+
+          // 載入公告
+          const annBox = document.getElementById('announcementBox');
+          annBox.innerHTML = data.announcements.length ? "" : "<div style='font-size:12px;color:#9ca3af;'>暫無最新公告</div>";
+          data.announcements.forEach(a => {
+            annBox.innerHTML += `<div class="announcement-item"><strong>[${a.date}] ${a.title}</strong><br>${a.content}</div>`;
+          });
+
+          // 設定案場選單
+          const select = document.getElementById('empLocationSelect');
+          select.innerHTML = "";
+          if(data.isRoamingUser) {
+            data.allLocations.forEach(loc => {
+              select.innerHTML += `<option value="${loc}">${loc} (機動支援)</option>`;
+            });
+          } else {
+            select.innerHTML = `<option value="${data.assignedLocation}">${data.assignedLocation}</option>`;
+          }
+
+          // 📝 渲染含當月共3個月的員工歷史班表紀錄
+          const histList = document.getElementById('empHistoryList');
+          histList.innerHTML = data.historyLogs.length ? "" : "<div style='text-align:center;color:#9ca3af;padding:10px;font-size:12px;'>尚無打卡歷史紀錄</div>";
+          data.historyLogs.forEach(log => {
+            const isClickIn = log.type === "上班";
+            histList.innerHTML += `
+              <div class="log-item">
+                <span>🟢 ${log.location}</span>
+                <span>${log.time}</span>
+                <span class="badge ${isClickIn ? 'badge-in' : 'badge-out'}">${log.type}</span>
+              </div>`;
+          });
+
+        } else {
+          alert(data.message);
+        }
+      }).catch(() => alert("系統連線失敗，請檢查網路或網址。"));
+  }
+
+  // 員工 GPS 打卡
+  function handleClock(actionType) {
+    if(!currentEmployeeData) return;
+    const chosenLocation = document.getElementById('empLocationSelect').value;
     
-    let currentEmpId = "", currentEmpName = "", baseLoc = "", remainingLeaveDays = 0;
-    let isRoamingUser = false;
-    let gpsConfig = {}; 
-
-    function login() {
-      const id = document.getElementById('emp-id').value.trim();
-      const pwd = document.getElementById('emp-password').value.trim();
-      if(!id || !pwd) return alert('請完整輸入帳號密碼');
-
-      fetch(`${GAS_WEB_APP_URL}?action=login&employeeId=${id}&password=${pwd}`)
+    if(!navigator.geolocation) return alert("您的手機不支援或未開啟 GPS 定位功能");
+    
+    alert("正在取得您的 GPS 衛星定位座標，請稍候...");
+    
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      
+      const url = `${GAS_WEB_APP_URL}?action=${actionType}` +
+                  `&employeeId=${encodeURIComponent(document.getElementById('empId').value)}` +
+                  `&employeeName=${encodeURIComponent(currentEmployeeData.employeeName)}` +
+                  `&location=${encodeURIComponent(chosenLocation)}` +
+                  `&lat=${lat}&lng=${lng}`;
+                  
+      fetch(url)
         .then(res => res.json())
         .then(data => {
-          if(data.success) {
-            currentEmpId = id; 
-            currentEmpName = data.employeeName; 
-            baseLoc = data.assignedLocation; 
-            isRoamingUser = data.isRoamingUser; 
-            gpsConfig = data.locationGpsConfig || {};
-            remainingLeaveDays = Number(data.annualLeaveRemaining) || 0;
-            
-            document.getElementById('welcome-msg').innerText = `${currentEmpName} ，您好`;
-            document.getElementById('assigned-loc').innerText = `目前指派職務：${isRoamingUser ? '機動人員' : baseLoc}`;
-            document.getElementById('arrival-date').innerText = `到職日：${data.hireDate || '--'}`;
-            document.getElementById('lv-total').innerText = data.annualLeaveTotal || 0;
-            document.getElementById('lv-rem').innerText = remainingLeaveDays;
+          alert(data.message);
+          if(data.success) { handleEmployeeLogin(); } // 重新刷打卡歷史清單
+        });
+    }, () => alert("❌ 無法取得 GPS 座標，請確認瀏覽器及手機已允許本網頁定位權限。"), { enableHighAccuracy: true, timeout: 8000 });
+  }
 
-            if (isRoamingUser && data.allLocations && data.allLocations.length > 0) {
-              let locOptions = "";
-              data.allLocations.forEach(loc => {
-                locOptions += `<option value="${loc}">${loc}</option>`;
-              });
-              document.getElementById('current-working-location').innerHTML = locOptions;
-              document.getElementById('roaming-selector-block').classList.remove('hidden');
-            } else {
-              document.getElementById('roaming-selector-block').classList.add('hidden');
-            }
+  // 員工請假
+  function handleLeaveSubmit() {
+    const type = document.getElementById('leaveType').value;
+    const start = document.getElementById('leaveStart').value;
+    const end = document.getElementById('leaveEnd').value;
+    if(!start || !end) return alert("請填寫完整的請假起訖時間！");
 
-            let annHtml = "";
-            if(data.announcements && data.announcements.length > 0) {
-              data.announcements.forEach(a => {
-                annHtml += `
-                  <div class="ann-box">
-                    <div class="ann-header">
-                      <div class="ann-title">${a.title}</div>
-                      <div class="ann-date">${a.date}</div>
-                    </div>
-                    <div class="ann-content">${a.content}</div>
-                  </div>`;
-              });
-            } else { 
-              annHtml = "<div style='color:#999; font-style:italic; font-size:13px; text-align:center;'>目前暫無最新公告</div>"; 
-            }
-            document.getElementById('announcements-container').innerHTML = annHtml;
-            
-            document.getElementById('login-section').classList.add('hidden');
-            document.getElementById('main-section').classList.remove('hidden');
-          } else { alert(data.message); }
-        }).catch(err => alert("連線失敗！請確認您的 GAS 網址與重新部署設定。"));
-    }
+    const url = `${GAS_WEB_APP_URL}?action=submitLeave` +
+                `&employeeId=${encodeURIComponent(document.getElementById('empId').value)}` +
+                `&employeeName=${encodeURIComponent(currentEmployeeData.employeeName)}` +
+                `&location=${encodeURIComponent(currentEmployeeData.assignedLocation)}` +
+                `&leaveType=${encodeURIComponent(type)}` +
+                `&startTime=${start}&endTime=${end}`;
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message);
+        if(data.success) { handleEmployeeLogin(); }
+      });
+  }
 
-    function getTargetLocation() {
-      if (isRoamingUser) {
-        return document.getElementById('current-working-location').value;
-      }
-      return baseLoc;
-    }
+  // 主委端登入
+  function handleCommitteeLogin() {
+    const user = document.getElementById('commUser').value.trim();
+    const pw = document.getElementById('commPassword').value.trim();
+    if(!user || !pw) return alert("請輸入管理帳號與密碼");
 
-    function triggerClockAction(actionType) {
-      const activeLoc = getTargetLocation();
-      if (!activeLoc || activeLoc === "載入中...") return alert("尚未選取有效案場！");
+    fetch(`${GAS_WEB_APP_URL}?action=committeeLogin&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pw)}`)
+      .then(res => res.json())
+      .then(data => {
+        if(data.success) {
+          document.getElementById('commLoginForm').style.display = 'none';
+          document.getElementById('commMainZone').style.display = 'block';
+          document.getElementById('showCommName').innerText = data.committeeName;
+          document.getElementById('showCommLocation').innerText = data.location;
 
-      if (!navigator.geolocation) {
-        return alert("您的瀏覽器或手機不支援GPS定位。");
-      }
+          // 📝 渲染含當月共 2 個月該案場的人員歷史班表紀錄
+          const attList = document.getElementById('commAttendanceList');
+          attList.innerHTML = data.attendance.length ? "" : "<div style='text-align:center;color:#9ca3af;padding:10px;font-size:12px;'>目前無任何人員打卡紀錄</div>";
+          data.attendance.forEach(log => {
+            const isClickIn = log.type === "上班";
+            attList.innerHTML += `
+              <div class="log-item">
+                <strong>👤 ${log.name}</strong>
+                <span>${log.time}</span>
+                <span class="badge ${isClickIn ? 'badge-in' : 'badge-out'}">${log.type}</span>
+              </div>`;
+          });
 
-      alert("⏳ 正在取得您的 GPS 定位，請點擊允許權限...");
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          
-          fetch(`${GAS_WEB_APP_URL}?action=${actionType}&employeeId=${currentEmpId}&employeeName=${encodeURIComponent(currentEmpName)}&location=${encodeURIComponent(activeLoc)}&lat=${lat}&lng=${lng}`)
-            .then(res => res.json())
-            .then(data => alert(data.message))
-            .catch(err => alert("打卡連線發生錯誤。"));
-        },
-        (error) => {
-          alert("❌ 無法取得 GPS 定位，請檢查定位服務是否開啟。");
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    }
-
-    function checkLeaveType() {
-      if(document.getElementById('leave-type').value === '特休' && remainingLeaveDays <= 0) {
-        alert('⚠️ 警告：您目前的剩餘特休天數為 0 天，將無法送出申請！');
-      }
-    }
-
-    function submitLeave() {
-      const type = document.getElementById('leave-type').value;
-      const start = document.getElementById('leave-start').value;
-      const end = document.getElementById('leave-end').value;
-      const activeLoc = getTargetLocation();
-      
-      if(type === '特休' && remainingLeaveDays <= 0) {
-        return alert('❌ 申請失敗：您已無剩餘特休天數！');
-      }
-      
-      if(!start || !end) return alert('請填寫完整的時間！');
-      fetch(`${GAS_WEB_APP_URL}?action=submitLeave&employeeId=${currentEmpId}&employeeName=${encodeURIComponent(currentEmpName)}&location=${encodeURIComponent(activeLoc)}&leaveType=${encodeURIComponent(type)}&startTime=${start}&endTime=${end}`)
-        .then(res => res.json()).then(data => { alert(data.message); if(data.success) location.reload(); });
-    }
-  </script>
+          // 假單
+          const lvList = document.getElementById('commLeaveList');
+          lvList.innerHTML = data.leaves.length ? "" : "<div style='text-align:center;color:#9ca3af;padding:10px;font-size:12px;'>暫無請假審核申請</div>";
+          data.leaves.forEach(lv => {
+            lvList.innerHTML += `
+              <div class="log-item">
+                <span>👤 ${lv.name} (${lv.type})</span>
+                <span style="color:#f59e0b;font-weight:bold;">${lv.status}</span>
+              </div>`;
+          });
+        } else {
+          alert(data.message);
+        }
+      });
+  }
+</script>
 </body>
 </html>
