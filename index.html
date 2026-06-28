@@ -76,7 +76,7 @@
         <button class="btn-clock-out" onclick="handleClock('clockOut')">下班打卡</button>
       </div>
 
-      <div class="history-title">🌴 點選查詢歷史班表紀錄</div>
+      <div class="history-title">📅 點選查詢歷史班表紀錄 (Schedules)</div>
       <div class="form-group">
         <select id="empMonthQuerySelect" onchange="queryEmployeeHistory()">
           <option value="0">📅 查詢：本月班表紀錄</option>
@@ -132,6 +132,7 @@
 </div>
 
 <script>
+  // ⚠️ 請確保此處換上您最新部署、以 /exec 結尾的 GAS 網址
   const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec"; 
   let currentEmployeeData = null;
   let committeeLocation = "";
@@ -164,7 +165,7 @@
           document.getElementById('showEmpLocation').innerText = data.assignedLocation;
           document.getElementById('showHireDate').innerText = data.hireDate;
           
-          // 渲染特休數據
+          // 渲染特休應有天數與剩餘天數
           document.getElementById('showLeaveTotal').innerText = data.annualLeaveTotal;
           document.getElementById('showLeaveRemaining').innerText = data.annualLeaveRemaining;
 
@@ -178,7 +179,7 @@
           queryEmployeeHistory();
           renderLeaveStatusList('empLeaveStatusList', data.leaves);
         } else { alert(data.message); }
-      }).catch(err => alert("連線失敗！"));
+      }).catch(err => alert("連線失敗！請確認網頁中 GAS 網址與最新部署的網址一致。"));
   }
 
   function queryEmployeeHistory() {
@@ -272,7 +273,7 @@
     
     if(!start || !end) return alert("請選擇請假時間");
     
-    // 如果選特休且剩餘天數小於等於 0，跳出警告攔截
+    // 如果選特休且剩餘天數小於等於 0，攔截警告
     if (type === "特休" && parseInt(currentEmployeeData.annualLeaveRemaining) <= 0) {
       return alert("⚠️ 警告：您目前的剩餘特休天數為 0 天，將無法送出申請！");
     }
