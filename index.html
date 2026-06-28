@@ -21,6 +21,7 @@
     button.btn-block { width: 100%; padding: 13px; border: none; border-radius: 8px; background: var(--primary-color); color: white; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 5px; }
     button.btn-block:hover { background: #4338ca; }
     .info-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; margin-bottom: 15px; font-size: 13px; line-height: 1.6; }
+    .law-box { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 10px; padding: 14px; margin-bottom: 15px; font-size: 13px; line-height: 1.6; color: #b45309; }
     .clock-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
     .btn-clock-in { background: #10b981; color: white; padding: 15px; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
     .btn-clock-out { background: #ef4444; color: white; padding: 15px; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
@@ -47,14 +48,8 @@
 
   <div id="employeePanel" class="panel active">
     <div id="empLoginForm">
-      <div class="form-group">
-        <label>員工編號</label>
-        <input type="text" id="empId" placeholder="請輸入您的員工編號">
-      </div>
-      <div class="form-group">
-        <label>密碼</label>
-        <input type="password" id="empPassword" placeholder="請輸入密碼">
-      </div>
+      <div class="form-group"><label>員工編號</label><input type="text" id="empId" placeholder="請輸入您的員工編號"></div>
+      <div class="form-group"><label>密碼</label><input type="password" id="empPassword" placeholder="請輸入密碼"></div>
       <button class="btn-block" onclick="handleEmployeeLogin()">登入員工系統</button>
     </div>
 
@@ -62,7 +57,13 @@
       <div class="info-box">
         <strong>姓名：</strong><span id="showEmpName">--</span><br>
         <strong>負責案場：</strong><span id="showEmpLocation">--</span><br>
-        <strong>剩餘特休：</strong><span id="showLeaveRemaining">0</span> 天
+        <strong>到職日期：</strong><span id="showHireDate">--</span>
+      </div>
+
+      <div class="history-title">⚖️ 勞基法特休規定</div>
+      <div class="law-box">
+        ⚖️ <strong>勞基法特休規定：</strong>滿半年享 3 天；1 年享 7 天；2 年享 10 天。<br>
+        📊 <strong>您的特休狀態：</strong>應有總額 <span id="showLeaveTotal" style="font-weight:bold;color:#ef4444;">0</span> 天 / 剩餘 <span id="showLeaveRemaining" style="font-weight:bold;color:#10b981;">0</span> 天
       </div>
       
       <div class="history-title">📢 最新公告</div>
@@ -89,10 +90,19 @@
       <div class="log-list" id="empLeaveStatusList"></div>
 
       <div class="history-title">✍️ 線上請假申請</div>
-      <div class="form-group"><select id="leaveType"><option value="事假">事假</option><option value="病假">病假</option><option value="特休">特休</option></select></div>
-      <div class="form-group"><input type="datetime-local" id="leaveStart"></div>
-      <div class="form-group"><input type="datetime-local" id="leaveEnd"></div>
-      <button class="btn-block" style="background:#6b7280;" onclick="handleLeaveSubmit()">送出請假申請</button>
+      <div class="form-group">
+        <select id="leaveType">
+              <option value="事假">事假 (勞基法上限14天)</option>
+              <option value="病假">病假 (勞基法上限30天)</option>
+              <option value="公假">公假 (依公司規定請假)</option>
+              <option value="婚假">婚假 (勞基法上限08天)</option>
+              <option value="喪假">喪假 (勞基法上限08天)</option>
+              <option value="特休">特休 (依同仁年資計算)</option>
+        </select>
+      </div>
+      <div class="form-group"><label>請假開始時間</label><input type="datetime-local" id="leaveStart"></div>
+      <div class="form-group"><label>請假結束時間</label><input type="datetime-local" id="leaveEnd"></div>
+      <button class="btn-block" style="background:#4f46e5;" onclick="handleLeaveSubmit()">送出請假申請</button>
     </div>
   </div>
 
@@ -108,16 +118,13 @@
         <strong>歡迎主委：</strong><span id="showCommName">--</span><br>
         <strong>管轄社區：</strong><span id="showCommLocation">--</span>
       </div>
-
       <div class="history-title">📥 下載社區排班表檔案</div>
       <div class="download-box">
         <button class="btn-download" onclick="downloadReport(0)">📥 下載當月排班表</button>
         <button class="btn-download" style="background:#312e81;" onclick="downloadReport(1)">📥 下載前一月排班表</button>
       </div>
-
       <div class="history-title">📊 社區人員當月打卡速覽</div>
       <div class="log-list" id="commAttendanceList"></div>
-
       <div class="history-title">📩 社區同仁請假審核狀態查閱</div>
       <div class="log-list" id="commLeaveList"></div>
     </div>
@@ -155,38 +162,36 @@
           document.getElementById('empMainZone').style.display = 'block';
           document.getElementById('showEmpName').innerText = data.employeeName;
           document.getElementById('showEmpLocation').innerText = data.assignedLocation;
+          document.getElementById('showHireDate').innerText = data.hireDate;
+          
+          // 渲染特休數據
+          document.getElementById('showLeaveTotal').innerText = data.annualLeaveTotal;
           document.getElementById('showLeaveRemaining').innerText = data.annualLeaveRemaining;
 
-          // 渲染公告
           const annBox = document.getElementById('announcementBox');
           annBox.innerHTML = data.announcements.length ? "" : "<div style='font-size:12px;color:#9ca3af;'>暫無最新公告</div>";
           data.announcements.forEach(a => { annBox.innerHTML += `<div class="announcement-item"><strong>[${a.date}] ${a.title}</strong><br>${a.content}</div>`; });
 
-          // 打卡案場選項
           const select = document.getElementById('empLocationSelect');
           select.innerHTML = data.isRoamingUser ? data.allLocations.map(l => `<option value="${l}">${l} (機動支援)</option>`).join('') : `<option value="${data.assignedLocation}">${data.assignedLocation}</option>`;
 
-          // 載入預設當月歷史班表
           queryEmployeeHistory();
-
-          // 渲染員工本人的請假狀態
           renderLeaveStatusList('empLeaveStatusList', data.leaves);
         } else { alert(data.message); }
-      });
+      }).catch(err => alert("連線失敗！"));
   }
 
-  // 員工切換選單查詢特定月份歷史班表
   function queryEmployeeHistory() {
     if(!currentEmployeeData) return;
     const monthsAgo = document.getElementById('empMonthQuerySelect').value;
     const empId = document.getElementById('empId').value.trim();
     const histList = document.getElementById('empHistoryList');
-    histList.innerHTML = "<div style='text-align:center;padding:10px;font-size:12px;color:#9ca3af;'>載入紀錄中...</div>";
+    histList.innerHTML = "<div style='text-align:center;padding:10px;font-size:12px;color:#9ca3af;'>從排班表分頁撈取紀錄中...</div>";
 
     fetch(`${GAS_WEB_APP_URL}?action=fetchEmployeeHistory&employeeId=${encodeURIComponent(empId)}&monthsAgo=${monthsAgo}`)
       .then(res => res.json())
       .then(data => {
-        histList.innerHTML = data.logs.length ? "" : "<div style='text-align:center;color:#9ca3af;padding:10px;font-size:12px;'>該月份尚無打卡歷史紀錄</div>";
+        histList.innerHTML = data.logs.length ? "" : "<div style='text-align:center;color:#9ca3af;padding:10px;font-size:12px;'>該月份排班表中尚無打卡紀錄</div>";
         data.logs.forEach(log => {
           histList.innerHTML += `
             <div class="log-item">
@@ -198,7 +203,6 @@
       });
   }
 
-  // 主委端登入
   function handleCommitteeLogin() {
     const user = document.getElementById('commUser').value.trim();
     const pw = document.getElementById('commPassword').value.trim();
@@ -214,9 +218,8 @@
           document.getElementById('showCommName').innerText = data.committeeName;
           document.getElementById('showCommLocation').innerText = data.location;
 
-          // 當月打卡紀錄速覽
           const attList = document.getElementById('commAttendanceList');
-          attList.innerHTML = data.attendance.length ? "" : "<div style='text-align:center;color:#9ca3af;padding:10px;font-size:12px;'>本月目前無任何人員打卡</div>";
+          attList.innerHTML = data.attendance.length ? "" : "<div style='text-align:center;color:#9ca3af;padding:10px;font-size:12px;'>本月排班表分頁目前無任何人員紀錄</div>";
           data.attendance.forEach(log => {
             attList.innerHTML += `
               <div class="log-item">
@@ -225,21 +228,18 @@
                 <span class="badge ${log.type === '上班' ? 'badge-in' : 'badge-out'}">${log.type}</span>
               </div>`;
           });
-
-          // 全社區同仁請假狀態查閱
           renderLeaveStatusList('commLeaveList', data.leaves);
         } else { alert(data.message); }
       });
   }
 
-  // 共用：請假審核狀態查閱渲染（能明確查看是否有被審核過）
   function renderLeaveStatusList(elementId, leaves) {
     const list = document.getElementById(elementId);
     list.innerHTML = leaves.length ? "" : "<div style='text-align:center;color:#9ca3af;padding:10px;font-size:12px;'>暫無請假申請紀錄</div>";
     leaves.forEach(lv => {
-      let color = "#f59e0b"; // 待審核＝黃色
-      if(lv.status === "已核准") color = "#10b981"; // 已核准＝綠色
-      if(lv.status === "已拒絕") color = "#ef4444"; // 已拒絕＝紅色
+      let color = "#f59e0b"; 
+      if(lv.status === "已核准") color = "#10b981"; 
+      if(lv.status === "已拒絕") color = "#ef4444"; 
 
       list.innerHTML += `
         <div class="log-item">
@@ -252,14 +252,11 @@
     });
   }
 
-  // 主委一鍵點選下載指定月份排班表 CSV 
   function downloadReport(monthsAgo) {
     if(!committeeLocation) return alert("請先登入系統");
-    const downloadUrl = `${GAS_WEB_APP_URL}?action=downloadCommitteeReport&location=${encodeURIComponent(committeeLocation)}&monthsAgo=${monthsAgo}`;
-    window.location.href = downloadUrl; // 直接觸發瀏覽器下載
+    window.location.href = `${GAS_WEB_APP_URL}?action=downloadCommitteeReport&location=${encodeURIComponent(committeeLocation)}&monthsAgo=${monthsAgo}`;
   }
 
-  // 打卡及請假送出
   function handleClock(type) {
     if(!currentEmployeeData) return;
     navigator.geolocation.getCurrentPosition((pos) => {
@@ -272,7 +269,14 @@
     const type = document.getElementById('leaveType').value;
     const start = document.getElementById('leaveStart').value;
     const end = document.getElementById('leaveEnd').value;
+    
     if(!start || !end) return alert("請選擇請假時間");
+    
+    // 如果選特休且剩餘天數小於等於 0，跳出警告攔截
+    if (type === "特休" && parseInt(currentEmployeeData.annualLeaveRemaining) <= 0) {
+      return alert("⚠️ 警告：您目前的剩餘特休天數為 0 天，將無法送出申請！");
+    }
+
     fetch(`${GAS_WEB_APP_URL}?action=submitLeave&employeeId=${encodeURIComponent(document.getElementById('empId').value)}&employeeName=${encodeURIComponent(currentEmployeeData.employeeName)}&location=${encodeURIComponent(currentEmployeeData.assignedLocation)}&leaveType=${encodeURIComponent(type)}&startTime=${start}&endTime=${end}`)
       .then(res => res.json()).then(data => { alert(data.message); handleEmployeeLogin(); });
   }
