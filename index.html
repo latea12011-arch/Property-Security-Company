@@ -32,7 +32,6 @@
 <body>
 
   <div class="container">
-    <!-- 1. 登入卡片 -->
     <div id="login-section" class="card">
       <h2 style="text-align:center; margin-bottom: 16px;">物業考勤系統登入</h2>
       <div class="form-group"><input type="text" id="emp-id" placeholder="請輸入員工編號"></div>
@@ -40,11 +39,9 @@
       <button class="btn-submit" onclick="login()">登入系統</button>
     </div>
 
-    <!-- 2. 主要面板 -->
     <div id="main-section" class="hidden">
       <div style="display: flex; flex-direction: column; gap: 20px;">
         
-        <!-- 歡迎卡 -->
         <div class="card user-info">
           <div>
             <h2 id="welcome-msg">歡迎，同仁</h2>
@@ -54,25 +51,21 @@
           <button onclick="location.reload()" style="background:#ef4444; padding:6px 12px; font-size:12px; border-radius:6px; flex:none; width:auto;">登出</button>
         </div>
 
-        <!-- 即時考勤打卡 -->
         <div class="card">
-          <div class="section-title">📌 即時考勤打卡</div>
+          <div class="section-title">📌 即時考勤打卡 (含地區GPS限制)</div>
           
-          <!-- 機動人員專用地點選擇器 -->
           <div id="roaming-selector-block" class="roaming-box hidden">
-            <label style="color:#16a34a; font-weight:bold;">🔄 偵測為機動人員，請選擇本次打卡案場：</label>
+            <label style="color:#16a34a; font-weight:bold;">🔄 您是機動人員，請選取您目前所在的打卡案場：</label>
             <select id="current-working-location" style="border-color:#28a745; margin-top:4px; font-weight:bold; color:#16a34a;">
-              <!-- 後端自動注入 -->
-            </select>
+              </select>
           </div>
 
           <div class="btn-group">
-            <button class="btn-in" onclick="clockIn()">上班打卡</button>
-            <button class="btn-out" onclick="clockOut()">下班打卡</button>
+            <button class="btn-in" onclick="triggerClockAction('clockIn')">上班打卡</button>
+            <button class="btn-out" onclick="triggerClockAction('clockOut')">下班打卡</button>
           </div>
         </div>
 
-        <!-- 請假申請 -->
         <div class="card">
           <div class="section-title">📅 線上請假申請表單</div>
           <div class="law-box">
@@ -98,7 +91,6 @@
           <button class="btn-submit" onclick="submitLeave()">送出請假申請</button>
         </div>
 
-        <!-- 最新公告 -->
         <div class="card">
           <div class="section-title">📢 最新公告</div>
           <div id="announcements-container"></div>
@@ -114,6 +106,7 @@
     
     let currentEmpId = "", currentEmpName = "", baseLoc = "", remainingLeaveDays = 0;
     let isRoamingUser = false;
+    let gpsConfig = {}; // 存放所有案場經緯度
 
     function login() {
       const id = document.getElementById('emp-id').value.trim();
@@ -127,17 +120,17 @@
             currentEmpId = id; 
             currentEmpName = data.employeeName; 
             baseLoc = data.assignedLocation; 
-            remainingLeaveDays = data.annualLeaveRemaining;
+            isRoamingUser = data.isRoamingUser; // 從G欄抓取狀態
+            gpsConfig = data.locationGpsConfig || {};
             
             document.getElementById('welcome-msg').innerText = `${currentEmpName} ，您好`;
-            document.getElementById('assigned-loc').innerText = `今日指派職務：${baseLoc}`;
+            document.getElementById('assigned-loc').innerText = `目前指派職務：${isRoamingUser ? '機動人員' : baseLoc}`;
             document.getElementById('arrival-date').innerText = `到職日：${data.hireDate || '--'}`;
             document.getElementById('lv-total').innerText = data.annualLeaveTotal || 0;
             document.getElementById('lv-rem').innerText = remainingLeaveDays || 0;
 
-            // 判斷是否為機動人員
-            if (baseLoc === "機動人員" && data.allLocations && data.allLocations.length > 0) {
-              isRoamingUser = true;
+            // 如果是機動人員，展現選單
+            if (isRoamingUser && data.allLocations && data.allLocations.length > 0) {
               let locOptions = "";
               data.allLocations.forEach(loc => {
                 locOptions += `<option value="${loc}">${loc}</option>`;
@@ -145,7 +138,6 @@
               document.getElementById('current-working-location').innerHTML = locOptions;
               document.getElementById('roaming-selector-block').classList.remove('hidden');
             } else {
-              isRoamingUser = false;
               document.getElementById('roaming-selector-block').classList.add('hidden');
             }
 
@@ -171,22 +163,51 @@
       return baseLoc;
     }
 
+    // 觸發打卡並要求手機 GPS 位置
+    function triggerClockAction(actionType) {
+      const activeLoc = getTargetLocation();
+      if (!activeLoc || activeLoc === "載入中...") return alert("尚未選取有效案場！");
+
+      if (!navigator.geolocation) {
+        return alert("您的瀏覽器或手機不支援全球定位系統(GPS)，無法完成打卡。");
+      }
+
+      alert("⏳ 正在讀取您的 GPS 位置，請在跳出權限提示時選擇「允許」...");
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          
+          // 前端先做基本定位資料確認，並送交後端做嚴格距離計算與寫入
+          fetch(`${GAS_WEB_APP_URL}?action=${actionType}&employeeId=${currentEmpId}&employeeName=${encodeURIComponent(currentEmpName)}&location=${encodeURIComponent(activeLoc)}&lat=${lat}&lng=${lng}`)
+            .then(res => res.json())
+            .then(data => alert(data.message))
+            .catch(err => alert("打卡失敗，與伺服器連線中斷。"));
+        },
+        (error) => {
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              alert("❌ 打卡失敗：您拒絕了位置存取要求。請至手機瀏覽器設定中開啟定位權限。");
+              break;
+            case error.POSITION_UNAVAILABLE:
+              alert("❌ 打卡失敗：無法取得當前位置，請確認手機已開啟GPS定位。");
+              break;
+            case error.TIMEOUT:
+              alert("❌ 打卡失敗：讀取位置逾時，請至收訊較佳的地方重新嘗試。");
+              break;
+            default:
+              alert("❌ 打卡失敗：發生未知的定位錯誤。");
+          }
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
     function checkLeaveType() {
       if(document.getElementById('leave-type').value === '特休' && remainingLeaveDays <= 0) {
         alert('⚠️ 警告：您目前的剩餘特休天數為 0 天，將無法送出申請！');
       }
-    }
-
-    function clockIn() {
-      const activeLoc = getTargetLocation();
-      fetch(`${GAS_WEB_APP_URL}?action=clockIn&employeeId=${currentEmpId}&employeeName=${encodeURIComponent(currentEmpName)}&location=${encodeURIComponent(activeLoc)}`)
-        .then(res => res.json()).then(data => alert(data.message));
-    }
-
-    function clockOut() {
-      const activeLoc = getTargetLocation();
-      fetch(`${GAS_WEB_APP_URL}?action=clockOut&employeeId=${currentEmpId}&employeeName=${encodeURIComponent(currentEmpName)}&location=${encodeURIComponent(activeLoc)}`)
-        .then(res => res.json()).then(data => alert(data.message));
     }
 
     function submitLeave() {
@@ -196,8 +217,6 @@
       const activeLoc = getTargetLocation();
       
       if(!start || !end) return alert('請填寫完整的時間！');
-      if(type === '特休' && remainingLeaveDays <= 0) return alert('特休額度不足 0 天，系統拒絕送出！');
-
       fetch(`${GAS_WEB_APP_URL}?action=submitLeave&employeeId=${currentEmpId}&employeeName=${encodeURIComponent(currentEmpName)}&location=${encodeURIComponent(activeLoc)}&leaveType=${encodeURIComponent(type)}&startTime=${start}&endTime=${end}`)
         .then(res => res.json()).then(data => { alert(data.message); if(data.success) location.reload(); });
     }
