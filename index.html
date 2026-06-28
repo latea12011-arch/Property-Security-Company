@@ -26,14 +26,14 @@
     .ann-box { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; }
     .ann-title { font-weight: bold; color: #1e40af; margin-bottom: 2px; }
     
-    /* 💡 控制隱藏的關鍵樣式 */
+    /* 機動選單高亮區 */
+    .roaming-box { background: #f0fdf4; border: 1px dashed #28a745; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
     .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <!-- 1. 登入卡片 (未登入前只顯示這一塊) -->
     <div id="login-section" class="card">
       <h2 style="text-align:center; margin-bottom: 16px;">物業考勤系統登入</h2>
       <div class="form-group"><input type="text" id="emp-id" placeholder="請輸入員工編號"></div>
@@ -41,11 +41,9 @@
       <button class="btn-submit" onclick="login()">登入系統</button>
     </div>
 
-    <!-- 2. 主要面板 (把所有功能卡片全部包在一個 hidden 的貨櫃裡面，登入成功前絕對看不到) -->
     <div id="main-section" class="hidden">
       <div style="display: flex; flex-direction: column; gap: 20px;">
         
-        <!-- 歡迎同仁資訊卡 -->
         <div class="card user-info">
           <div>
             <h2 id="welcome-msg">歡迎，同仁</h2>
@@ -55,16 +53,21 @@
           <button onclick="location.reload()" style="background:#ef4444; padding:6px 12px; font-size:12px; border-radius:6px; flex:none; width:auto;">登出</button>
         </div>
 
-        <!-- 即時考勤打卡卡片 -->
         <div class="card">
           <div class="section-title">📌 即時考勤打卡</div>
+          
+          <div id="roaming-selector-block" class="roaming-box hidden">
+            <label style="color:#16a34a; font-weight:bold;">🔄 偵測為機動人員，請選擇本次打卡案場：</label>
+            <select id="current-working-location" style="border-color:#28a745; margin-top:4px; font-weight:bold; color:#16a34a;">
+              </select>
+          </div>
+
           <div class="btn-group">
             <button class="btn-in" onclick="clockIn()">上班打卡</button>
             <button class="btn-out" onclick="clockOut()">下班打卡</button>
           </div>
         </div>
 
-        <!-- 請假申請卡片 -->
         <div class="card">
           <div class="section-title">📅 線上請假申請表單</div>
           <div class="law-box">
@@ -90,7 +93,6 @@
           <button class="btn-submit" onclick="submitLeave()">送出請假申請</button>
         </div>
 
-        <!-- 最新公告卡片 -->
         <div class="card">
           <div class="section-title">📢 最新公告</div>
           <div id="announcements-container"></div>
@@ -101,10 +103,11 @@
   </div>
 
   <script>
-    // ⚠️ 請記得抽換成您最新部署的 GAS 後端應用程式網址 (/exec 結尾)
+    // ⚠️ 記得更換成您最新部署的 GAS 網址
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec"; 
     
-    let currentEmpId = "", currentEmpName = "", currentLoc = "", remainingLeaveDays = 0;
+    let currentEmpId = "", currentEmpName = "", baseLoc = "", remainingLeaveDays = 0;
+    let isRoamingUser = false;
 
     function login() {
       const id = document.getElementById('emp-id').value.trim();
@@ -117,15 +120,28 @@
           if(data.success) {
             currentEmpId = id; 
             currentEmpName = data.employeeName; 
-            currentLoc = data.assignedLocation; 
+            baseLoc = data.assignedLocation; 
             remainingLeaveDays = data.annualLeaveRemaining;
             
-            // 資料寫入前端欄位
             document.getElementById('welcome-msg').innerText = `${currentEmpName} ，您好`;
-            document.getElementById('assigned-loc').innerText = `今日指派案場：${currentLoc}`;
-            document.getElementById('arrival-date').innerText = `系統偵測到職日：${data.hireDate || '--'}`;
+            document.getElementById('assigned-loc').innerText = `今日指派職務：${baseLoc}`;
+            document.getElementById('arrival-date').innerText = `到職日：${data.hireDate || '--'}`;
             document.getElementById('lv-total').innerText = data.annualLeaveTotal || 0;
             document.getElementById('lv-rem').innerText = remainingLeaveDays || 0;
+
+            // 💡 判斷是否為機動人員，若是則渲染並秀出下拉選單
+            if (baseLoc === "機動人員" && data.allLocations && data.allLocations.length > 0) {
+              isRoamingUser = true;
+              let locOptions = "";
+              data.allLocations.forEach(loc => {
+                locOptions += `<option value="${loc}">${loc}</option>`;
+              });
+              document.getElementById('current-working-location').innerHTML = locOptions;
+              document.getElementById('roaming-selector-block').classList.remove('hidden');
+            } else {
+              isRoamingUser = false;
+              document.getElementById('roaming-selector-block').classList.add('hidden');
+            }
 
             // 渲染公告
             let annHtml = "";
@@ -133,14 +149,21 @@
               data.announcements.forEach(a => {
                 annHtml += `<div class="ann-box"><div class="ann-title">${a.title} <span style="font-size:11px; color:#666;">${a.date}</span></div><div>${a.content}</div></div>`;
               });
-            } else { annHtml = "<div style='color:#999; font-style:italic; font-size:13px;'>目前暫無公告</div>"; }
+            } else { annHtml = "<div style='color:#999; font-style:italic; font-size:13px;'>目前暫無最新公告</div>"; }
             document.getElementById('announcements-container').innerHTML = annHtml;
             
-            // 💡 登入成功：隱藏登入卡片，秀出功能面板
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('main-section').classList.remove('hidden');
           } else { alert(data.message); }
-        }).catch(err => alert("連線失敗！請檢查您的 GAS 網址與權限設定。"));
+        }).catch(err => alert("連線失敗！請確認您的 GAS 網址與部署權限設定。"));
+    }
+
+    // 取得當前打卡到底該用哪個地點 (一般人員用預設案場，機動人員抓下拉選單選的值)
+    function getTargetLocation() {
+      if (isRoamingUser) {
+        return document.getElementById('current-working-location').value;
+      }
+      return baseLoc;
     }
 
     function checkLeaveType() {
@@ -150,12 +173,14 @@
     }
 
     function clockIn() {
-      fetch(`${GAS_WEB_APP_URL}?action=clockIn&employeeId=${currentEmpId}&employeeName=${encodeURIComponent(currentEmpName)}&location=${encodeURIComponent(currentLoc)}`)
+      const activeLoc = getTargetLocation();
+      fetch(`${GAS_WEB_APP_URL}?action=clockIn&employeeId=${currentEmpId}&employeeName=${encodeURIComponent(currentEmpName)}&location=${encodeURIComponent(activeLoc)}`)
         .then(res => res.json()).then(data => alert(data.message));
     }
 
     function clockOut() {
-      fetch(`${GAS_WEB_APP_URL}?action=clockOut&employeeId=${currentEmpId}&employeeName=${encodeURIComponent(currentEmpName)}&location=${encodeURIComponent(currentLoc)}`)
+      const activeLoc = getTargetLocation();
+      fetch(`${GAS_WEB_APP_URL}?action=clockOut&employeeId=${currentEmpId}&employeeName=${encodeURIComponent(currentEmpName)}&location=${encodeURIComponent(activeLoc)}`)
         .then(res => res.json()).then(data => alert(data.message));
     }
 
@@ -163,10 +188,12 @@
       const type = document.getElementById('leave-type').value;
       const start = document.getElementById('leave-start').value;
       const end = document.getElementById('leave-end').value;
+      const activeLoc = getTargetLocation();
+      
       if(!start || !end) return alert('請填寫完整的時間！');
       if(type === '特休' && remainingLeaveDays <= 0) return alert('特休額度不足 0 天，系統拒絕送出！');
 
-      fetch(`${GAS_WEB_APP_URL}?action=submitLeave&employeeId=${currentEmpId}&employeeName=${encodeURIComponent(currentEmpName)}&location=${encodeURIComponent(currentLoc)}&leaveType=${encodeURIComponent(type)}&startTime=${start}&endTime=${end}`)
+      fetch(`${GAS_WEB_APP_URL}?action=submitLeave&employeeId=${currentEmpId}&employeeName=${encodeURIComponent(currentEmpName)}&location=${encodeURIComponent(activeLoc)}&leaveType=${encodeURIComponent(type)}&startTime=${start}&endTime=${end}`)
         .then(res => res.json()).then(data => { alert(data.message); if(data.success) location.reload(); });
     }
   </script>
