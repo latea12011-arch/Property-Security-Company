@@ -41,9 +41,10 @@
     .hidden { display: none !important; }
     .label-title { font-size: 15px; font-weight: bold; color: #374151; margin-bottom: 8px; display: block; }
     
-    .tab-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
-    .tab-btn { padding: 10px 4px; background: #e5e7eb; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; color: #4b5563; cursor: pointer; text-align: center; }
-    .tab-btn.active { background: var(--primary-color); color: white; }
+    /* 🌟 重置與強化功能標籤切換鈕 (確保手機上可以輕鬆點選) */
+    .tab-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; position: relative; z-index: 10; }
+    .tab-btn { padding: 12px 2px; background: #e5e7eb; border: none; border-radius: 10px; font-size: 14px; font-weight: bold; color: #4b5563; cursor: pointer; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.2s; }
+    .tab-btn.active { background: var(--primary-color) !important; color: white !important; font-weight: 800; }
     
     .announcement-item { padding: 14px 0; border-bottom: 1px solid #f3f4f6; }
     .announcement-item:last-child { border-bottom: none; }
@@ -79,7 +80,7 @@
 
   <div class="container">
     <div id="login-box" class="card">
-      <h2 style="color:var(--primary-color);">紘嘉物業同仁行動端</h2>
+      <h2 style="color:var(--primary-color);">橫嘉物業同仁行動端</h2>
       <div style="text-align: left; margin-bottom: 6px; font-size: 14px; font-weight: bold; color: #4b5563;">員工工號</div>
       <input type="text" id="employeeId" placeholder="請輸入員工編號">
       
@@ -184,6 +185,7 @@
   </div>
 
   <script>
+    // 🔗 後端部署網址
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec"; 
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -199,9 +201,10 @@
     }
     function closeModal() { document.getElementById('custom-modal').classList.add('hidden'); }
 
-    // 初始化自動計算：當月、前1個月、前2個月下拉選單
+    // 初始化月份下拉選單 (當月與前兩個月)
     function initMonthDropdown() {
       const select = document.getElementById('schedule-month-select');
+      if(!select) return;
       select.innerHTML = "";
       const now = new Date();
       for (let i = 0; i < 3; i++) {
@@ -214,6 +217,22 @@
         opt.innerText = i === 0 ? `📅 ${yyyy}年${mm}月 (當月)` : `📅 ${yyyy}年${mm}月`;
         select.appendChild(opt);
       }
+    }
+
+    // 🌟 核心分頁切換函數 (修正切換邏輯，移除了任何可能被卡住的 class 判定)
+    function switchTab(idx) {
+      console.log("切換至分頁：", idx);
+      for(let i = 0; i < 4; i++) {
+        const btn = document.getElementById(`tab${i}`);
+        const panel = document.getElementById(`panel-${i}`);
+        if(btn) btn.classList.remove('active');
+        if(panel) panel.classList.add('hidden');
+      }
+      
+      const activeBtn = document.getElementById(`tab${idx}`);
+      const activePanel = document.getElementById(`panel-${idx}`);
+      if(activeBtn) activeBtn.classList.add('active');
+      if(activePanel) activePanel.classList.remove('hidden');
     }
 
     function checkLocalLogin() {
@@ -250,7 +269,6 @@
         document.getElementById('fixed-location-box').classList.remove('hidden');
       }
       
-      // 特休年資顯示
       const joinDate = localStorage.getItem('emp_join_date') || '未登錄';
       const totalAnnual = localStorage.getItem('emp_annual_total') || '0';
       document.getElementById('leave-entitlement-box').innerHTML = `
@@ -275,7 +293,7 @@
             localStorage.setItem('emp_id', empId);
             localStorage.setItem('emp_name', data.employeeName);
             localStorage.setItem('emp_location', data.assignedLocation);
-            localStorage.setItem('emp_identity_type', data.identityType); // 正職 或 機動
+            localStorage.setItem('emp_identity_type', data.identityType);
             localStorage.setItem('emp_join_date', data.joinDate);
             localStorage.setItem('emp_annual_total', data.annualLeaveTotal);
             localStorage.setItem('emp_all_locations', JSON.stringify(data.allLocations || []));
@@ -290,7 +308,6 @@
         }).catch(err => openModal("網路異常", "無法連接考勤伺服器", "❌"));
     }
 
-    // 切換月份時動態重新抓取排班
     function changeScheduleMonth() {
       const empId = localStorage.getItem('emp_id');
       const selectedMonth = document.getElementById('schedule-month-select').value;
@@ -299,6 +316,7 @@
 
     function fetchSchedule(empId, monthStr) {
       const tbody = document.getElementById('schedule-tbody');
+      if(!tbody) return;
       tbody.innerHTML = `<tr><td colspan="2" style="color:#9ca3af;">正在加載 ${monthStr} 排班資料...</td></tr>`;
       
       fetch(`${GAS_WEB_APP_URL}?action=fetchSchedule&employeeId=${encodeURIComponent(empId)}&month=${monthStr}`)
@@ -314,6 +332,8 @@
           } else {
             tbody.innerHTML = `<tr><td colspan="2" style="color:#9ca3af;">⚠️ 試算表中尚未建立此月份(${monthStr})的排班資料</td></tr>`;
           }
+        }).catch(e => {
+          tbody.innerHTML = `<tr><td colspan="2" style="color:#ef4444;">排班加載失敗，請檢查網路。</td></tr>`;
         });
     }
 
@@ -322,6 +342,7 @@
         .then(res => res.json())
         .then(data => {
           const container = document.getElementById('announcement-container');
+          if(!container) return;
           if(data.success && data.announcements.length > 0) {
             container.innerHTML = "";
             data.announcements.forEach(ann => {
@@ -333,7 +354,7 @@
           } else {
             container.innerHTML = `<div style="color:#9ca3af; text-align:center; padding:20px;">目前尚無發布官方公告。</div>`;
           }
-        });
+        }).catch(e => {});
     }
 
     function submitLeaveForm() {
