@@ -2,100 +2,145 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>紘嘉物業管理 - 主委專區</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>紘嘉物業管理 - 主委行動專區</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
-    :root { --primary-color: #4f46e5; --bg-color: #f3f4f6; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, sans-serif; background-color: var(--bg-color); padding: 20px; display: flex; justify-content: center; }
-    .container { width: 100%; max-width: 750px; display: flex; flex-direction: column; gap: 20px; }
-    .card { background: white; padding: 24px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-    .header-box { display: flex; justify-content: space-between; align-items: center; }
-    h2 { color: #1f2937; font-size: 18px; font-weight: bold; }
-    .location-tag { color: #4f46e5; font-weight: 600; font-size: 14px; margin-top: 2px; }
-    .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    @media (max-width: 600px) { .grid-layout { grid-template-columns: 1fr; } }
-    .section-title { font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 12px; }
+    :root { 
+      --primary-color: #4f46e5; 
+      --primary-hover: #4338ca;
+      --bg-color: #f3f4f6; 
+      --card-bg: #ffffff;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --border-color: #e5e7eb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); padding: 12px; display: flex; justify-content: center; color: var(--text-main); }
+    .container { width: 100%; max-width: 480px; display: flex; flex-direction: column; min-height: calc(100vh - 24px); }
     
-    /* 區塊標題與按鈕的排版組合 */
-    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .section-header .section-title { margin-bottom: 0; }
+    /* App 行動化卡片外觀 */
+    .card { background: var(--card-bg); padding: 18px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); margin-bottom: 12px; }
     
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th { background: #f9fafb; padding: 10px; font-weight: 600; border-bottom: 1px solid #e5e7eb; }
-    td { padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center; }
-    .badge { padding: 4px 8px; border-radius: 9999px; font-size: 12px; }
+    /* 登入畫面 App 化 */
+    #login-box { margin: 60px auto 0 auto; width: 100%; text-align: center; background: white; }
+    #login-box h2 { font-size: 20px; margin-bottom: 24px; font-weight: bold; color: #111827; }
+    
+    /* 手機精緻輸入框與按鈕 */
+    input { width: 100%; padding: 14px; margin-bottom: 14px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 15px; outline: none; transition: all 0.2s; background: #f9fafb; }
+    input:focus { border-color: var(--primary-color); background: #fff; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+    button.btn-main { width: 100%; padding: 14px; background: var(--primary-color); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    button.btn-main:hover { background: var(--primary-hover); }
+    
+    /* App 頂部個人資料區 */
+    .app-header { display: flex; justify-content: space-between; align-items: center; background: white; }
+    .app-title { font-size: 18px; font-weight: bold; color: #111827; }
+    .location-tag { color: var(--primary-color); font-weight: bold; font-size: 13px; margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+    .btn-logout { width: auto; padding: 6px 12px; background: #fee2e2; color: #ef4444; font-size: 12px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; }
+    
+    /* 🌟 App 專屬分頁切換列 (Tab Bar) */
+    .tab-bar { display: grid; grid-template-columns: 1fr 1fr; background: #e5e7eb; padding: 4px; border-radius: 10px; margin-bottom: 14px; }
+    .tab-btn { padding: 10px; text-align: center; font-size: 14px; font-weight: bold; color: #4b5563; border-radius: 8px; border: none; background: transparent; cursor: pointer; transition: all 0.2s; }
+    .tab-btn.active { background: white; color: var(--primary-color); box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+    
+    /* 列表標頭排版 */
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .section-title { font-size: 15px; font-weight: bold; color: #1f2937; }
+    .btn-excel { background: #10b981; color: white; padding: 6px 12px; font-size: 12px; border-radius: 6px; width: auto; font-weight: bold; border: none; cursor: pointer; }
+    
+    /* 手機列表化清單（捨棄傳統大表格，改用更好讀的清單） */
+    .list-container { display: flex; flex-direction: column; gap: 10px; }
+    .list-item { background: #f9fafb; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .item-left { display: flex; flex-direction: column; gap: 4px; }
+    .item-name { font-size: 14px; font-weight: bold; color: #111827; }
+    .item-sub { font-size: 12px; color: var(--text-muted); }
+    
+    /* 精美手機 Badge 狀態標籤 */
+    .badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; text-align: center; }
     .badge-in { background: #dcfce7; color: #15803d; }
-    .badge-out { background: #fef3c7; color: #d97706; }
-    .badge-pending { background: #fce7f3; color: #9d174d; }
-    .badge-approved { background: #e0e7ff; color: #4338ca; }
-    input { width: 100%; padding: 11px; margin-bottom: 14px; border: 1px solid #d1d5db; border-radius: 8px; }
-    button { width: 100%; padding: 11px; background: #4f46e5; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    .btn-excel { background: #10b981; color: white; padding: 6px 12px; font-size: 13px; border-radius: 6px; width: auto; font-weight: bold; }
-    .btn-excel:hover { background: #059669; }
+    .badge-out { background: #fee2e2; color: #b91c1c; }
+    .badge-pending { background: #fffbeb; border: 1px solid #fef3c7; color: #b45309; }
+    .badge-approved { background: #dbeafe; color: #1d4ed8; }
+    .badge-rejected { background: #f3f4f6; color: #6b7280; }
+    
     .hidden { display: none !important; }
-    .no-data { color: #9ca3af; font-style: italic; padding: 15px 0; }
+    .no-data { text-align: center; color: #9ca3af; font-style: italic; padding: 30px 0; font-size: 13px; }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <div id="login-box" class="card" style="max-width: 380px; margin: 40px auto; width:100%;">
-      <h2 style="text-align: center; margin-bottom: 16px;">案場主委/管理端登入</h2>
-      <input type="text" id="username" placeholder="請輸入主委專屬帳號">
+    <div id="login-box" class="card">
+      <h2>紘嘉物業行動管理端</h2>
+      <input type="text" id="username" placeholder="請輸入主委管理帳號">
       <input type="password" id="password" placeholder="請輸入密碼">
-      <button onclick="login()">登入系統</button>
+      <button class="btn-main" onclick="login()">登入專區</button>
     </div>
 
     <div id="dashboard" class="hidden">
-      <div style="display: flex; flex-direction: column; gap: 20px;">
-        
-        <div class="card header-box">
-          <div>
-            <h2 id="committee-welcome">主委，您好</h2>
-            <div class="location-tag" id="committee-location">監督案場：連線中...</div>
-          </div>
-          <button onclick="location.reload()" style="width: auto; padding: 6px 12px; background: #f3f4f6; color: #4b5563;">登出</button>
+      
+      <div class="card app-header">
+        <div>
+          <div class="app-title" id="committee-welcome">主委，您好</div>
+          <div class="location-tag" id="committee-location">📍 監督案場：連線中...</div>
         </div>
-
-        <div class="grid-layout">
-          <div class="card">
-            <div class="section-header">
-              <div class="section-title">📌 今日案場打卡動態</div>
-              <button class="btn-excel" onclick="exportToExcel()">📊 匯出 Excel</button>
-            </div>
-            <table>
-              <thead><tr><th>員工</th><th>狀態</th><th>時間</th></tr></thead>
-              <tbody id="attendance-list"><tr><td colspan="3" class="no-data">暫無打卡數據</td></tr></tbody>
-            </table>
-          </div>
-
-          <div class="card">
-            <div class="section-title">📅 本社區員工請假狀態申請</div>
-            <table>
-              <thead><tr><th>員工</th><th>假別</th><th>狀態</th></tr></thead>
-              <tbody id="leave-list"><tr><td colspan="3" class="no-data">暫無請假申請</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-
+        <button class="btn-logout" onclick="location.reload()">登出</button>
       </div>
+
+      <div class="tab-bar">
+        <button id="tab-att" class="tab-btn active" onclick="switchTab('att')">📌 今日打卡動態</button>
+        <button id="tab-leave" class="tab-btn" onclick="switchTab('leave')">📅 同仁請假紀錄</button>
+      </div>
+
+      <div id="page-att" class="card">
+        <div class="section-header">
+          <div class="section-title">今日考勤動態</div>
+          <button class="btn-excel" onclick="exportToExcel()">📊 匯出 Excel</button>
+        </div>
+        <div class="list-container" id="attendance-list">
+          <div class="no-data">暫無打卡數據</div>
+        </div>
+      </div>
+
+      <div id="page-leave" class="card hidden">
+        <div class="section-header">
+          <div class="section-title">同仁請假申請紀錄</div>
+        </div>
+        <div class="list-container" id="leave-list">
+          <div class="no-data">暫無請假紀錄</div>
+        </div>
+      </div>
+
     </div>
   </div>
 
   <script>
-    // ⚠️ 記得更換成您最新部署的 GAS 網址
+    // ⚠️ 記得更換成您最新部署的大寫 /exec 網址
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec"; 
 
-    // 全域變數，用來暫存從後端撈出來的打卡紀錄與案場名稱
     let currentAttendanceData = [];
-    let currentCommunityLocation = "未命名案場";
+    let currentCommunityLocation = "本社區";
+
+    // 🌟 App 分頁切換功能
+    function switchTab(tabName) {
+      document.getElementById('tab-att').classList.remove('active');
+      document.getElementById('tab-leave').classList.remove('active');
+      document.getElementById('page-att').classList.add('hidden');
+      document.getElementById('page-leave').classList.add('hidden');
+
+      if(tabName === 'att') {
+        document.getElementById('tab-att').classList.add('active');
+        document.getElementById('page-att').classList.remove('hidden');
+      } else {
+        document.getElementById('tab-leave').classList.add('active');
+        document.getElementById('page-leave').classList.remove('hidden');
+      }
+    }
 
     function login() {
       const user = document.getElementById('username').value.trim();
       const pwd = document.getElementById('password').value.trim();
-      if(!user || !pwd) return alert('請輸入主委帳密');
+      if(!user || !pwd) return alert('請輸入主委專屬帳號與密碼');
 
       fetch(`${GAS_WEB_APP_URL}?action=committeeLogin&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pwd)}`)
         .then(res => res.json())
@@ -103,70 +148,75 @@
           if(data.success) {
             currentCommunityLocation = data.location || "本社區";
             document.getElementById('committee-welcome').innerText = `${data.committeeName || user} 主委，您好`;
-            document.getElementById('committee-location').innerText = `🏠 監督案場：${currentCommunityLocation}`;
+            document.getElementById('committee-location').innerText = `🏠 ${currentCommunityLocation}`;
 
-            // 將打卡數據暫存至全域變數，以便後續匯出 Excel 使用
             currentAttendanceData = data.attendance || [];
 
-            // 渲染考勤
+            // 1. 渲染打卡動態（轉換成更精緻的手機卡片清單）
             let attHtml = "";
             if(currentAttendanceData.length > 0) {
               currentAttendanceData.forEach(a => {
                 let bClass = a.type === '上班' ? 'badge badge-in' : 'badge badge-out';
-                attHtml += `<tr><td><strong>${a.name}</strong></td><td><span class="${bClass}">${a.type}</span></td><td>${a.time}</td></tr>`;
+                attHtml += `
+                  <div class="list-item">
+                    <div class="item-left">
+                      <div class="item-name">${a.name}</div>
+                      <div class="item-sub">🕒 打卡時間：${a.time}</div>
+                    </div>
+                    <span class="${bClass}">${a.type}</span>
+                  </div>`;
               });
               document.getElementById('attendance-list').innerHTML = attHtml;
-            } else { document.getElementById('attendance-list').innerHTML = "<tr><td colspan='3' class='no-data'>今日尚無本社區人員打卡</td></tr>"; }
+            } else { 
+              document.getElementById('attendance-list').innerHTML = "<div class='no-data'>今日尚無同仁打卡紀錄</div>"; 
+            }
 
-            // 渲染請假
+            // 2. 渲染請假紀錄（轉換成手機卡片清單）
             let leaveHtml = "";
             if(data.leaves && data.leaves.length > 0) {
               data.leaves.forEach(l => {
-                let bClass = l.status === '已核准' ? 'badge badge-approved' : 'badge badge-pending';
-                leaveHtml += `<tr><td><strong>${l.name}</strong></td><td>${l.type}</td><td><span class="${bClass}">${l.status}</span></td></tr>`;
+                let bClass = 'badge badge-pending';
+                if(l.status === '已核准') bClass = 'badge badge-approved';
+                if(l.status === '已拒絕') bClass = 'badge badge-rejected';
+                
+                leaveHtml += `
+                  <div class="list-item">
+                    <div class="item-left">
+                      <div class="item-name">${l.name}</div>
+                      <div class="item-sub">🌴 申請假別：<span style="color:#4f46e5;font-weight:bold;">${l.type}</span></div>
+                    </div>
+                    <span class="${bClass}">${l.status}</span>
+                  </div>`;
               });
               document.getElementById('leave-list').innerHTML = leaveHtml;
-            } else { document.getElementById('leave-list').innerHTML = "<tr><td colspan='3' class='no-data'>目前無任何請假紀錄</td></tr>"; }
+            } else { 
+              document.getElementById('leave-list').innerHTML = "<div class='no-data'>目前尚無請假申請紀錄</div>"; 
+            }
 
+            // 進入主畫面
             document.getElementById('login-box').classList.add('hidden');
             document.getElementById('dashboard').classList.remove('hidden');
-          } else { alert(data.message); }
-        }).catch(err => alert("連線失敗！請檢查您的 GAS 網址與權限設定。"));
+          } else { 
+            alert(data.message); 
+          }
+        }).catch(err => alert("連線失敗！請確認您的後端部署網址是否正確。"));
     }
 
-    // 🌟 新增功能：匯出成 Excel 檔案的邏輯
     function exportToExcel() {
       if (!currentAttendanceData || currentAttendanceData.length === 0) {
-        return alert("❌ 目前沒有打卡紀錄數據可供匯出！");
+        return alert("❌ 目前沒有數據可供匯出！");
       }
-      
       try {
-        // 1. 建立一個全新的 Excel 工作簿 (Workbook)
         const wb = XLSX.utils.book_new();
-        
-        // 2. 將現有資料整理成 Excel 漂亮的橫向欄位對齊格式
         const formattedData = currentAttendanceData.map(item => ({
-          "員工姓名": item.name,
+          "同仁姓名": item.name,
           "打卡狀態": item.type,
           "打卡日期與時間": item.time
         }));
-        
-        // 3. 將 JSON 資料轉換成 Excel 的工作表 (Worksheet)
         const ws = XLSX.utils.json_to_sheet(formattedData);
-        
-        // 可選：手動調整欄位寬度，讓時間不會被字體遮擋
-        ws['!cols'] = [
-          { wch: 15 }, // 員工姓名欄寬
-          { wch: 12 }, // 打卡狀態欄寬
-          { wch: 22 }  // 打卡時間欄寬
-        ];
-
-        // 4. 將工作表命名為「今日打卡紀錄」並塞入工作簿
+        ws['!cols'] = [{ wch: 15 }, { wch: 12 }, { wch: 22 }];
         XLSX.utils.book_append_sheet(wb, ws, "今日打卡紀錄");
-        
-        // 5. 自動執行瀏覽器下載檔，檔名自動套用該社區名稱
-        XLSX.writeFile(wb, `${currentCommunityLocation}_打卡紀錄匯出.xlsx`);
-        
+        XLSX.writeFile(wb, `${currentCommunityLocation}_今日打卡紀錄.xlsx`);
       } catch (error) {
         alert("匯出 Excel 時發生錯誤：" + error.toString());
       }
