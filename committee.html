@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>紘嘉物業管理 - 主委專區</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root { --primary-color: #4f46e5; --bg-color: #f3f4f6; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -16,6 +17,11 @@
     .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     @media (max-width: 600px) { .grid-layout { grid-template-columns: 1fr; } }
     .section-title { font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 12px; }
+    
+    /* 區塊標題與按鈕的排版組合 */
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .section-header .section-title { margin-bottom: 0; }
+    
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
     th { background: #f9fafb; padding: 10px; font-weight: 600; border-bottom: 1px solid #e5e7eb; }
     td { padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center; }
@@ -26,6 +32,8 @@
     .badge-approved { background: #e0e7ff; color: #4338ca; }
     input { width: 100%; padding: 11px; margin-bottom: 14px; border: 1px solid #d1d5db; border-radius: 8px; }
     button { width: 100%; padding: 11px; background: #4f46e5; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .btn-excel { background: #10b981; color: white; padding: 6px 12px; font-size: 13px; border-radius: 6px; width: auto; font-weight: bold; }
+    .btn-excel:hover { background: #059669; }
     .hidden { display: none !important; }
     .no-data { color: #9ca3af; font-style: italic; padding: 15px 0; }
   </style>
@@ -33,7 +41,6 @@
 <body>
 
   <div class="container">
-    <!-- 1. 登入區塊 -->
     <div id="login-box" class="card" style="max-width: 380px; margin: 40px auto; width:100%;">
       <h2 style="text-align: center; margin-bottom: 16px;">案場主委/管理端登入</h2>
       <input type="text" id="username" placeholder="請輸入主委專屬帳號">
@@ -41,7 +48,6 @@
       <button onclick="login()">登入系統</button>
     </div>
 
-    <!-- 2. 主委數據面板 -->
     <div id="dashboard" class="hidden">
       <div style="display: flex; flex-direction: column; gap: 20px;">
         
@@ -54,16 +60,17 @@
         </div>
 
         <div class="grid-layout">
-          <!-- 考勤動態 -->
           <div class="card">
-            <div class="section-title">📌 今日案場打卡動態</div>
+            <div class="section-header">
+              <div class="section-title">📌 今日案場打卡動態</div>
+              <button class="btn-excel" onclick="exportToExcel()">📊 匯出 Excel</button>
+            </div>
             <table>
               <thead><tr><th>員工</th><th>狀態</th><th>時間</th></tr></thead>
               <tbody id="attendance-list"><tr><td colspan="3" class="no-data">暫無打卡數據</td></tr></tbody>
             </table>
           </div>
 
-          <!-- 請假狀態 -->
           <div class="card">
             <div class="section-title">📅 本社區員工請假狀態申請</div>
             <table>
@@ -81,6 +88,10 @@
     // ⚠️ 記得更換成您最新部署的 GAS 網址
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec"; 
 
+    // 全域變數，用來暫存從後端撈出來的打卡紀錄與案場名稱
+    let currentAttendanceData = [];
+    let currentCommunityLocation = "未命名案場";
+
     function login() {
       const user = document.getElementById('username').value.trim();
       const pwd = document.getElementById('password').value.trim();
@@ -90,13 +101,17 @@
         .then(res => res.json())
         .then(data => {
           if(data.success) {
+            currentCommunityLocation = data.location || "本社區";
             document.getElementById('committee-welcome').innerText = `${data.committeeName || user} 主委，您好`;
-            document.getElementById('committee-location').innerText = `🏠 監督案場：${data.location}`;
+            document.getElementById('committee-location').innerText = `🏠 監督案場：${currentCommunityLocation}`;
+
+            // 將打卡數據暫存至全域變數，以便後續匯出 Excel 使用
+            currentAttendanceData = data.attendance || [];
 
             // 渲染考勤
             let attHtml = "";
-            if(data.attendance && data.attendance.length > 0) {
-              data.attendance.forEach(a => {
+            if(currentAttendanceData.length > 0) {
+              currentAttendanceData.forEach(a => {
                 let bClass = a.type === '上班' ? 'badge badge-in' : 'badge badge-out';
                 attHtml += `<tr><td><strong>${a.name}</strong></td><td><span class="${bClass}">${a.type}</span></td><td>${a.time}</td></tr>`;
               });
@@ -117,6 +132,44 @@
             document.getElementById('dashboard').classList.remove('hidden');
           } else { alert(data.message); }
         }).catch(err => alert("連線失敗！請檢查您的 GAS 網址與權限設定。"));
+    }
+
+    // 🌟 新增功能：匯出成 Excel 檔案的邏輯
+    function exportToExcel() {
+      if (!currentAttendanceData || currentAttendanceData.length === 0) {
+        return alert("❌ 目前沒有打卡紀錄數據可供匯出！");
+      }
+      
+      try {
+        // 1. 建立一個全新的 Excel 工作簿 (Workbook)
+        const wb = XLSX.utils.book_new();
+        
+        // 2. 將現有資料整理成 Excel 漂亮的橫向欄位對齊格式
+        const formattedData = currentAttendanceData.map(item => ({
+          "員工姓名": item.name,
+          "打卡狀態": item.type,
+          "打卡日期與時間": item.time
+        }));
+        
+        // 3. 將 JSON 資料轉換成 Excel 的工作表 (Worksheet)
+        const ws = XLSX.utils.json_to_sheet(formattedData);
+        
+        // 可選：手動調整欄位寬度，讓時間不會被字體遮擋
+        ws['!cols'] = [
+          { wch: 15 }, // 員工姓名欄寬
+          { wch: 12 }, // 打卡狀態欄寬
+          { wch: 22 }  // 打卡時間欄寬
+        ];
+
+        // 4. 將工作表命名為「今日打卡紀錄」並塞入工作簿
+        XLSX.utils.book_append_sheet(wb, ws, "今日打卡紀錄");
+        
+        // 5. 自動執行瀏覽器下載檔，檔名自動套用該社區名稱
+        XLSX.writeFile(wb, `${currentCommunityLocation}_打卡紀錄匯出.xlsx`);
+        
+      } catch (error) {
+        alert("匯出 Excel 時發生錯誤：" + error.toString());
+      }
     }
   </script>
 </body>
