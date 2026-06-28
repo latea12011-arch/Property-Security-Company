@@ -26,12 +26,13 @@
     .btn-clock-out { background: #ef4444; color: white; padding: 15px; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
     .history-title { font-weight: bold; margin-top: 15px; color: #374151; font-size: 14px; border-left: 3px solid var(--primary-color); padding-left: 6px; margin-bottom: 8px; }
     .log-list { max-height: 200px; overflow-y: auto; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; padding: 5px; }
-    .log-item { display: flex; justify-content: space-between; font-size: 12px; padding: 8px; border-bottom: 1px solid #edf2f7; }
+    .log-item { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 8px; border-bottom: 1px solid #edf2f7; }
     .log-item:last-child { border-bottom: none; }
     .badge { padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; }
     .badge-in { background: #e6fffa; color: #047481; }
     .badge-out { background: #fde8e8; color: #c81e1e; }
     .announcement-item { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 6px; padding: 8px; margin-bottom: 8px; font-size: 12px; }
+    .btn-review { padding: 4px 8px; font-size: 11px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 4px; }
   </style>
 </head>
 <body>
@@ -44,9 +45,7 @@
     <button class="tab-btn" onclick="switchTab('committee')">主委端</button>
   </div>
 
-  <!-- ================= 員工端面板 ================= -->
   <div id="employeePanel" class="panel active">
-    <!-- 員工登入表單 -->
     <div id="empLoginForm">
       <div class="form-group">
         <label>員工編號</label>
@@ -59,7 +58,6 @@
       <button class="btn-block" onclick="handleEmployeeLogin()">登入員工系統</button>
     </div>
 
-    <!-- 員工操作主區 -->
     <div id="empMainZone" style="display:none;">
       <div class="info-box">
         <strong>姓名：</strong><span id="showEmpName">--</span><br>
@@ -68,11 +66,9 @@
         <strong>負責案場：</strong><span id="showEmpLocation">--</span>
       </div>
       
-      <!-- 公告欄 -->
       <div class="history-title">📢 佈告欄最新公告</div>
       <div id="announcementBox" style="margin-bottom: 15px;"></div>
 
-      <!-- 打卡區 -->
       <div class="history-title">📍 線上 GPS 定位打卡</div>
       <div class="form-group" style="margin-top:5px;">
         <label>選擇目前打卡案場</label>
@@ -83,15 +79,16 @@
         <button class="btn-clock-out" onclick="handleClock('clockOut')">下班打卡</button>
       </div>
 
-      <!-- 請假區 -->
       <div class="history-title">🌴 線上請假申請</div>
       <div class="form-group" style="margin-top:5px;">
         <label>假別</label>
         <select id="leaveType">
-          <option value="事假">事假</option>
-          <option value="病假">病假</option>
-          <option value="特休">特休</option>
-          <option value="婚假/喪假">婚假/喪假</option>
+              <option value="事假">事假 (勞基法上限14天)</option>
+              <option value="病假">病假 (勞基法上限30天)</option>
+              <option value="公假">公假 (依公司規定請假)</option>
+              <option value="婚假">婚假 (勞基法上限08天)</option>
+              <option value="喪假">喪假 (勞基法上限08天)</option>
+              <option value="特休">特休 (依同仁年資計算)</option>
         </select>
       </div>
       <div class="form-group">
@@ -104,7 +101,6 @@
       </div>
       <button class="btn-block" style="background:#6b7280;" onclick="handleLeaveSubmit()">送出請假申請</button>
 
-      <!-- 📝 員工歷史班表紀錄 (含當月共3個月) -->
       <div class="history-title">📅 歷史班表與打卡紀錄 (含當月共3個月)</div>
       <div class="log-list" id="empHistoryList">
         <div style="text-align:center;color:#9ca3af;padding:10px;font-size:12px;">尚無打卡歷史紀錄</div>
@@ -112,7 +108,6 @@
     </div>
   </div>
 
-  <!-- ================= 主委端面板 ================= -->
   <div id="committeePanel" class="panel">
     <div id="commLoginForm">
       <div class="form-group">
@@ -132,7 +127,6 @@
         <strong>管轄社區：</strong><span id="showCommLocation">--</span>
       </div>
 
-      <!-- 📝 主委歷史班表紀錄 (含當月共2個月) -->
       <div class="history-title">📊 社區人員歷史班表紀錄 (含當月共2個月)</div>
       <div class="log-list" id="commAttendanceList" style="max-height: 250px;">
         <div style="text-align:center;color:#9ca3af;padding:10px;font-size:12px;">目前無任何人員打卡紀錄</div>
@@ -184,14 +178,12 @@
           document.getElementById('showLeaveRemaining').innerText = data.annualLeaveRemaining;
           document.getElementById('showEmpLocation').innerText = data.assignedLocation;
 
-          // 載入公告
           const annBox = document.getElementById('announcementBox');
           annBox.innerHTML = data.announcements.length ? "" : "<div style='font-size:12px;color:#9ca3af;'>暫無最新公告</div>";
           data.announcements.forEach(a => {
             annBox.innerHTML += `<div class="announcement-item"><strong>[${a.date}] ${a.title}</strong><br>${a.content}</div>`;
           });
 
-          // 設定案場選單
           const select = document.getElementById('empLocationSelect');
           select.innerHTML = "";
           if(data.isRoamingUser) {
@@ -202,7 +194,6 @@
             select.innerHTML = `<option value="${data.assignedLocation}">${data.assignedLocation}</option>`;
           }
 
-          // 📝 渲染含當月共3個月的員工歷史班表紀錄
           const histList = document.getElementById('empHistoryList');
           histList.innerHTML = data.historyLogs.length ? "" : "<div style='text-align:center;color:#9ca3af;padding:10px;font-size:12px;'>尚無打卡歷史紀錄</div>";
           data.historyLogs.forEach(log => {
@@ -214,7 +205,6 @@
                 <span class="badge ${isClickIn ? 'badge-in' : 'badge-out'}">${log.type}</span>
               </div>`;
           });
-
         } else {
           alert(data.message);
         }
@@ -225,11 +215,9 @@
   function handleClock(actionType) {
     if(!currentEmployeeData) return;
     const chosenLocation = document.getElementById('empLocationSelect').value;
-    
     if(!navigator.geolocation) return alert("您的手機不支援或未開啟 GPS 定位功能");
     
     alert("正在取得您的 GPS 衛星定位座標，請稍候...");
-    
     navigator.geolocation.getCurrentPosition((pos) => {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
@@ -240,13 +228,11 @@
                   `&location=${encodeURIComponent(chosenLocation)}` +
                   `&lat=${lat}&lng=${lng}`;
                   
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          alert(data.message);
-          if(data.success) { handleEmployeeLogin(); } // 重新刷打卡歷史清單
-        });
-    }, () => alert("❌ 無法取得 GPS 座標，請確認瀏覽器及手機已允許本網頁定位權限。"), { enableHighAccuracy: true, timeout: 8000 });
+      fetch(url).then(res => res.json()).then(data => {
+        alert(data.message);
+        if(data.success) { handleEmployeeLogin(); }
+      });
+    }, () => alert("❌ 無法取得 GPS 座標，請確認瀏覽器及手機已允許定位權限。"), { enableHighAccuracy: true, timeout: 8000 });
   }
 
   // 員工請假
@@ -262,12 +248,10 @@
                 `&location=${encodeURIComponent(currentEmployeeData.assignedLocation)}` +
                 `&leaveType=${encodeURIComponent(type)}` +
                 `&startTime=${start}&endTime=${end}`;
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        alert(data.message);
-        if(data.success) { handleEmployeeLogin(); }
-      });
+    fetch(url).then(res => res.json()).then(data => {
+      alert(data.message);
+      if(data.success) { handleEmployeeLogin(); }
+    });
   }
 
   // 主委端登入
@@ -285,7 +269,7 @@
           document.getElementById('showCommName').innerText = data.committeeName;
           document.getElementById('showCommLocation').innerText = data.location;
 
-          // 📝 渲染含當月共 2 個月該案場的人員歷史班表紀錄
+          // 渲染含當月共 2 個月該案場的人員歷史班表紀錄
           const attList = document.getElementById('commAttendanceList');
           attList.innerHTML = data.attendance.length ? "" : "<div style='text-align:center;color:#9ca3af;padding:10px;font-size:12px;'>目前無任何人員打卡紀錄</div>";
           data.attendance.forEach(log => {
@@ -298,18 +282,56 @@
               </div>`;
           });
 
-          // 假單
-          const lvList = document.getElementById('commLeaveList');
-          lvList.innerHTML = data.leaves.length ? "" : "<div style='text-align:center;color:#9ca3af;padding:10px;font-size:12px;'>暫無請假審核申請</div>";
-          data.leaves.forEach(lv => {
-            lvList.innerHTML += `
-              <div class="log-item">
-                <span>👤 ${lv.name} (${lv.type})</span>
-                <span style="color:#f59e0b;font-weight:bold;">${lv.status}</span>
-              </div>`;
-          });
+          // 渲染假單審核清單（含功能按鈕）
+          renderCommitteeLeaves(data.leaves);
         } else {
           alert(data.message);
+        }
+      });
+  }
+
+  // 渲染主委假單清單與審核按鈕邏輯
+  function renderCommitteeLeaves(leaves) {
+    const lvList = document.getElementById('commLeaveList');
+    lvList.innerHTML = leaves.length ? "" : "<div style='text-align:center;color:#9ca3af;padding:10px;font-size:12px;'>暫無請假審核申請</div>";
+    
+    leaves.forEach(lv => {
+      let actionHtml = `<span style="color:#10b981;font-weight:bold;">${lv.status}</span>`;
+      
+      // 如果狀態是待審核，才顯示「核准」與「拒絕」按鈕
+      if(lv.status === "待審核") {
+        actionHtml = `
+          <div>
+            <button class="btn-review" style="background:#10b981;color:white;" onclick="reviewLeave(${lv.rowId}, 'approveLeave')">核准</button>
+            <button class="btn-review" style="background:#ef4444;color:white;" onclick="reviewLeave(${lv.rowId}, 'rejectLeave')">拒絕</button>
+          </div>
+        `;
+      } else if(lv.status === "已拒絕") {
+        actionHtml = `<span style="color:#ef4444;font-weight:bold;">${lv.status}</span>`;
+      }
+
+      lvList.innerHTML += `
+        <div class="log-item">
+          <div>
+            <strong>👤 ${lv.name}</strong> <span style="color:#6b7280;">(${lv.type})</span><br>
+            <span style="font-size:11px;color:#9ca3af;">${lv.duration}</span>
+          </div>
+          ${actionHtml}
+        </div>`;
+    });
+  }
+
+  // 主委點擊審核按鈕
+  function reviewLeave(rowId, actionType) {
+    const actionName = actionType === 'approveLeave' ? '核准' : '拒絕';
+    if(!confirm(`確定要【${actionName}】這張假單嗎？`)) return;
+
+    fetch(`${GAS_WEB_APP_URL}?action=${actionType}&rowId=${rowId}`)
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message);
+        if(data.success) {
+          handleCommitteeLogin(); // 審核成功後，立刻重新刷網頁清單
         }
       });
   }
