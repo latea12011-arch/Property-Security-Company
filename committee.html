@@ -26,8 +26,6 @@
     .badge-approved { background: #e0e7ff; color: #4338ca; }
     input { width: 100%; padding: 11px; margin-bottom: 14px; border: 1px solid #d1d5db; border-radius: 8px; }
     button { width: 100%; padding: 11px; background: #4f46e5; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    
-    /* 💡 強制隱藏的關鍵樣式 */
     .hidden { display: none !important; }
     .no-data { color: #9ca3af; font-style: italic; padding: 15px 0; }
   </style>
@@ -35,7 +33,7 @@
 <body>
 
   <div class="container">
-    <!-- 1. 登入區塊 (未登入前只顯示這一塊) -->
+    <!-- 1. 登入區塊 -->
     <div id="login-box" class="card" style="max-width: 380px; margin: 40px auto; width:100%;">
       <h2 style="text-align: center; margin-bottom: 16px;">案場主委/管理端登入</h2>
       <input type="text" id="username" placeholder="請輸入主委專屬帳號">
@@ -43,11 +41,10 @@
       <button onclick="login()">登入系統</button>
     </div>
 
-    <!-- 2. 主委數據面板 (全部封裝在 hidden 的貨櫃內，登入前絕不外洩) -->
+    <!-- 2. 主委數據面板 -->
     <div id="dashboard" class="hidden">
       <div style="display: flex; flex-direction: column; gap: 20px;">
         
-        <!-- 頂部指派案場卡 -->
         <div class="card header-box">
           <div>
             <h2 id="committee-welcome">主委，您好</h2>
@@ -56,7 +53,6 @@
           <button onclick="location.reload()" style="width: auto; padding: 6px 12px; background: #f3f4f6; color: #4b5563;">登出</button>
         </div>
 
-        <!-- 數據表格區 (即時考勤與請假) -->
         <div class="grid-layout">
           <!-- 考勤動態 -->
           <div class="card">
@@ -82,7 +78,7 @@
   </div>
 
   <script>
-    // ⚠️ 請記得填入您最新部署的 GAS 正式網址 (/exec 結尾)
+    // ⚠️ 記得更換成您最新部署的 GAS 網址
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec"; 
 
     function login() {
@@ -94,11 +90,10 @@
         .then(res => res.json())
         .then(data => {
           if(data.success) {
-            // 寫入主委與案場資訊
             document.getElementById('committee-welcome').innerText = `${data.committeeName || user} 主委，您好`;
             document.getElementById('committee-location').innerText = `🏠 監督案場：${data.location}`;
 
-            // 渲染考勤動態
+            // 渲染考勤
             let attHtml = "";
             if(data.attendance && data.attendance.length > 0) {
               data.attendance.forEach(a => {
@@ -108,7 +103,7 @@
               document.getElementById('attendance-list').innerHTML = attHtml;
             } else { document.getElementById('attendance-list').innerHTML = "<tr><td colspan='3' class='no-data'>今日尚無本社區人員打卡</td></tr>"; }
 
-            // 渲染請假紀錄
+            // 渲染請假
             let leaveHtml = "";
             if(data.leaves && data.leaves.length > 0) {
               data.leaves.forEach(l => {
@@ -118,7 +113,6 @@
               document.getElementById('leave-list').innerHTML = leaveHtml;
             } else { document.getElementById('leave-list').innerHTML = "<tr><td colspan='3' class='no-data'>目前無任何請假紀錄</td></tr>"; }
 
-            // 💡 登入成功：隱藏登入盒，秀出主委管理面板
             document.getElementById('login-box').classList.add('hidden');
             document.getElementById('dashboard').classList.remove('hidden');
           } else { alert(data.message); }
