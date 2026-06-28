@@ -3,7 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>紘嘉物業管理 - 主委行動專區</title>
+  <title>紘嘉物業管理 - 主委行動App</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root { 
@@ -19,43 +26,35 @@
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); padding: 12px; display: flex; justify-content: center; color: var(--text-main); }
     .container { width: 100%; max-width: 480px; display: flex; flex-direction: column; min-height: calc(100vh - 24px); }
     
-    /* App 行動化卡片外觀 */
     .card { background: var(--card-bg); padding: 18px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); margin-bottom: 12px; }
     
-    /* 登入畫面 App 化 */
     #login-box { margin: 60px auto 0 auto; width: 100%; text-align: center; background: white; }
     #login-box h2 { font-size: 20px; margin-bottom: 24px; font-weight: bold; color: #111827; }
     
-    /* 手機精緻輸入框與按鈕 */
     input { width: 100%; padding: 14px; margin-bottom: 14px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 15px; outline: none; transition: all 0.2s; background: #f9fafb; }
     input:focus { border-color: var(--primary-color); background: #fff; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
     button.btn-main { width: 100%; padding: 14px; background: var(--primary-color); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
     button.btn-main:hover { background: var(--primary-hover); }
     
-    /* App 頂部個人資料區 */
     .app-header { display: flex; justify-content: space-between; align-items: center; background: white; }
     .app-title { font-size: 18px; font-weight: bold; color: #111827; }
     .location-tag { color: var(--primary-color); font-weight: bold; font-size: 13px; margin-top: 3px; display: flex; align-items: center; gap: 4px; }
     .btn-logout { width: auto; padding: 6px 12px; background: #fee2e2; color: #ef4444; font-size: 12px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; }
     
-    /* 🌟 App 專屬分頁切換列 (Tab Bar) */
     .tab-bar { display: grid; grid-template-columns: 1fr 1fr; background: #e5e7eb; padding: 4px; border-radius: 10px; margin-bottom: 14px; }
     .tab-btn { padding: 10px; text-align: center; font-size: 14px; font-weight: bold; color: #4b5563; border-radius: 8px; border: none; background: transparent; cursor: pointer; transition: all 0.2s; }
     .tab-btn.active { background: white; color: var(--primary-color); box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
     
-    /* 列表標頭排版 */
     .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .section-title { font-size: 15px; font-weight: bold; color: #1f2937; }
     .btn-excel { background: #10b981; color: white; padding: 6px 12px; font-size: 12px; border-radius: 6px; width: auto; font-weight: bold; border: none; cursor: pointer; }
     
-    /* 手機列表化清單（捨棄傳統大表格，改用更好讀的清單） */
     .list-container { display: flex; flex-direction: column; gap: 10px; }
     .list-item { background: #f9fafb; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
     .item-left { display: flex; flex-direction: column; gap: 4px; }
     .item-name { font-size: 14px; font-weight: bold; color: #111827; }
     .item-sub { font-size: 12px; color: var(--text-muted); }
     
-    /* 精美手機 Badge 狀態標籤 */
     .badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; text-align: center; }
     .badge-in { background: #dcfce7; color: #15803d; }
     .badge-out { background: #fee2e2; color: #b91c1c; }
@@ -63,6 +62,11 @@
     .badge-approved { background: #dbeafe; color: #1d4ed8; }
     .badge-rejected { background: #f3f4f6; color: #6b7280; }
     
+    /* 🌟 新增：App 內嵌提示點擊下載按鈕 */
+    .pwa-install-banner { display: flex; justify-content: space-between; align-items: center; background: #eef2ff; border: 1px solid #c7d2fe; padding: 12px; border-radius: 12px; margin-bottom: 12px; }
+    .pwa-text { font-size: 13px; color: #3730a3; font-weight: bold; }
+    .pwa-btn { background: #4f46e5; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
+
     .hidden { display: none !important; }
     .no-data { text-align: center; color: #9ca3af; font-style: italic; padding: 30px 0; font-size: 13px; }
   </style>
@@ -70,6 +74,11 @@
 <body>
 
   <div class="container">
+    <div id="install-banner" class="pwa-install-banner hidden">
+      <div class="pwa-text">📲 下載「主委管理端」App 至手機</div>
+      <button class="pwa-btn" id="install-button">立即安裝</button>
+    </div>
+
     <div id="login-box" class="card">
       <h2>紘嘉物業行動管理端</h2>
       <input type="text" id="username" placeholder="請輸入主委管理帳號">
@@ -78,7 +87,6 @@
     </div>
 
     <div id="dashboard" class="hidden">
-      
       <div class="card app-header">
         <div>
           <div class="app-title" id="committee-welcome">主委，您好</div>
@@ -115,13 +123,39 @@
   </div>
 
   <script>
-    // ⚠️ 記得更換成您最新部署的大寫 /exec 網址
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec"; 
 
     let currentAttendanceData = [];
     let currentCommunityLocation = "本社區";
 
-    // 🌟 App 分頁切換功能
+    // 🌟 註冊 PWA Service Worker 服務
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js')
+          .then(reg => console.log('Service Worker 註冊成功！'))
+          .catch(err => console.log('Service Worker 註冊失敗: ', err));
+      });
+    }
+
+    // 🌟 攔截瀏覽器安裝事件，彈出網頁內嵌安裝鈕（限 Android / Chrome）
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('install-banner').classList.remove('hidden');
+    });
+
+    document.getElementById('install-button').addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          document.getElementById('install-banner').classList.add('hidden');
+        }
+        deferredPrompt = null;
+      }
+    });
+
     function switchTab(tabName) {
       document.getElementById('tab-att').classList.remove('active');
       document.getElementById('tab-leave').classList.remove('active');
@@ -152,7 +186,6 @@
 
             currentAttendanceData = data.attendance || [];
 
-            // 1. 渲染打卡動態（轉換成更精緻的手機卡片清單）
             let attHtml = "";
             if(currentAttendanceData.length > 0) {
               currentAttendanceData.forEach(a => {
@@ -171,7 +204,6 @@
               document.getElementById('attendance-list').innerHTML = "<div class='no-data'>今日尚無同仁打卡紀錄</div>"; 
             }
 
-            // 2. 渲染請假紀錄（轉換成手機卡片清單）
             let leaveHtml = "";
             if(data.leaves && data.leaves.length > 0) {
               data.leaves.forEach(l => {
@@ -193,13 +225,12 @@
               document.getElementById('leave-list').innerHTML = "<div class='no-data'>目前尚無請假申請紀錄</div>"; 
             }
 
-            // 進入主畫面
             document.getElementById('login-box').classList.add('hidden');
             document.getElementById('dashboard').classList.remove('hidden');
           } else { 
             alert(data.message); 
           }
-        }).catch(err => alert("連線失敗！請確認您的後端部署網址是否正確。"));
+        }).catch(err => alert("連線失敗！"));
     }
 
     function exportToExcel() {
