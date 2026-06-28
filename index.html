@@ -9,12 +9,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, sans-serif; background-color: var(--bg-color); color: #333; padding: 12px; display: flex; justify-content: center; }
     .container { width: 100%; max-width: 480px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); padding: 20px; min-height: 500px; }
-    h2 { text-align: center; margin-bottom: 20px; color: #1f2937; font-size: 20px; font-weight: bold; }
-    .tab-group { display: flex; background: #e5e7eb; border-radius: 8px; padding: 3px; margin-bottom: 20px; }
-    .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; font-weight: bold; cursor: pointer; border-radius: 6px; font-size: 14px; color: #4b5563; }
-    .tab-btn.active { background: white; color: var(--primary-color); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .panel { display: none; }
-    .panel.active { display: block; }
+    h2 { text-align: center; margin-bottom: 20px; color: #1f2937; font-size: 20px; font-weight: bold; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px; }
     .form-group { margin-bottom: 14px; }
     label { display: block; font-size: 13px; font-weight: 600; color: #4b5563; margin-bottom: 5px; }
     input, select { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
@@ -27,7 +22,6 @@
     .btn-clock-out { background: #ef4444; color: white; padding: 15px; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
     .history-title { font-weight: bold; margin-top: 15px; color: #374151; font-size: 14px; border-left: 3px solid var(--primary-color); padding-left: 6px; margin-bottom: 8px; }
     
-    /* 排班表網格樣式 */
     .schedule-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 260px; overflow-y: auto; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; padding: 8px; }
     .schedule-card { background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
     .sch-date { font-size: 11px; color: #6b7280; font-weight: bold; margin-bottom: 4px; }
@@ -37,122 +31,76 @@
     .log-list { max-height: 180px; overflow-y: auto; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; padding: 5px; }
     .log-item { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 8px; border-bottom: 1px solid #edf2f7; }
     .announcement-item { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 6px; padding: 8px; margin-bottom: 8px; font-size: 12px; }
-    .download-box { background: #edf2f7; padding: 12px; border-radius: 8px; margin-top: 10px; text-align: center; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .btn-download { background: #4f46e5; color: white; padding: 10px; font-size: 13px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h2>紘嘉物業保全管理系統</h2>
+  <h2>紘嘉物業保全同仁系統</h2>
   
-  <div class="tab-group" id="mainTabs">
-    <button class="tab-btn active" onclick="switchTab('employee')">員工端</button>
-    <button class="tab-btn" onclick="switchTab('committee')">主委端</button>
+  <div id="empLoginForm">
+    <div class="form-group"><label>員工編號</label><input type="text" id="empId" placeholder="請輸入您的工號 (如: 00001)"></div>
+    <div class="form-group"><label>密碼</label><input type="password" id="empPassword" placeholder="請輸入密碼"></div>
+    <button class="btn-block" onclick="handleEmployeeLogin()">登入系統</button>
   </div>
 
-  <div id="employeePanel" class="panel active">
-    <div id="empLoginForm">
-      <div class="form-group"><label>員工編號</label><input type="text" id="empId" placeholder="請輸入求職工號，例如 00001"></div>
-      <div class="form-group"><label>密碼</label><input type="password" id="empPassword" placeholder="請輸入密碼"></div>
-      <button class="btn-block" onclick="handleEmployeeLogin()">登入員工系統</button>
+  <div id="empMainZone" style="display:none;">
+    <div class="info-box">
+      <strong>同仁姓名：</strong><span id="showEmpName">--</span><br>
+      <strong>所屬案場：</strong><span id="showEmpLocation">--</span><br>
+      <strong>到職日期：</strong><span id="showHireDate">--</span>
     </div>
 
-    <div id="empMainZone" style="display:none;">
-      <div class="info-box">
-        <strong>姓名：</strong><span id="showEmpName">--</span><br>
-        <strong>負責案場：</strong><span id="showEmpLocation">--</span><br>
-        <strong>到職日期：</strong><span id="showHireDate">--</span>
-      </div>
+    <div class="history-title">⚖️ 勞基法特休規定</div>
+    <div class="law-box">
+      滿半年享 3 天；1 年享 7 天；2 年享 10 天。<br>
+      📊 <strong>您的特休狀態：</strong>應有總額 <span id="showLeaveTotal" style="font-weight:bold;color:#ef4444;">0</span> 天 / 剩餘 <span id="showLeaveRemaining" style="font-weight:bold;color:#10b981;">0</span> 天
+    </div>
+    
+    <div class="history-title">📢 最新公告</div>
+    <div id="announcementBox"></div>
 
-      <div class="history-title">⚖️ 勞基法特休規定</div>
-      <div class="law-box">
-        ⚖️ <strong>勞基法特休規定：</strong>滿半年享 3 天；1 年享 7 天；2 年享 10 天。<br>
-        📊 <strong>您的特休狀態：</strong>應有總額 <span id="showLeaveTotal" style="font-weight:bold;color:#ef4444;">0</span> 天 / 剩餘 <span id="showLeaveRemaining" style="font-weight:bold;color:#10b981;">0</span> 天
-      </div>
-      
-      <div class="history-title">📢 最新公告</div>
-      <div id="announcementBox"></div>
+    <div class="history-title">📍 線上打卡</div>
+    <div class="form-group"><select id="empLocationSelect"></select></div>
+    <div class="clock-grid">
+      <button class="btn-clock-in" onclick="handleClock('clockIn')">上班打卡</button>
+      <button class="btn-clock-out" onclick="handleClock('clockOut')">下班打卡</button>
+    </div>
 
-      <div class="history-title">📍 線上打卡</div>
-      <div class="form-group"><select id="empLocationSelect"></select></div>
-      <div class="clock-grid">
-        <button class="btn-clock-in" onclick="handleClock('clockIn')">上班打卡</button>
-        <button class="btn-clock-out" onclick="handleClock('clockOut')">下班打卡</button>
-      </div>
+    <div class="history-title">📅 排班表查閱 (Schedules)</div>
+    <div class="form-group">
+      <select id="empMonthQuerySelect" onchange="queryEmployeeHistory()">
+        <option value="0">📅 查詢：本月排班表資料</option>
+        <option value="1">📅 查詢：上個月排班表資料</option>
+        <option value="2">📅 查詢：前兩個月排班表資料</option>
+      </select>
+    </div>
+    <div class="schedule-grid" id="empScheduleGrid"></div>
 
-      <div class="history-title">📅 點選查詢歷史排班表紀錄 (Schedules)</div>
-      <div class="form-group">
-        <select id="empMonthQuerySelect" onchange="queryEmployeeHistory()">
-          <option value="0">📅 查詢：本月排班表資料</option>
-          <option value="1">📅 查詢：上個月排班表資料</option>
-          <option value="2">📅 查詢：前兩個月排班表資料</option>
-        </select>
-      </div>
-      <div class="schedule-grid" id="empScheduleGrid"></div>
+    <div class="history-title">🌴 我的請假紀錄與審核狀態</div>
+    <div class="log-list" id="empLeaveStatusList"></div>
 
-      <div class="history-title">🌴 我的請假審核狀態查閱</div>
-      <div class="log-list" id="empLeaveStatusList"></div>
-
-      <div class="history-title">✍️ 線上請假申請</div>
-      <div class="form-group">
-        <select id="leaveType">
+    <div class="history-title">✍️ 線上請假申請</div>
+    <div class="form-group">
+      <select id="leaveType">
               <option value="事假">事假 (勞基法上限14天)</option>
               <option value="病假">病假 (勞基法上限30天)</option>
               <option value="公假">公假 (依公司規定請假)</option>
               <option value="婚假">婚假 (勞基法上限08天)</option>
               <option value="喪假">喪假 (勞基法上限08天)</option>
               <option value="特休">特休 (依同仁年資計算)</option>
-        </select>
-      </div>
-      <div class="form-group"><label>請假開始時間</label><input type="datetime-local" id="leaveStart"></div>
-      <div class="form-group"><label>請假結束時間</label><input type="datetime-local" id="leaveEnd"></div>
-      <button class="btn-block" style="background:#4f46e5;" onclick="handleLeaveSubmit()">送出請假申請</button>
+      </select>
     </div>
-  </div>
-
-  <div id="committeePanel" class="panel">
-    <div id="commLoginForm">
-      <div class="form-group"><label>主委管理帳號</label><input type="text" id="commUser" placeholder="管理帳號"></div>
-      <div class="form-group"><label>密碼</label><input type="password" id="commPassword" placeholder="密碼"></div>
-      <button class="btn-block" onclick="handleCommitteeLogin()">登入管理後台</button>
-    </div>
-
-    <div id="commMainZone" style="display:none;">
-      <div class="info-box" style="background:#eeebff;">
-        <strong>歡迎主委：</strong><span id="showCommName">--</span><br>
-        <strong>管轄社區：</strong><span id="showCommLocation">--</span>
-      </div>
-      <div class="history-title">📥 下載本案場整月排班表 Excel 檔案</div>
-      <div class="download-box">
-        <button class="btn-download" onclick="downloadReport(0)">📥 下載當月排班表</button>
-        <button class="btn-download" style="background:#312e81;" onclick="downloadReport(1)">📥 下載前一月排班表</button>
-      </div>
-      <div class="history-title">📊 社區人員最新打卡紀錄動態</div>
-      <div class="log-list" id="commAttendanceList"></div>
-      <div class="history-title">📩 社區同仁請假審核狀態查閱</div>
-      <div class="log-list" id="commLeaveList"></div>
-    </div>
+    <div class="form-group"><label>請假開始時間</label><input type="datetime-local" id="leaveStart"></div>
+    <div class="form-group"><label>請假結束時間</label><input type="datetime-local" id="leaveEnd"></div>
+    <button class="btn-block" style="background:#4f46e5;" onclick="handleLeaveSubmit()">送出請假申請</button>
   </div>
 </div>
 
 <script>
-  // ⚠️ 請在此更換為您剛剛在第一步中最新部署獲得的大寫 /exec 網址！
+  // ⚠️ 請在此更換為您的大寫 /exec 網址！
   const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec"; 
   let currentEmployeeData = null;
-  let committeeLocation = "";
-
-  function switchTab(target) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    if(target === 'employee') {
-      document.querySelectorAll('.tab-btn')[0].classList.add('active');
-      document.getElementById('employeePanel').classList.add('active');
-    } else {
-      document.querySelectorAll('.tab-btn')[1].classList.add('active');
-      document.getElementById('committeePanel').classList.add('active');
-    }
-  }
 
   function handleEmployeeLogin() {
     const id = document.getElementById('empId').value.trim();
@@ -183,7 +131,7 @@
           queryEmployeeHistory();
           renderLeaveStatusList('empLeaveStatusList', data.leaves);
         } else { alert(data.message); }
-      }).catch(err => alert("連線失敗！請檢查網頁第134行的 GAS 網址。"));
+      }).catch(err => alert("連線失敗！請檢查網址設定是否正確。"));
   }
 
   function queryEmployeeHistory() {
@@ -191,7 +139,7 @@
     const monthsAgo = document.getElementById('empMonthQuerySelect').value;
     const empId = document.getElementById('empId').value.trim();
     const grid = document.getElementById('empScheduleGrid');
-    grid.innerHTML = "<div style='grid-column: span 3; text-align:center; font-size:12px; color:#9ca3af; padding:10px;'>從排班表分頁載入排班中...</div>";
+    grid.innerHTML = "<div style='grid-column: span 3; text-align:center; font-size:12px; color:#9ca3af; padding:10px;'>載入排班中...</div>";
 
     fetch(`${GAS_WEB_APP_URL}?action=fetchEmployeeSchedule&employeeId=${encodeURIComponent(empId)}&monthsAgo=${monthsAgo}`)
       .then(res => res.json())
@@ -212,36 +160,6 @@
       });
   }
 
-  function handleCommitteeLogin() {
-    const user = document.getElementById('commUser').value.trim();
-    const pw = document.getElementById('commPassword').value.trim();
-    if(!user || !pw) return alert("請輸入管理帳號與密碼");
-
-    fetch(`${GAS_WEB_APP_URL}?action=committeeLogin&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pw)}`)
-      .then(res => res.json())
-      .then(data => {
-        if(data.success) {
-          committeeLocation = data.location;
-          document.getElementById('commLoginForm').style.display = 'none';
-          document.getElementById('commMainZone').style.display = 'block';
-          document.getElementById('showCommName').innerText = data.committeeName;
-          document.getElementById('showCommLocation').innerText = data.location;
-
-          const attList = document.getElementById('commAttendanceList');
-          attList.innerHTML = data.attendance.length ? "" : "<div style='text-align:center;color:#9ca3af;padding:10px;font-size:12px;'>本月目前無任何打卡紀錄數據</div>";
-          data.attendance.forEach(log => {
-            attList.innerHTML += `
-              <div class="log-item">
-                <strong>👤 ${log.name}</strong>
-                <span>${log.time}</span>
-                <span class="badge badge-in">${log.type}</span>
-              </div>`;
-          });
-          renderLeaveStatusList('commLeaveList', data.leaves);
-        } else { alert(data.message); }
-      });
-  }
-
   function renderLeaveStatusList(elementId, leaves) {
     const list = document.getElementById(elementId);
     list.innerHTML = leaves.length ? "" : "<div style='text-align:center;color:#9ca3af;padding:10px;font-size:12px;'>暫無請假申請紀錄</div>";
@@ -259,11 +177,6 @@
           <span style="color:${color}; font-weight:bold; font-size:13px; border:1px solid ${color}; padding:2px 6px; border-radius:4px;">${lv.status}</span>
         </div>`;
     });
-  }
-
-  function downloadReport(monthsAgo) {
-    if(!committeeLocation) return alert("請先登入系統");
-    window.location.href = `${GAS_WEB_APP_URL}?action=downloadCommitteeReport&location=${encodeURIComponent(committeeLocation)}&monthsAgo=${monthsAgo}`;
   }
 
   function handleClock(type) {
