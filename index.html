@@ -23,8 +23,14 @@
     .form-group { margin-bottom: 12px; }
     label { display: block; font-size: 13px; color: #4b5563; margin-bottom: 4px; }
     select, input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
-    .ann-box { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; }
-    .ann-title { font-weight: bold; color: #1e40af; margin-bottom: 2px; }
+    
+    /* 公告欄專用排版優化 */
+    .ann-box { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; }
+    .ann-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border-bottom: 1px dashed #bfdbfe; padding-bottom: 4px; }
+    .ann-title { font-weight: bold; color: #1e40af; font-size: 15px; }
+    .ann-date { font-size: 12px; color: #666; font-weight: normal; }
+    .ann-content { color: #333; line-height: 1.5; white-space: pre-wrap; margin-top: 4px; }
+    
     .roaming-box { background: #f0fdf4; border: 1px dashed #28a745; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
     .hidden { display: none !important; }
   </style>
@@ -130,9 +136,9 @@
             document.getElementById('assigned-loc').innerText = `目前指派職務：${isRoamingUser ? '機動人員' : baseLoc}`;
             document.getElementById('arrival-date').innerText = `到職日：${data.hireDate || '--'}`;
             document.getElementById('lv-total').innerText = data.annualLeaveTotal || 0;
-            document.getElementById('lv-rem').innerText = remainingLeaveDays || 0;
+            document.getElementById('lv-rem').innerText = data.annualLeaveRemaining || 0;
 
-            // 若為機動人員，自動展現所有合法案場
+            // 機動人員選單
             if (isRoamingUser && data.allLocations && data.allLocations.length > 0) {
               let locOptions = "";
               data.allLocations.forEach(loc => {
@@ -144,13 +150,22 @@
               document.getElementById('roaming-selector-block').classList.add('hidden');
             }
 
-            // 渲染最新公告
+            // 渲染最新公告（校正版結構）
             let annHtml = "";
             if(data.announcements && data.announcements.length > 0) {
               data.announcements.forEach(a => {
-                annHtml += `<div class="ann-box"><div class="ann-title">${a.title} <span style="font-size:11px; color:#666;">${a.date}</span></div><div>${a.content}</div></div>`;
+                annHtml += `
+                  <div class="ann-box">
+                    <div class="ann-header">
+                      <div class="ann-title">${a.title}</div>
+                      <div class="ann-date">${a.date}</div>
+                    </div>
+                    <div class="ann-content">${a.content}</div>
+                  </div>`;
               });
-            } else { annHtml = "<div style='color:#999; font-style:italic; font-size:13px;'>目前暫無最新公告</div>"; }
+            } else { 
+              annHtml = "<div style='color:#999; font-style:italic; font-size:13px; text-align:center;'>目前暫無最新公告</div>"; 
+            }
             document.getElementById('announcements-container').innerHTML = annHtml;
             
             document.getElementById('login-section').classList.add('hidden');
@@ -166,7 +181,6 @@
       return baseLoc;
     }
 
-    // 觸發打卡並取得手機 GPS 經緯度
     function triggerClockAction(actionType) {
       const activeLoc = getTargetLocation();
       if (!activeLoc || activeLoc === "載入中...") return alert("尚未選取有效案場！");
