@@ -5,12 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>紘嘉物業管理 - 主委行動App</title>
   
+  <!-- PWA 原生 App 模式設定 -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#4f46e5">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="icon-192.png">
 
+  <!-- 引入 Excel 匯出套件 -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root { 
@@ -33,54 +35,44 @@
     
     input, textarea, select { width: 100%; padding: 14px; margin-bottom: 14px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 15px; outline: none; transition: all 0.2s; background: #f9fafb; font-family: inherit; }
     input:focus, textarea:focus, select:focus { border-color: var(--primary-color); background: #fff; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
-    textarea { resize: none; height: 100px; }
-
+    
     button.btn-main { width: 100%; padding: 14px; background: var(--primary-color); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
     button.btn-main:hover { background: var(--primary-hover); }
     
     .app-header { display: flex; justify-content: space-between; align-items: center; background: white; }
     .app-title { font-size: 18px; font-weight: bold; color: #111827; }
-    .location-tag { color: var(--primary-color); font-weight: bold; font-size: 13px; margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+    .location-tag { color: var(--primary-color); font-weight: bold; font-size: 13px; margin-top: 3px; }
     .btn-logout { width: auto; padding: 6px 12px; background: #fee2e2; color: #ef4444; font-size: 12px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; }
     
-    /* 🌟 App 三分頁導覽列 */
-    .tab-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; background: #e5e7eb; padding: 4px; border-radius: 10px; margin-bottom: 14px; gap: 4px; }
-    .tab-btn { padding: 10px 4px; text-align: center; font-size: 13px; font-weight: bold; color: #4b5563; border-radius: 8px; border: none; background: transparent; cursor: pointer; transition: all 0.2s; }
+    /* 四分頁導覽列 */
+    .tab-bar { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; background: #e5e7eb; padding: 4px; border-radius: 10px; margin-bottom: 14px; gap: 4px; }
+    .tab-btn { padding: 10px 2px; text-align: center; font-size: 12px; font-weight: bold; color: #4b5563; border-radius: 8px; border: none; background: transparent; cursor: pointer; transition: all 0.2s; }
     .tab-btn.active { background: white; color: var(--primary-color); box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
     
     .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .section-title { font-size: 15px; font-weight: bold; color: #1f2937; }
-    .btn-excel { background: #10b981; color: white; padding: 6px 12px; font-size: 12px; border-radius: 6px; width: auto; font-weight: bold; border: none; cursor: pointer; }
+    .btn-excel { background: #0284c7; color: white; padding: 6px 12px; font-size: 12px; border-radius: 6px; width: auto; font-weight: bold; border: none; cursor: pointer; }
     
-    .list-container { display: flex; flex-direction: column; gap: 10px; }
+    .list-container { display: flex; flex-direction: column; gap: 10px; max-height: 320px; overflow-y: auto; }
     .list-item { background: #f9fafb; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
     .item-left { display: flex; flex-direction: column; gap: 4px; }
     .item-name { font-size: 14px; font-weight: bold; color: #111827; }
     .item-sub { font-size: 12px; color: var(--text-muted); }
     
-    .badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; text-align: center; }
+    .badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
     .badge-in { background: #dcfce7; color: #15803d; }
     .badge-out { background: #fee2e2; color: #b91c1c; }
     .badge-pending { background: #fffbeb; border: 1px solid #fef3c7; color: #b45309; }
     .badge-approved { background: #dbeafe; color: #1d4ed8; }
-    .badge-rejected { background: #f3f4f6; color: #6b7280; }
     
-    .pwa-install-banner { display: flex; justify-content: space-between; align-items: center; background: #eef2ff; border: 1px solid #c7d2fe; padding: 12px; border-radius: 12px; margin-bottom: 12px; }
-    .pwa-text { font-size: 13px; color: #3730a3; font-weight: bold; }
-    .pwa-btn { background: #4f46e5; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
-
     .hidden { display: none !important; }
-    .no-data { text-align: center; color: #9ca3af; font-style: italic; padding: 30px 0; font-size: 13px; }
+    .no-data { text-align: center; color: #9ca3af; font-style: italic; padding: 20px 0; font-size: 13px; }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <div id="install-banner" class="pwa-install-banner hidden">
-      <div class="pwa-text">📲 下載「主委管理端」App 至手機</div>
-      <button class="pwa-btn" id="install-button">立即安裝</button>
-    </div>
-
+    <!-- ================= 1. 登入畫面 ================= -->
     <div id="login-box" class="card">
       <h2>紘嘉物業行動管理端</h2>
       <input type="text" id="username" placeholder="請輸入主委管理帳號">
@@ -88,6 +80,7 @@
       <button class="btn-main" onclick="login()">登入專區</button>
     </div>
 
+    <!-- ================= 2. App 主功能儀表板 ================= -->
     <div id="dashboard" class="hidden">
       
       <div class="card app-header">
@@ -95,44 +88,59 @@
           <div class="app-title" id="committee-welcome">主委，您好</div>
           <div class="location-tag" id="committee-location">📍 監督案場：連線中...</div>
         </div>
-        <button class="btn-logout" onclick="location.reload()">登出</button>
+        <button class="btn-logout" onclick="logout()">登登出</button>
       </div>
 
+      <!-- App 四分頁切換列 -->
       <div class="tab-bar">
         <button id="tab-att" class="tab-btn active" onclick="switchTab('att')">📌 打卡動態</button>
-        <button id="tab-leave" class="tab-btn" onclick="switchTab('leave')">📅 請假紀錄</button>
+        <button id="tab-sched" class="tab-btn" onclick="switchTab('sched')">📅 案場排班</button>
+        <button id="tab-leave" class="tab-btn" onclick="switchTab('leave')">🌴 請假紀錄</button>
         <button id="tab-suggest" class="tab-btn" onclick="switchTab('suggest')">✍️ 意見交辦</button>
       </div>
 
+      <!-- 分頁一：今日打卡動態 -->
       <div id="page-att" class="card">
         <div class="section-header">
-          <div class="section-title">今日考勤動態</div>
-          <button class="btn-excel" onclick="exportToExcel()">📊 匯出 Excel</button>
+          <div class="section-title">今日同仁考勤</div>
         </div>
         <div class="list-container" id="attendance-list">
           <div class="no-data">暫無打卡數據</div>
         </div>
       </div>
 
+      <!-- 🌟 分頁二：案場排班紀錄（提供下載排班資訊按鈕） -->
+      <div id="page-sched" class="card hidden">
+        <div class="section-header">
+          <div class="section-title">本月同仁排班表</div>
+          <button class="btn-excel" onclick="exportScheduleToExcel()">📊 下載排班資訊</button>
+        </div>
+        <div class="list-container" id="schedule-list">
+          <div class="no-data">正在載入排班資訊...</div>
+        </div>
+      </div>
+
+      <!-- 分頁三：同仁請假紀錄 -->
       <div id="page-leave" class="card hidden">
         <div class="section-header">
-          <div class="section-title">同仁請假申請紀錄</div>
+          <div class="section-title">同仁請假申請</div>
         </div>
         <div class="list-container" id="leave-list">
           <div class="no-data">暫無請假紀錄</div>
         </div>
       </div>
 
+      <!-- 分頁四：主委意見與交辦反映 -->
       <div id="page-suggest" class="card hidden">
         <div class="section-header">
-          <div class="section-title">新增意見反映 / 交辦事項</div>
+          <div class="section-title">新增意見交辦</div>
         </div>
         <select id="suggest-type">
           <option value="意見反映">💡 意見反映</option>
           <option value="交辦事項">📋 交辦事項</option>
           <option value="環境報修">🔧 環境報修</option>
         </select>
-        <textarea id="suggest-content" placeholder="請輸入您想反映的內容或交辦事項..."></textarea>
+        <textarea id="suggest-content" style="width:100%; height:100px; resize:none;" placeholder="請輸入您想反映的內容..."></textarea>
         <button class="btn-main" onclick="submitSuggestion()">送出交辦事項</button>
       </div>
 
@@ -142,37 +150,16 @@
   <script>
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec"; 
 
-    let currentAttendanceData = [];
-    let currentCommunityLocation = "本社區";
+    let currentCommunityLocation = "";
     let savedUsername = "";
+    let rawScheduleData = []; // 儲存排班原始資料供 Excel 下載
 
-    // 註冊 Service Worker
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js').catch(err => console.log(err));
-      });
+      window.addEventListener('load', () => { navigator.serviceWorker.register('service-worker.js').catch(err => {}); });
     }
 
-    // PWA 安裝按鈕事件
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      document.getElementById('install-banner').classList.remove('hidden');
-    });
-
-    document.getElementById('install-button').addEventListener('click', async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') document.getElementById('install-banner').classList.add('hidden');
-        deferredPrompt = null;
-      }
-    });
-
-    // 三分頁切換
     function switchTab(tabName) {
-      ['att', 'leave', 'suggest'].forEach(t => {
+      ['att', 'sched', 'leave', 'suggest'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.remove('active');
         document.getElementById(`page-${t}`).classList.add('hidden');
       });
@@ -192,14 +179,12 @@
             savedUsername = user;
             currentCommunityLocation = data.location || "本社區";
             document.getElementById('committee-welcome').innerText = `${data.committeeName || user} 主委，您好`;
-            document.getElementById('committee-location').innerText = `🏠 ${currentCommunityLocation}`;
+            document.getElementById('committee-location').innerText = `🏠 監督案場：${currentCommunityLocation}`;
 
-            currentAttendanceData = data.attendance || [];
-
-            // 渲染打卡
+            // 1. 渲染打卡紀錄
             let attHtml = "";
-            if(currentAttendanceData.length > 0) {
-              currentAttendanceData.forEach(a => {
+            if(data.attendance && data.attendance.length > 0) {
+              data.attendance.forEach(a => {
                 let bClass = a.type === '上班' ? 'badge badge-in' : 'badge badge-out';
                 attHtml += `<div class="list-item"><div class="item-left"><div class="item-name">${a.name}</div><div class="item-sub">🕒 時間：${a.time}</div></div><span class="${bClass}">${a.type}</span></div>`;
               });
@@ -208,11 +193,23 @@
               document.getElementById('attendance-list').innerHTML = "<div class='no-data'>今日尚無同仁打卡紀錄</div>"; 
             }
 
-            // 渲染請假
+            // 2. 渲染並儲存排班表
+            rawScheduleData = data.schedules || [];
+            let schedHtml = "";
+            if(rawScheduleData.length > 0) {
+              rawScheduleData.forEach(s => {
+                schedHtml += `<div class="list-item"><div class="item-left"><div class="item-name">${s.date}</div><div class="item-sub">👤 值班同仁：${s.name}</div></div><span class="badge badge-approved">${s.shift}</span></div>`;
+              });
+              document.getElementById('schedule-list').innerHTML = schedHtml;
+            } else {
+              document.getElementById('schedule-list').innerHTML = "<div class='no-data'>本月暫無排班資訊</div>";
+            }
+
+            // 3. 渲染請假紀錄
             let leaveHtml = "";
             if(data.leaves && data.leaves.length > 0) {
               data.leaves.forEach(l => {
-                let bClass = l.status === '已核准' ? 'badge badge-approved' : (l.status === '已拒絕' ? 'badge badge-rejected' : 'badge badge-pending');
+                let bClass = l.status === '已核准' ? 'badge badge-in' : 'badge badge-pending';
                 leaveHtml += `<div class="list-item"><div class="item-left"><div class="item-name">${l.name}</div><div class="item-sub">🌴 假別：${l.type}</div></div><span class="${bClass}">${l.status}</span></div>`;
               });
               document.getElementById('leave-list').innerHTML = leaveHtml;
@@ -228,36 +225,42 @@
         }).catch(err => alert("連線失敗！"));
     }
 
-    // 🌟 新增：提交主委意見交辦至後端
+    // 🌟 匯出排班資訊為 Excel
+    function exportScheduleToExcel() {
+      if (!rawScheduleData || rawScheduleData.length === 0) return alert("❌ 目前沒有排班數據可供下載！");
+      try {
+        const wb = XLSX.utils.book_new();
+        const formattedData = rawScheduleData.map(item => ({
+          "日期": item.date,
+          "值班同仁": item.name,
+          "班別資訊": item.shift
+        }));
+        const ws = XLSX.utils.json_to_sheet(formattedData);
+        ws['!cols'] = [{ wch: 15 }, { wch: 15 }, { wch: 20 }];
+        XLSX.utils.book_append_sheet(wb, ws, "本月排班表");
+        XLSX.writeFile(wb, `${currentCommunityLocation}_當月排班資訊.xlsx`);
+      } catch (error) {
+        alert("匯出排班錯誤：" + error.toString());
+      }
+    }
+
     function submitSuggestion() {
       const type = document.getElementById('suggest-type').value;
       const content = document.getElementById('suggest-content').value.trim();
-      if(!content) return alert('請輸入要反映或交辦的內容！');
+      if(!content) return alert('請輸入交辦內容！');
 
       fetch(`${GAS_WEB_APP_URL}?action=submitSuggestion&username=${encodeURIComponent(savedUsername)}&location=${encodeURIComponent(currentCommunityLocation)}&type=${encodeURIComponent(type)}&content=${encodeURIComponent(content)}`)
         .then(res => res.json())
         .then(data => {
           if(data.success) {
-            alert('🎉 意見/交辦事項已成功寫入系統總表！');
+            alert('🎉 交辦事項已成功寫入系統總表！');
             document.getElementById('suggest-content').value = "";
-          } else {
-            alert('提交失敗：' + data.message);
-          }
-        }).catch(err => alert('連線失敗，請檢查網路狀態。'));
+          } else { alert('提交失敗：' + data.message); }
+        }).catch(err => alert('連線失敗'));
     }
 
-    function exportToExcel() {
-      if (!currentAttendanceData || currentAttendanceData.length === 0) return alert("❌ 目前沒有數據！");
-      try {
-        const wb = XLSX.utils.book_new();
-        const formattedData = currentAttendanceData.map(item => ({ "同仁姓名": item.name, "打卡狀態": item.type, "打卡時間": item.time }));
-        const ws = XLSX.utils.json_to_sheet(formattedData);
-        ws['!cols'] = [{ wch: 15 }, { wch: 12 }, { wch: 22 }];
-        XLSX.utils.book_append_sheet(wb, ws, "今日打卡紀錄");
-        XLSX.writeFile(wb, `${currentCommunityLocation}_今日打卡紀錄.xlsx`);
-      } catch (error) {
-        alert("匯出錯誤：" + error.toString());
-      }
+    function logout() {
+      location.reload();
     }
   </script>
 </body>
