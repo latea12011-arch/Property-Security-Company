@@ -77,6 +77,9 @@
             <select id="leave-type" onchange="checkLeaveType()">
               <option value="事假">事假 (勞基法上限14天)</option>
               <option value="病假">病假 (勞基法上限30天)</option>
+              <option value="公假">公假 (依公司規定請假)</option>
+              <option value="婚假">婚假 (勞基法上限08天)</option>
+              <option value="喪假">喪假 (勞基法上限08天)</option>
               <option value="特休">特休 (依同仁年資計算)</option>
             </select>
           </div>
@@ -101,12 +104,12 @@
   </div>
 
   <script>
-    // ⚠️ 記得更換成您最新部署的 GAS 網址
+    // ⚠️ 請務必替換成您最新重新部署的 GAS /exec 網址
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec"; 
     
     let currentEmpId = "", currentEmpName = "", baseLoc = "", remainingLeaveDays = 0;
     let isRoamingUser = false;
-    let gpsConfig = {}; // 存放所有案場經緯度
+    let gpsConfig = {}; 
 
     function login() {
       const id = document.getElementById('emp-id').value.trim();
@@ -120,7 +123,7 @@
             currentEmpId = id; 
             currentEmpName = data.employeeName; 
             baseLoc = data.assignedLocation; 
-            isRoamingUser = data.isRoamingUser; // 從G欄抓取狀態
+            isRoamingUser = data.isRoamingUser; 
             gpsConfig = data.locationGpsConfig || {};
             
             document.getElementById('welcome-msg').innerText = `${currentEmpName} ，您好`;
@@ -129,7 +132,7 @@
             document.getElementById('lv-total').innerText = data.annualLeaveTotal || 0;
             document.getElementById('lv-rem').innerText = remainingLeaveDays || 0;
 
-            // 如果是機動人員，展現選單
+            // 若為機動人員，自動展現所有合法案場
             if (isRoamingUser && data.allLocations && data.allLocations.length > 0) {
               let locOptions = "";
               data.allLocations.forEach(loc => {
@@ -141,7 +144,7 @@
               document.getElementById('roaming-selector-block').classList.add('hidden');
             }
 
-            // 渲染公告
+            // 渲染最新公告
             let annHtml = "";
             if(data.announcements && data.announcements.length > 0) {
               data.announcements.forEach(a => {
@@ -153,7 +156,7 @@
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('main-section').classList.remove('hidden');
           } else { alert(data.message); }
-        }).catch(err => alert("連線失敗！請確認您的 GAS 網址與部署權限設定。"));
+        }).catch(err => alert("連線失敗！請確認您的 GAS 網址與重新部署設定。"));
     }
 
     function getTargetLocation() {
@@ -163,41 +166,40 @@
       return baseLoc;
     }
 
-    // 觸發打卡並要求手機 GPS 位置
+    // 觸發打卡並取得手機 GPS 經緯度
     function triggerClockAction(actionType) {
       const activeLoc = getTargetLocation();
       if (!activeLoc || activeLoc === "載入中...") return alert("尚未選取有效案場！");
 
       if (!navigator.geolocation) {
-        return alert("您的瀏覽器或手機不支援全球定位系統(GPS)，無法完成打卡。");
+        return alert("您的瀏覽器或手機不支援GPS定位，無法完成打卡。");
       }
 
-      alert("⏳ 正在讀取您的 GPS 位置，請在跳出權限提示時選擇「允許」...");
+      alert("⏳ 正在取得您的 GPS 衛星定位，請在跳出權限提示時點擊「允許」...");
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
           
-          // 前端先做基本定位資料確認，並送交後端做嚴格距離計算與寫入
           fetch(`${GAS_WEB_APP_URL}?action=${actionType}&employeeId=${currentEmpId}&employeeName=${encodeURIComponent(currentEmpName)}&location=${encodeURIComponent(activeLoc)}&lat=${lat}&lng=${lng}`)
             .then(res => res.json())
             .then(data => alert(data.message))
-            .catch(err => alert("打卡失敗，與伺服器連線中斷。"));
+            .catch(err => alert("打卡連線發生錯誤，請重新嘗試。"));
         },
         (error) => {
           switch(error.code) {
             case error.PERMISSION_DENIED:
-              alert("❌ 打卡失敗：您拒絕了位置存取要求。請至手機瀏覽器設定中開啟定位權限。");
+              alert("❌ 打卡失敗：您拒絕了瀏覽器的定位權限。請至手機設定中將瀏覽器定位開啟。");
               break;
             case error.POSITION_UNAVAILABLE:
-              alert("❌ 打卡失敗：無法取得當前位置，請確認手機已開啟GPS定位。");
+              alert("❌ 打卡失敗：無法取得位置，請確認手機已開啟GPS功能且收訊良好。");
               break;
             case error.TIMEOUT:
-              alert("❌ 打卡失敗：讀取位置逾時，請至收訊較佳的地方重新嘗試。");
+              alert("❌ 打卡失敗：定位逾時，請到空曠處重新打卡。");
               break;
             default:
-              alert("❌ 打卡失敗：發生未知的定位錯誤。");
+              alert("❌ 打卡失敗：發生未知的GPS錯誤。");
           }
         },
         { enableHighAccuracy: true, timeout: 10000 }
