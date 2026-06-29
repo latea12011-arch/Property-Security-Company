@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>紘嘉物業 - 員工行動考勤與請假系統 (新增請假審核查詢)</title>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4e54c8">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -407,5 +409,19 @@
     function hideMask() { document.getElementById("globalMask").style.display = "none"; }
     function setMaskText(txt) { document.getElementById("maskText").innerText = txt; }
   </script>
+  // 🚀 啟動 PWA App 自動安裝偵測
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    // 建立一個微型的背景 Service Worker 滿足安裝條件
+    const blob = new Blob([
+      `self.addEventListener('fetch', function(event) { event.respondWith(fetch(event.request)); });`
+    ], { type: 'text/javascript' });
+    const blobURL = URL.createObjectURL(blob);
+    
+    navigator.serviceWorker.register(blobURL)
+      .then(reg => console.log('紘嘉 App 核心註冊成功！'))
+      .catch(err => console.log('註冊失敗：', err));
+  });
+}
 </body>
 </html>
