@@ -3,9 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>紘嘉物業 - 員工行動考勤與請假系統 (新增請假審核查詢)</title>
-  <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#4e54c8">
+  <title>紘嘉物業 - 員工行動考勤</title>
+  
+  <!-- 【1. PWA 核心設定】讓手機偵測並跳出「安裝 App」提示 -->
+  <script>
+    const manifest = {
+      "name": "紘嘉物業行動考勤系統",
+      "short_name": "紘嘉物業",
+      "description": "紘嘉物業內部同仁專用行動考勤、打卡與請假管理系統",
+      "start_url": window.location.href,
+      "display": "standalone",
+      "background_color": "#f4f6f9",
+      "theme_color": "#4e54c8",
+      "orientation": "portrait-primary",
+      "icons": [
+        { "src": "https://img.icons8.com/fluent/192/000000/clock.png", "sizes": "192x192", "type": "image/png" },
+        { "src": "https://img.icons8.com/fluent/512/000000/clock.png", "sizes": "512x512", "type": "image/png" }
+      ]
+    };
+    const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = URL.createObjectURL(blob);
+    document.head.appendChild(link);
+  </script>
+  <meta name="theme-color" content="#4e54c8">
+
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -35,8 +58,6 @@
     .item-row { padding: 12px; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; font-size: 14px; align-items: center; }
     .announcement-box { padding: 15px; background: #fff5f5; border-left: 4px solid #e53e3e; margin-bottom: 12px; border-radius: 6px; }
     .preview-box { width: 100%; max-height: 150px; object-fit: contain; margin-top: 10px; display: none; border-radius: 8px; border: 1px dashed #cbd5e0; }
-    
-    /* 假單狀態標籤樣式 */
     .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; color: #fff; }
     .badge-wait { background-color: #f39c12; }
     .badge-pass { background-color: #27ae60; }
@@ -45,13 +66,11 @@
 </head>
 <body>
 
-  <!-- 讀取遮罩 -->
   <div class="loading-mask" id="globalMask">
     <div class="spinner"></div>
     <p id="maskText" style="font-weight: bold; color: #4e54c8;">安全與雲端核心連線中...</p>
   </div>
 
-  <!-- 【A】登入介面 -->
   <div class="login-container" id="loginBox">
     <h2>紘嘉物業行動考勤</h2>
     <div class="form-group" style="text-align: left;">
@@ -65,7 +84,6 @@
     <button class="btn-action btn-submit" onclick="executeLogin()">安全登入</button>
   </div>
 
-  <!-- 【B】主控制面板 -->
   <div class="main-panel" id="mainPanel">
     <div class="user-card">
       <h3 id="welcomeTitle">同仁，您好</h3>
@@ -81,7 +99,6 @@
       <button class="tab-btn" onclick="loadAnnouncementsTab('announceTab', this)"><i class="fa-solid fa-bullhorn"></i>公告</button>
     </div>
 
-    <!-- 1. 打卡 -->
     <div class="content-section active" id="clockTab">
       <div style="margin-bottom: 15px; padding: 12px; background: #edf2f7; border-left: 5px solid #4e54c8; border-radius: 4px;">
         <p style="font-weight: bold; font-size: 14px; color: #4a5568;"><i class="fa-solid fa-location-dot" style="color:#e53e3e; margin-right:5px;"></i> 打卡選取案場</p>
@@ -93,7 +110,6 @@
       </div>
     </div>
 
-    <!-- 2. 請假 -->
     <div class="content-section" id="leaveTab">
       <h4 style="margin-bottom: 12px; color:#4e54c8;"><i class="fa-solid fa-file-signature"></i> 填寫請假單</h4>
       <div class="form-group">
@@ -127,14 +143,12 @@
       
       <hr style="border:0; border-top:1px dashed #cbd5e0; margin-bottom: 15px;">
       
-      <!-- 新增：個人請假審核進度面板 -->
       <h4 style="margin-bottom: 10px; color:#4e54c8;"><i class="fa-solid fa-clipboard-list"></i> 您的請假審核進度</h4>
       <div id="leaveRecordsContainer" style="background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0; max-height: 250px; overflow-y: auto;">
         <p style="padding:15px; text-align:center; color:#a0aec0;">正在同步審核進度...</p>
       </div>
     </div>
 
-    <!-- 3. 班表 -->
     <div class="content-section" id="scheduleTab">
       <div class="form-group" style="display: flex; gap: 10px; align-items: flex-end;">
         <div style="flex: 1;">
@@ -149,12 +163,10 @@
       </div>
     </div>
 
-    <!-- 4. 公告 -->
     <div class="content-section" id="announceTab">
       <h4 style="margin-bottom: 15px; color:#e53e3e;"><i class="fa-solid fa-bullhorn"></i> 管理部最新公告事項</h4>
       <div id="announceContainer" style="max-height: 450px; overflow-y: auto;"></div>
     </div>
-
   </div>
 
   <script>
@@ -197,6 +209,11 @@
       });
     }
 
+    document.addEventListener("DOMContentLoaded", function() {
+      // 確保一開始是在登入畫面
+      executeLogout();
+    });
+
     function switchTab(tabId, btnElem) {
       document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -204,13 +221,11 @@
       btnElem.classList.add('active');
     }
 
-    // 當同仁切換到請假頁面時，自動載入他的請假紀錄
     function loadLeaveTab(tabId, btnElem) {
       switchTab(tabId, btnElem);
       fetchLeaveRecordsData();
     }
 
-    // 取得個人請假歷史紀錄與狀態
     function fetchLeaveRecordsData() {
       const container = document.getElementById("leaveRecordsContainer");
       const requestUrl = `${BASE_GAS_URL}?action=fetchLeaveRecords&employeeId=${encodeURIComponent(currentUser.empId)}`;
@@ -344,7 +359,7 @@
       .then(response => response.json())
       .then(res => {
         hideMask(); alert(res.message);
-        resetLeaveForm(); fetchLeaveRecordsData(); // 送出成功後自動刷新下方進度
+        resetLeaveForm(); fetchLeaveRecordsData();
       })
       .catch(err => {
         hideMask(); alert("🎉 請假申請已成功送出！證明文件已同步至雲端系統。");
@@ -408,20 +423,21 @@
     function showMask(txt) { document.getElementById("globalMask").style.display = "flex"; setMaskText(txt); }
     function hideMask() { document.getElementById("globalMask").style.display = "none"; }
     function setMaskText(txt) { document.getElementById("maskText").innerText = txt; }
+
+    // 🚀 啟動 PWA 核心背景服務（安全地寫在 script 標籤內部）
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const swCode = `
+          self.addEventListener('install', function(e) { self.skipWaiting(); });
+          self.addEventListener('activate', function(e) { return self.clients.claim(); });
+          self.addEventListener('fetch', function(e) { e.respondWith(fetch(e.request)); });
+        `;
+        const swBlob = new Blob([swCode], { type: 'text/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(swBlob))
+          .then(reg => console.log('紘嘉 App 引擎啟動成功！'))
+          .catch(err => console.log('作業失敗：', err));
+      });
+    }
   </script>
-  // 🚀 啟動 PWA App 自動安裝偵測
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    // 建立一個微型的背景 Service Worker 滿足安裝條件
-    const blob = new Blob([
-      `self.addEventListener('fetch', function(event) { event.respondWith(fetch(event.request)); });`
-    ], { type: 'text/javascript' });
-    const blobURL = URL.createObjectURL(blob);
-    
-    navigator.serviceWorker.register(blobURL)
-      .then(reg => console.log('紘嘉 App 核心註冊成功！'))
-      .catch(err => console.log('註冊失敗：', err));
-  });
-}
 </body>
 </html>
