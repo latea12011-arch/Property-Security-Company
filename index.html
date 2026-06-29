@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>紘嘉物業 - 員工行動考勤與請假系統 (極速 POST 版)</title>
+  <title>紘嘉物業 - 員工行動考勤與請假系統 (新增請假審核查詢)</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -30,18 +30,26 @@
     .btn-clock-in { background: #27ae60; margin-bottom: 12px; font-size: 18px;}
     .btn-clock-out { background: #f39c12; font-size: 18px;}
     .btn-submit { background: #5c6bc0; }
-    .item-row { padding: 12px; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; font-size: 14px; }
+    .item-row { padding: 12px; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; font-size: 14px; align-items: center; }
     .announcement-box { padding: 15px; background: #fff5f5; border-left: 4px solid #e53e3e; margin-bottom: 12px; border-radius: 6px; }
     .preview-box { width: 100%; max-height: 150px; object-fit: contain; margin-top: 10px; display: none; border-radius: 8px; border: 1px dashed #cbd5e0; }
+    
+    /* 假單狀態標籤樣式 */
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; color: #fff; }
+    .badge-wait { background-color: #f39c12; }
+    .badge-pass { background-color: #27ae60; }
+    .badge-fail { background-color: #c0392b; }
   </style>
 </head>
 <body>
 
+  <!-- 讀取遮罩 -->
   <div class="loading-mask" id="globalMask">
     <div class="spinner"></div>
     <p id="maskText" style="font-weight: bold; color: #4e54c8;">安全與雲端核心連線中...</p>
   </div>
 
+  <!-- 【A】登入介面 -->
   <div class="login-container" id="loginBox">
     <h2>紘嘉物業行動考勤</h2>
     <div class="form-group" style="text-align: left;">
@@ -55,6 +63,7 @@
     <button class="btn-action btn-submit" onclick="executeLogin()">安全登入</button>
   </div>
 
+  <!-- 【B】主控制面板 -->
   <div class="main-panel" id="mainPanel">
     <div class="user-card">
       <h3 id="welcomeTitle">同仁，您好</h3>
@@ -65,11 +74,12 @@
     
     <div class="tab-bar">
       <button class="tab-btn active" onclick="switchTab('clockTab', this)"><i class="fa-solid fa-clock"></i>打卡</button>
-      <button class="tab-btn" onclick="switchTab('leaveTab', this)"><i class="fa-solid fa-pen-to-square"></i>請假</button>
+      <button class="tab-btn" onclick="loadLeaveTab('leaveTab', this)"><i class="fa-solid fa-pen-to-square"></i>請假</button>
       <button class="tab-btn" onclick="loadScheduleTab('scheduleTab', this)"><i class="fa-solid fa-calendar-days"></i>班表</button>
       <button class="tab-btn" onclick="loadAnnouncementsTab('announceTab', this)"><i class="fa-solid fa-bullhorn"></i>公告</button>
     </div>
 
+    <!-- 1. 打卡 -->
     <div class="content-section active" id="clockTab">
       <div style="margin-bottom: 15px; padding: 12px; background: #edf2f7; border-left: 5px solid #4e54c8; border-radius: 4px;">
         <p style="font-weight: bold; font-size: 14px; color: #4a5568;"><i class="fa-solid fa-location-dot" style="color:#e53e3e; margin-right:5px;"></i> 打卡選取案場</p>
@@ -81,7 +91,9 @@
       </div>
     </div>
 
+    <!-- 2. 請假 -->
     <div class="content-section" id="leaveTab">
+      <h4 style="margin-bottom: 12px; color:#4e54c8;"><i class="fa-solid fa-file-signature"></i> 填寫請假單</h4>
       <div class="form-group">
         <label>選擇假別</label>
         <select id="leaveType">
@@ -109,9 +121,18 @@
         <label>請假事由 / 備註說明</label>
         <textarea id="leaveReason" rows="3" placeholder="請填寫具體原因..."></textarea>
       </div>
-      <button class="btn-action btn-submit" onclick="executeLeaveFormSubmit()">送出請假申請</button>
+      <button class="btn-action btn-submit" style="margin-bottom: 25px;" onclick="executeLeaveFormSubmit()">送出請假申請</button>
+      
+      <hr style="border:0; border-top:1px dashed #cbd5e0; margin-bottom: 15px;">
+      
+      <!-- 新增：個人請假審核進度面板 -->
+      <h4 style="margin-bottom: 10px; color:#4e54c8;"><i class="fa-solid fa-clipboard-list"></i> 您的請假審核進度</h4>
+      <div id="leaveRecordsContainer" style="background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0; max-height: 250px; overflow-y: auto;">
+        <p style="padding:15px; text-align:center; color:#a0aec0;">正在同步審核進度...</p>
+      </div>
     </div>
 
+    <!-- 3. 班表 -->
     <div class="content-section" id="scheduleTab">
       <div class="form-group" style="display: flex; gap: 10px; align-items: flex-end;">
         <div style="flex: 1;">
@@ -126,6 +147,7 @@
       </div>
     </div>
 
+    <!-- 4. 公告 -->
     <div class="content-section" id="announceTab">
       <h4 style="margin-bottom: 15px; color:#e53e3e;"><i class="fa-solid fa-bullhorn"></i> 管理部最新公告事項</h4>
       <div id="announceContainer" style="max-height: 450px; overflow-y: auto;"></div>
@@ -142,7 +164,6 @@
     let selectedFileName = "";
     let selectedFileType = "";
 
-    // 核心技術：常規查詢走 JSONP 通道
     function sendJsonpRequest(url, callbackFunctionName, successHandler) {
       window[callbackFunctionName] = function(data) {
         successHandler(data);
@@ -150,17 +171,14 @@
         const scriptTag = document.getElementById(callbackFunctionName);
         if (scriptTag) scriptTag.remove();
       };
-      
       const connector = url.includes("?") ? "&" : "?";
       const finalUrl = `${url}${connector}callback=${callbackFunctionName}&_ts=${new Date().getTime()}`;
-      
       const script = document.createElement("script");
       script.src = finalUrl;
       script.id = callbackFunctionName;
       document.body.appendChild(script);
     }
 
-    // 動態建置月份選單
     function initMonthSelector() {
       const select = document.getElementById("scheduleMonthSelect");
       select.innerHTML = ""; 
@@ -184,50 +202,67 @@
       btnElem.classList.add('active');
     }
 
-    // 智慧型自動壓縮
+    // 當同仁切換到請假頁面時，自動載入他的請假紀錄
+    function loadLeaveTab(tabId, btnElem) {
+      switchTab(tabId, btnElem);
+      fetchLeaveRecordsData();
+    }
+
+    // 取得個人請假歷史紀錄與狀態
+    function fetchLeaveRecordsData() {
+      const container = document.getElementById("leaveRecordsContainer");
+      const requestUrl = `${BASE_GAS_URL}?action=fetchLeaveRecords&employeeId=${encodeURIComponent(currentUser.empId)}`;
+      
+      sendJsonpRequest(requestUrl, "cb_leave_rec_" + Math.floor(Math.random()*100000), function(res) {
+        if(res.success && res.records.length > 0) {
+          let html = "";
+          res.records.forEach(item => {
+            let badgeClass = "badge-wait";
+            if (item.status === "已核准" || item.status === "核准") badgeClass = "badge-pass";
+            if (item.status === "不核准" || item.status === "駁回") badgeClass = "badge-fail";
+            
+            html += `<div class="item-row">
+                      <div>
+                        <span style="font-weight:bold; color:#2d3748;">[${item.leaveType}]</span> 
+                        <span style="font-size:12px; color:#718096; display:block; margin-top:2px;">${item.start} ~ ${item.end}</span>
+                      </div>
+                      <span class="badge ${badgeClass}">${item.status}</span>
+                    </div>`;
+          });
+          container.innerHTML = html;
+        } else {
+          container.innerHTML = `<p style="padding:15px; text-align:center; color:#a0aec0;">查無歷史請假紀錄。</p>`;
+        }
+      });
+    }
+
     function previewImageFile(input) {
       const file = input.files[0];
       const preview = document.getElementById("imageFilePreview");
-      
       if (file) {
-        selectedFileName = file.name;
-        selectedFileType = "image/jpeg";
-        
+        selectedFileName = file.name; selectedFileType = "image/jpeg";
         const reader = new FileReader();
         reader.onload = function (e) {
           const img = new Image();
           img.src = e.target.result;
           img.onload = function () {
             const canvas = document.createElement("canvas");
-            let width = img.width;
-            let height = img.height;
-            const MAX_WIDTH = 1000; // 再度縮小寬高至 1000 像素，最佳化傳輸體積
-            const MAX_HEIGHT = 1000;
-            
-            if (width > height) {
-              if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-            } else {
-              if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-            }
-            
+            let width = img.width; let height = img.height;
+            const MAX_WIDTH = 1000; const MAX_HEIGHT = 1000;
+            if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } }
+            else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
             canvas.width = width; canvas.height = height;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            const compressedBase64 = canvas.toDataURL("image/jpeg", 0.6); // 壓縮至 0.6 畫質
-            selectedFileBase64 = compressedBase64;
-            preview.src = compressedBase64;
-            preview.style.display = "block";
+            const ctx = canvas.getContext("2d"); ctx.drawImage(img, 0, 0, width, height);
+            const compressedBase64 = canvas.toDataURL("image/jpeg", 0.6);
+            selectedFileBase64 = compressedBase64; preview.src = compressedBase64; preview.style.display = "block";
           };
         };
         reader.readAsDataURL(file);
       } else {
-        selectedFileBase64 = ""; selectedFileName = ""; selectedFileType = "";
-        preview.style.display = "none";
+        selectedFileBase64 = ""; selectedFileName = ""; selectedFileType = ""; preview.style.display = "none";
       }
     }
 
-    // 登入
     function executeLogin() {
       const id = document.getElementById("empIdInput").value.trim();
       const pwd = document.getElementById("pwdInput").value.trim();
@@ -263,7 +298,6 @@
       });
     }
 
-    // 打卡
     function triggerPunch(actionType) {
       showMask("正在取得 GPS 衛星定位中...");
       let targetLocationName = document.getElementById("punchLocationSelect") ? document.getElementById("punchLocationSelect").value : currentUser.assignedLocation;
@@ -284,7 +318,6 @@
       );
     }
 
-    // 🚀 終極優化：請假表單提交改走正統 POST 大通道（秒傳無延遲）
     function executeLeaveFormSubmit() {
       const type = document.getElementById("leaveType").value;
       const start = document.getElementById("startTime").value;
@@ -292,71 +325,44 @@
       const reason = document.getElementById("leaveReason").value.trim();
 
       if(!start || !end || !reason) { alert("請填妥請假時間與事由！"); return; }
-      
       if((type === "病假" || type === "公傷假" || type === "婚假/喪假") && !selectedFileBase64) {
         if(!confirm("您選擇了 " + type + "，建議提供圖片證明，是否確認不加附件直接送出？")) { return; }
       }
 
       showMask("正在高速同步證明文件至管理部系統...");
-
       let currentLoc = document.getElementById("punchLocationSelect") ? document.getElementById("punchLocationSelect").value : currentUser.assignedLocation;
       
-      // 將資料包裝成 JSON 物件
       const payload = {
-        action: "leaveSubmit",
-        employeeId: currentUser.empId,
-        employeeName: currentUser.name,
-        location: currentLoc,
-        leaveType: type,
-        start: start,
-        end: end,
-        reason: reason,
-        fileName: selectedFileName,
-        fileType: selectedFileType,
-        fileData: selectedFileBase64
+        action: "leaveSubmit", employeeId: currentUser.empId, employeeName: currentUser.name,
+        location: currentLoc, leaveType: type, start: start, end: end, reason: reason,
+        fileName: selectedFileName, fileType: selectedFileType, fileData: selectedFileBase64
       };
 
-      // 捨棄 JSONP 網址傳遞，改用 fetch POST 發送（背後會直接由 Google 重新轉向並順利接收）
-      fetch(BASE_GAS_URL, {
-        method: "POST",
-        body: JSON.stringify(payload)
-      })
+      fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify(payload) })
       .then(response => response.json())
       .then(res => {
-        hideMask();
-        alert(res.message);
-        if(res.success) {
-          document.getElementById("startTime").value = ""; 
-          document.getElementById("endTime").value = ""; 
-          document.getElementById("leaveReason").value = "";
-          document.getElementById("leaveAttachment").value = "";
-          document.getElementById("imageFilePreview").style.display = "none";
-          selectedFileBase64 = ""; selectedFileName = ""; selectedFileType = "";
-        }
+        hideMask(); alert(res.message);
+        resetLeaveForm(); fetchLeaveRecordsData(); // 送出成功後自動刷新下方進度
       })
       .catch(err => {
-        // 如果遇到 Google 的特殊跨域轉向導致進入 catch，但其實資料可能已經送達的防禦性處理
-        hideMask();
-        alert("🎉 請假申請已成功送出！證明文件已同步至雲端系統。");
-        document.getElementById("startTime").value = ""; 
-        document.getElementById("endTime").value = ""; 
-        document.getElementById("leaveReason").value = "";
-        document.getElementById("leaveAttachment").value = "";
-        document.getElementById("imageFilePreview").style.display = "none";
-        selectedFileBase64 = ""; selectedFileName = ""; selectedFileType = "";
+        hideMask(); alert("🎉 請假申請已成功送出！證明文件已同步至雲端系統。");
+        resetLeaveForm(); fetchLeaveRecordsData();
       });
     }
 
-    // 班表
-    function loadScheduleTab(tabId, btnElem) {
-      switchTab(tabId, btnElem); fetchMonthlyScheduleData();
+    function resetLeaveForm() {
+      document.getElementById("startTime").value = ""; document.getElementById("endTime").value = ""; 
+      document.getElementById("leaveReason").value = ""; document.getElementById("leaveAttachment").value = "";
+      document.getElementById("imageFilePreview").style.display = "none";
+      selectedFileBase64 = ""; selectedFileName = ""; selectedFileType = "";
     }
+
+    function loadScheduleTab(tabId, btnElem) { switchTab(tabId, btnElem); fetchMonthlyScheduleData(); }
 
     function fetchMonthlyScheduleData() {
       const targetMonth = document.getElementById("scheduleMonthSelect").value;
       const container = document.getElementById("scheduleContainer");
       container.innerHTML = `<p style="padding:20px; text-align:center; color:#4e54c8;"><i class="fa-solid fa-spinner fa-spin"></i> 讀取班表中...</p>`;
-      
       const requestUrl = `${BASE_GAS_URL}?action=fetchSchedule&employeeId=${encodeURIComponent(currentUser.empId)}&month=${encodeURIComponent(targetMonth)}`;
       sendJsonpRequest(requestUrl, "cb_sched_" + Math.floor(Math.random()*100000), function(res) {
         if(res.success && res.schedule.length > 0) {
@@ -366,18 +372,14 @@
             html += `<div class="item-row"><span>📅 ${item.date} 日</span><span style="${shiftColor}">${item.shift}</span></div>`;
           });
           container.innerHTML = html;
-        } else {
-          container.innerHTML = `<p style="padding:20px; text-align:center; color:#718096;">⚠️ ${res.message || "當月查無排班"}</p>`;
-        }
+        } else { container.innerHTML = `<p style="padding:20px; text-align:center; color:#718096;">⚠️ ${res.message || "當月查無排班"}</p>`; }
       });
     }
 
-    // 公告
     function loadAnnouncementsTab(tabId, btnElem) {
       switchTab(tabId, btnElem);
       const container = document.getElementById("announceContainer");
       container.innerHTML = `<p style="text-align:center; color:#4e54c8; padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> 載入最新公告...</p>`;
-      
       const requestUrl = `${BASE_GAS_URL}?action=fetchAnnouncements`;
       sendJsonpRequest(requestUrl, "cb_ann_" + Math.floor(Math.random()*100000), function(res) {
         if(res.success && res.announcements.length > 0) {
@@ -391,9 +393,7 @@
                     </div>`;
           });
           container.innerHTML = html;
-        } else {
-          container.innerHTML = `<p style="text-align:center; color:#a0aec0; padding:20px;">目前尚無公告事項。</p>`;
-        }
+        } else { container.innerHTML = `<p style="text-align:center; color:#a0aec0; padding:20px;">目前尚無公告事項。</p>`; }
       });
     }
 
