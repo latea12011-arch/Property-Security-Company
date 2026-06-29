@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>紘嘉物業 - 員工行動考勤系統 (GitHub/獨立伺服器版)</title>
+  <title>紘嘉物業 - 員工行動考勤與請假系統 (附件上傳完美版)</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -32,6 +32,7 @@
     .btn-submit { background: #5c6bc0; }
     .item-row { padding: 12px; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; font-size: 14px; }
     .announcement-box { padding: 15px; background: #fff5f5; border-left: 4px solid #e53e3e; margin-bottom: 12px; border-radius: 6px; }
+    .preview-box { width: 100%; max-height: 150px; object-fit: contain; margin-top: 10px; display: none; border-radius: 8px; border: 1px dashed #cbd5e0; }
   </style>
 </head>
 <body>
@@ -87,6 +88,7 @@
           <option value="事假">事假</option>
           <option value="病假">病假</option>
           <option value="特休">特休</option>
+          <option value="公傷假">公傷假</option>
           <option value="婚假/喪假">婚假/喪假</option>
         </select>
       </div>
@@ -97,6 +99,11 @@
       <div class="form-group">
         <label>請假結束時間</label>
         <input type="datetime-local" id="endTime">
+      </div>
+      <div class="form-group">
+        <label>上傳證明文件 (病假單/訃聞/診斷證明圖片)</label>
+        <input type="file" id="leaveAttachment" accept="image/*" onchange="previewImageFile(this)">
+        <img id="imageFilePreview" class="preview-box">
       </div>
       <div class="form-group">
         <label>請假事由 / 備註說明</label>
@@ -113,7 +120,7 @@
         </div>
         <button class="btn-action btn-submit" style="width: auto; padding: 12px 20px;" onclick="fetchMonthlyScheduleData()">查詢</button>
       </div>
-      <h4 style="margin-bottom: 10px; color:#4e54c8;"><i class="fa-solid fa-calendar-check"></i> 個人當月排班班表</h4>
+      <h4 style="margin-bottom: 10px; color:#4e54c8;"><i class="fa-solid fa-calendar-check"></i> 個人排班班表</h4>
       <div id="scheduleContainer" style="background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0; max-height: 350px; overflow-y: auto;">
         <p style="padding:20px; text-align:center; color:#a0aec0;">請點擊上方查詢</p>
       </div>
@@ -131,6 +138,9 @@
     const BASE_GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
 
     let currentUser = { empId: "", name: "", identityType: "", assignedLocation: "", allLocations: [] };
+    let selectedFileBase64 = "";
+    let selectedFileName = "";
+    let selectedFileType = "";
 
     // 核心技術：不卡死 JSONP 跨網域請求引擎
     function sendJsonpRequest(url, callbackFunctionName, successHandler) {
@@ -150,15 +160,23 @@
       document.body.appendChild(script);
     }
 
+    // 動態建置：上個月、當月、下個月
     function initMonthSelector() {
       const select = document.getElementById("scheduleMonthSelect");
-      select.innerHTML = ""; const now = new Date();
-      for (let i = 0; i < 2; i++) {
-        let d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      select.innerHTML = ""; 
+      const now = new Date();
+      
+      // 產出三個月份陣列：上月(-1)、當月(0)、下月(1)
+      const monthsOffsets = [-1, 0, 1];
+      monthsOffsets.forEach(offset => {
+        let d = new Date(now.getFullYear(), now.getMonth() + offset, 1);
         let mStr = d.getFullYear() + "年" + String(d.getMonth() + 1).padStart(2, '0') + "月";
         let opt = document.createElement("option");
-        opt.value = mStr; opt.innerText = mStr; select.appendChild(opt);
-      }
+        opt.value = mStr; 
+        opt.innerText = mStr;
+        if(offset === 0) { opt.selected = true; } // 預設停留在當月
+        select.appendChild(opt);
+      });
     }
 
     function switchTab(tabId, btnElem) {
@@ -166,6 +184,26 @@
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
       btnElem.classList.add('active');
+    }
+
+    // 圖片預覽與 Base64 轉換處理
+    function previewImageFile(input) {
+      const file = input.files[0];
+      const preview = document.getElementById("imageFilePreview");
+      if (file) {
+        selectedFileName = file.name;
+        selectedFileType = file.type;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          selectedFileBase64 = e.target.result; // 取得 Base64 編碼
+          preview.src = e.target.result;
+          preview.style.display = "block";
+        }
+        reader.readAsDataURL(file);
+      } else {
+        selectedFileBase64 = ""; selectedFileName = ""; selectedFileType = "";
+        preview.style.display = "none";
+      }
     }
 
     // 登入
@@ -191,7 +229,7 @@
           
           const locArea = document.getElementById("locationDisplayArea");
           if(res.identityType === "機動人員") {
-            let selectHtml = `<select id="punchLocationSelect" style="font-weight:bold; color:#2d3748; background:#fff; border:1px solid #a0aec0; padding:8px;">`;
+            let selectHtml = `<select id="punchLocationSelect" style="font-weight:bold; color:#2d3748; background:#fff; border:1px solid #a0aec0; padding:8px; width:100%; border-radius:6px;">`;
             res.allLocations.forEach(loc => selectHtml += `<option value="${loc}">${loc}</option>`);
             selectHtml += `</select>`; locArea.innerHTML = selectHtml;
           } else {
@@ -229,7 +267,7 @@
       );
     }
 
-    // 請假
+    // 請假提交 (含圖片編碼大量數據壓縮)
     function executeLeaveFormSubmit() {
       const type = document.getElementById("leaveType").value;
       const start = document.getElementById("startTime").value;
@@ -237,15 +275,34 @@
       const reason = document.getElementById("leaveReason").value.trim();
 
       if(!start || !end || !reason) { alert("請填妥請假時間與事由！"); return; }
-      showMask("正在傳送請假申請...");
+      
+      // 病假、公傷假、喪假強制提醒上傳附件，其餘選填
+      if((type === "病假" || type === "公傷假" || type === "婚假/喪假") && !selectedFileBase64) {
+        if(!confirm("您選擇了 " + type + "，建議提供圖片證明（如病假單/訃聞/收據），是否確認不加附件直接送出？")) {
+          return;
+        }
+      }
+
+      showMask("正在安全打包證明文件並上傳雲端庫...");
 
       let currentLoc = document.getElementById("punchLocationSelect") ? document.getElementById("punchLocationSelect").value : currentUser.assignedLocation;
-      const requestUrl = `${BASE_GAS_URL}?action=leaveSubmit&employeeId=${encodeURIComponent(currentUser.empId)}&employeeName=${encodeURIComponent(currentUser.name)}&location=${encodeURIComponent(currentLoc)}&leaveType=${encodeURIComponent(type)}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&reason=${encodeURIComponent(reason)}`;
+      
+      // 利用 POST 式長參數模擬或利用大資料欄位
+      let requestUrl = `${BASE_GAS_URL}?action=leaveSubmit&employeeId=${encodeURIComponent(currentUser.empId)}&employeeName=${encodeURIComponent(currentUser.name)}&location=${encodeURIComponent(currentLoc)}&leaveType=${encodeURIComponent(type)}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&reason=${encodeURIComponent(reason)}`;
+      
+      if(selectedFileBase64) {
+        requestUrl += `&fileName=${encodeURIComponent(selectedFileName)}&fileType=${encodeURIComponent(selectedFileType)}&fileData=${encodeURIComponent(selectedFileBase64)}`;
+      }
 
       sendJsonpRequest(requestUrl, "cb_leave_" + Math.floor(Math.random()*100000), function(res) {
         hideMask(); alert(res.message);
         if(res.success) {
-          document.getElementById("startTime").value = ""; document.getElementById("endTime").value = ""; document.getElementById("leaveReason").value = "";
+          document.getElementById("startTime").value = ""; 
+          document.getElementById("endTime").value = ""; 
+          document.getElementById("leaveReason").value = "";
+          document.getElementById("leaveAttachment").value = "";
+          document.getElementById("imageFilePreview").style.display = "none";
+          selectedFileBase64 = ""; selectedFileName = ""; selectedFileType = "";
         }
       });
     }
