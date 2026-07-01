@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>紘嘉物業 - 員工行動考勤</title>
   
-  <!-- 【1. PWA 核心設定】讓手機偵測並跳出「安裝 App」提示 -->
   <script>
     const manifest = {
       "name": "紘嘉物業行動考勤系統",
@@ -62,6 +61,9 @@
     .badge-wait { background-color: #f39c12; }
     .badge-pass { background-color: #27ae60; }
     .badge-fail { background-color: #c0392b; }
+    
+    /* 新增：針對反霸凌申訴區的專屬警告框樣式 */
+    .complaint-warning { background: #fff5f5; border: 1px solid #feb2b2; padding: 12px; border-radius: 8px; color: #9b2c2c; font-size: 13px; margin-bottom: 15px; line-height: 1.5; text-align: left; }
   </style>
 </head>
 <body>
@@ -96,6 +98,7 @@
       <button class="tab-btn active" onclick="switchTab('clockTab', this)"><i class="fa-solid fa-clock"></i>打卡</button>
       <button class="tab-btn" onclick="loadLeaveTab('leaveTab', this)"><i class="fa-solid fa-pen-to-square"></i>請假</button>
       <button class="tab-btn" onclick="loadScheduleTab('scheduleTab', this)"><i class="fa-solid fa-calendar-days"></i>班表</button>
+      <button class="tab-btn" onclick="loadComplaintTab('complaintTab', this)"><i class="fa-solid fa-hand-holding-hand"></i>申訴區</button>
       <button class="tab-btn" onclick="loadAnnouncementsTab('announceTab', this)"><i class="fa-solid fa-bullhorn"></i>公告</button>
     </div>
 
@@ -163,8 +166,19 @@
       </div>
     </div>
 
+    <div class="content-section" id="complaintTab">
+      <h4 style="margin-bottom: 10px; color:#c0392b;"><i class="fa-solid fa-hand-holding-hand"></i> 職場反霸凌與不法侵害申訴</h4>
+      <div class="complaint-warning">
+        <strong>🔒 隱私與安全保障：</strong><br>
+        本公司對任何職場霸凌或不法侵害採取「零容忍」態度。此表單為獨立保密管道，您可以自由決定是否匿名。管理部將嚴格保密受理並依法調查，保障同仁絕不因申訴而受任何職場不利益對待。
+      </div>
+      <div style="width: 100%; overflow: hidden; border-radius: 10px; border: 1px solid #e2e8f0; background: #fff;">
+        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSe2FLb1sPoM8ajnAR_i4h4gbU3sF6W1mCqAj6EzHe4OXRDo_Q/viewform?usp=header" style="width:100%; height:600px; border:none;">載入中…</iframe>
+      </div>
+    </div>
+
     <div class="content-section" id="announceTab">
-      <h4 style="margin-bottom: 15px; color:#e53e3e;"><i class="fa-solid fa-bullhorn"></i> 管理部最新公告事項</h4>
+      <h4 style="margin-bottom: 15px; color:#e53e3e;"><i class="fa-solid fa-bullhorn"></i> 最新公告事項</h4>
       <div id="announceContainer" style="max-height: 450px; overflow-y: auto;"></div>
     </div>
   </div>
@@ -224,6 +238,11 @@
     function loadLeaveTab(tabId, btnElem) {
       switchTab(tabId, btnElem);
       fetchLeaveRecordsData();
+    }
+
+    /* 【新增控制邏輯】：切換至申訴專區分頁 */
+    function loadComplaintTab(tabId, btnElem) {
+      switchTab(tabId, btnElem);
     }
 
     function fetchLeaveRecordsData() {
