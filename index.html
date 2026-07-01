@@ -62,7 +62,7 @@
     .badge-pass { background-color: #27ae60; }
     .badge-fail { background-color: #c0392b; }
     
-    /* 新增：針對反霸凌申訴區的專屬警告框樣式 */
+    /* 專屬：反霸凌申訴區警告框樣式 */
     .complaint-warning { background: #fff5f5; border: 1px solid #feb2b2; padding: 12px; border-radius: 8px; color: #9b2c2c; font-size: 13px; margin-bottom: 15px; line-height: 1.5; text-align: left; }
   </style>
 </head>
@@ -172,8 +172,17 @@
         <strong>🔒 隱私與安全保障：</strong><br>
         本公司對任何職場霸凌或不法侵害採取「零容忍」態度。此表單為獨立保密管道，您可以自由決定是否匿名。管理部將嚴格保密受理並依法調查，保障同仁絕不因申訴而受任何職場不利益對待。
       </div>
-      <div style="width: 100%; overflow: hidden; border-radius: 10px; border: 1px solid #e2e8f0; background: #fff;">
-        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSe2FLb1sPoM8ajnAR_i4h4gbU3sF6W1mCqAj6EzHe4OXRDo_Q/viewform?usp=header" style="width:100%; height:600px; border:none;">載入中…</iframe>
+      
+      <div style="text-align: center; padding: 30px 15px; background: #fff; border-radius: 10px; border: 1px solid #e2e8f0; margin-top: 15px;">
+        <p style="font-size: 14px; color: #4a5568; margin-bottom: 20px; line-height: 1.6;">
+          ⚠️ 由於申訴表單包含「<b>上傳證明文件/截圖</b>」功能，受 Google 安全機制限制，請點擊下方按鈕前往專屬安全加密網頁進行填寫。
+        </p>
+        
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSe2FLb1sPoM8ajnAR_i4h4gbU3sF6W1mCqAj6EzHe4OXRDo_Q/viewform?usp=header" 
+           target="_blank" 
+           style="display: inline-block; width: 100%; max-width: 280px; padding: 14px; background: #c0392b; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(192, 57, 43, 0.2); transition: 0.2s;">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> 前往安全申訴通道
+        </a>
       </div>
     </div>
 
@@ -224,15 +233,46 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-      // 確保一開始是在登入畫面
       executeLogout();
     });
 
+    /* 【核心修正】：重新設計分頁切換邏輯，一勞永逸解決選單消失、分頁跑掉問題 */
     function switchTab(tabId, btnElem) {
+      // 1. 隱藏所有面板、移除所有按鈕 active 樣式
       document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
-      btnElem.classList.add('active');
+      
+      // 2. 顯示指定面板、高亮對應按鈕
+      const targetSection = document.getElementById(tabId);
+      if (targetSection) {
+        targetSection.classList.add('active');
+      }
+      if (btnElem) {
+        btnElem.classList.add('active');
+      }
+      
+      // 3. ✨ 究極修正：如果是切換回「打卡分頁 (clockTab)」，一定要強制檢查並重新建構機動人員下拉選單
+      if (tabId === 'clockTab') {
+        renderLocationArea();
+      }
+    }
+
+    // 🌟 將案場區域渲染獨立出來，確保登入、切換分頁都能完美調用
+    function renderLocationArea() {
+      const locArea = document.getElementById("locationDisplayArea");
+      if (!locArea) return;
+
+      if (currentUser.identityType === "機動人員" && currentUser.allLocations && currentUser.allLocations.length > 0) {
+        let selectHtml = `<select id="punchLocationSelect" style="font-weight:bold; color:#2d3748; background:#fff; border:1px solid #a0aec0; padding:12px; width:100%; border-radius:8px; font-size:15px;">`;
+        currentUser.allLocations.forEach(loc => {
+          selectHtml += `<option value="${loc}">${loc}</option>`;
+        });
+        selectHtml += `</select>`;
+        locArea.innerHTML = selectHtml;
+      } else {
+        // 固定案場人員
+        locArea.innerHTML = `<span style="font-size:16px; font-weight:bold; color:#2d3748;">🏠 綁定案場：${currentUser.assignedLocation || '無'}</span>`;
+      }
     }
 
     function loadLeaveTab(tabId, btnElem) {
@@ -240,9 +280,13 @@
       fetchLeaveRecordsData();
     }
 
-    /* 【新增控制邏輯】：切換至申訴專區分頁 */
     function loadComplaintTab(tabId, btnElem) {
       switchTab(tabId, btnElem);
+    }
+
+    function loadScheduleTab(tabId, btnElem) { 
+      switchTab(tabId, btnElem); 
+      fetchMonthlyScheduleData(); 
     }
 
     function fetchLeaveRecordsData() {
@@ -317,17 +361,15 @@
           document.getElementById("identityTypeDisplay").innerText = `💼 身分類別：${res.identityType}`;
           document.getElementById("joinDateDisplay").innerText = `📅 入職日期：${res.joinDate} | 年度特休：${res.annualLeaveTotal} 天`;
           
-          const locArea = document.getElementById("locationDisplayArea");
-          if(res.identityType === "機動人員") {
-            let selectHtml = `<select id="punchLocationSelect" style="font-weight:bold; color:#2d3748; background:#fff; border:1px solid #a0aec0; padding:8px; width:100%; border-radius:6px;">`;
-            res.allLocations.forEach(loc => selectHtml += `<option value="${loc}">${loc}</option>`);
-            selectHtml += `</select>`; locArea.innerHTML = selectHtml;
-          } else {
-            locArea.innerHTML = `<span style="font-size:16px; font-weight:bold; color:#2d3748;">🏠 綁定案場：${res.assignedLocation}</span>`;
-          }
+          // 渲染打卡區
+          renderLocationArea();
           initMonthSelector();
+          
           document.getElementById("loginBox").style.display = "none";
           document.getElementById("mainPanel").style.display = "block";
+          
+          // 確保登入進來直接切換到首頁打卡分頁
+          switchTab('clockTab', document.querySelector('.tab-bar .tab-btn'));
         } else {
           alert(res.message);
         }
@@ -393,8 +435,6 @@
       selectedFileBase64 = ""; selectedFileName = ""; selectedFileType = "";
     }
 
-    function loadScheduleTab(tabId, btnElem) { switchTab(tabId, btnElem); fetchMonthlyScheduleData(); }
-
     function fetchMonthlyScheduleData() {
       const targetMonth = document.getElementById("scheduleMonthSelect").value;
       const container = document.getElementById("scheduleContainer");
@@ -443,7 +483,6 @@
     function hideMask() { document.getElementById("globalMask").style.display = "none"; }
     function setMaskText(txt) { document.getElementById("maskText").innerText = txt; }
 
-    // 🚀 啟動 PWA 核心背景服務（安全地寫在 script 標籤內部）
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
