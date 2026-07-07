@@ -50,24 +50,17 @@
     .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #4e54c8; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* 📄 A4 標準單頁列印區專屬精裝樣式 */
     #printTemplateArea { display: none; }
     @media print {
-      @page { size: A4 portrait; margin: 15mm 20mm; }
       body * { display: none !important; }
       #printTemplateArea, #printTemplateArea * { display: block !important; }
-      #printTemplateArea { display: block !important; position: absolute; left: 0; top: 0; width: 100%; padding: 10px; color: #000; background: white; font-family: 'Noto Sans TC', sans-serif; }
-      .print-header-decor { width: 100%; height: 4px; background: #000; margin-bottom: 25px; }
-      .print-title { text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 35px; letter-spacing: 6px; color: #000; }
-      .print-table { width: 100%; border: 1.5px solid #000 !important; border-collapse: collapse; margin-bottom: 30px; }
-      .print-table th, .print-table td { border: 1px solid #000 !important; padding: 10px 14px !important; font-size: 14px; color: #000 !important; background: none !important; height: 42px; }
-      .print-table th { font-weight: bold; text-align: center; width: 22%; background-color: #f2f2f2 !important; letter-spacing: 1px; }
-      .print-table td { text-align: left; font-weight: 500; }
-      .print-statement { font-size: 14px; line-height: 2; margin-top: 25px; text-align: justify; text-indent: 2.8em; color: #000; }
-      .print-sign-area { margin-top: 55px; display: flex; justify-content: space-between; font-size: 15px; padding: 0 10px; line-height: 2; }
-      .company-info-footer { margin-top: 65px; border-top: 1px solid #000; padding-top: 15px; font-size: 12px; color: #333; line-height: 1.6; }
-      .company-info-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
-      .print-footer-date { text-align: right; font-size: 14px; font-weight: bold; margin-top: 20px; }
+      #printTemplateArea { display: block !important; position: absolute; left: 0; top: 0; width: 100%; padding: 40px; color: #000; background: white; font-family: 'Noto Sans TC', sans-serif; }
+      .print-title { text-align: center; font-size: 26px; font-weight: bold; margin-bottom: 30px; letter-spacing: 2px; }
+      .print-table { width: 100%; border: 2px solid #000 !important; border-collapse: collapse; margin-bottom: 25px; }
+      .print-table th, .print-table td { border: 1px solid #000 !important; padding: 14px 18px !important; font-size: 15px; color: #000 !important; background: none !important; }
+      .print-table th { font-weight: bold; text-align: center; width: 25%; background-color: #f2f2f2 !important; }
+      .print-sign-area { margin-top: 50px; display: flex; justify-content: space-between; font-size: 16px; padding: 0 20px; }
+      .print-footer-date { margin-top: 80px; text-align: right; font-size: 14px; padding-right: 20px; }
     }
   </style>
 </head>
@@ -82,7 +75,7 @@
     <button class="menu-btn" onclick="switchSection('leaveAudit', this)"><i class="fa-solid fa-file-signature"></i>請假單審核</button>
     <button class="menu-btn" onclick="switchSection('punchLog', this)"><i class="fa-solid fa-location-dot"></i>即時打卡監控</button>
     <button class="menu-btn" onclick="switchSection('empMgmt', this)"><i class="fa-solid fa-users-gear"></i>同仁名冊維護</button>
-    <button class="menu-btn" onclick="switchSection('locMgmt', this).png"><i class="fa-solid fa-map-pin"></i>案場GPS設定</button>
+    <button class="menu-btn" onclick="switchSection('locMgmt', this)"><i class="fa-solid fa-map-pin"></i>案場GPS設定</button>
     <button class="menu-btn" onclick="switchSection('announcementMgmt', this)"><i class="fa-solid fa-bullhorn"></i>發布公告事項</button>
     <button class="menu-btn" onclick="switchSection('resignationSection', this)"><i class="fa-solid fa-print"></i>離職證明書列印</button>
   </div>
@@ -256,65 +249,27 @@
     </div>
   </div>
 
-  <!-- 🌟 📄 A4 標準單頁精裝版列印骨架庫（修正表格結構、大幅增加官方內文與頁尾基礎資料） -->
+  <!-- 📄 A4 標準列印專用 HTML 骨架庫 -->
   <div id="printTemplateArea">
-    <div class="print-header-decor"></div>
     <div class="print-title">離 職 證 明 書</div>
-    
     <table class="print-table">
-      <tr>
-        <th>員工姓名</th><td id="p_name"></td>
-        <th>身分證字號</th><td id="p_idcard"></td>
-      </tr>
-      <tr>
-        <th>出生年月日</th><td id="p_birth"></td>
-        <th>任職工號</th><td id="p_id"></td>
-      </tr>
-      <tr>
-        <th>擔任職務</th><td id="p_type"></td>
-        <th>負責執勤案場</th><td id="p_loc"></td>
-      </tr>
-      <tr>
-        <th>到職日期</th><td id="p_join"></td>
-        <th>離職日期</th><td id="p_leave"></td>
-      </tr>
-      <tr>
-        <th>離職原因</th><td colspan="3" id="p_reason"></td>
-      </tr>
+      <tr><th>員工姓名</th><td id="p_name"></td></tr>
+      <tr><th>身分證字號</th><td id="p_idcard"></td></tr>
+      <tr><th>出生年月日</th><td id="p_birth"></td></tr>
+      <tr><th>任職工號</th><td id="p_id"></td></tr>
+      <tr><th>擔任職務</th><td id="p_type"></td></tr>
+      <tr><th>負責執勤案場</th><td id="p_loc"></td></tr>
+      <tr><th>到職日期</th><td id="p_join"></td></tr>
+      <tr><th>離職日期</th><td id="p_leave"></td></tr>
+      <tr><th>離職原因</th><td id="p_reason"></td></tr>
     </table>
-    
-    <div class="print-statement">
-      儲查本公司上述同仁於任職期間，負責盡職，恪遵各項現場維護與保全管理規範，工作表現深獲肯定[cite: 3]。
-      現因上述事由提出申請[cite: 3]，經本公司依法審查，雙方勞雇關係確實已於離職日期正式依法宣告終止[cite: 3]。
-      同仁於離職前已依本公司規定將所保管之各項勤務機具、案場公物、執勤紀錄及業務相關檔案清點移交完畢，確認無誤，特發此證以茲證明[cite: 3]。
-    </div>
-    
-    <div class="print-statement" style="font-size: 13px; color: #1a1a1a; font-weight: bold; margin-top: 15px; text-indent: 0;">
-      ※ 注意事項：本證明書依勞動基準法第十九條規定開立，開具後同仁仍應負有任職期間之職務保密義務。
-    </div>
-    
+    <p style="font-size:14px; line-height:1.8; margin-top:40px; text-indent: 2em;">
+      查本公司同仁於任職期間遵守各項物業後勤管理規範，表現良好。茲證明其與本公司之勞雇關係確實已依法終止，特發此證，以茲證明。
+    </p>
     <div class="print-sign-area">
-      <div>
-        <b>開具單位（蓋章）：</b><br>
-        紘嘉物業管理股份有限公司[cite: 3]
-      </div>
-      <div style="width: 200px;">
-        <b>負責人（簽章）：</b>
-      </div>
+      <div><b>開具單位蓋章：</b><br><br><br>紘嘉物業管理股份有限公司</div>
+      <div><b>負責人簽章：</b></div>
     </div>
-
-    <!-- 🌟 新增：頁尾公司聯絡專區，填補空白、防空洞且極具官方公信力 -->
-    <div class="company-info-footer">
-      <div class="company-info-row">
-        <div><b>發證機關：</b>紘嘉物業管理股份有限公司[cite: 3]</div>
-        <div><b>統一編號：</b>90562471</div>
-      </div>
-      <div class="company-info-row">
-        <div><b>聯絡電話：</b>(03) 578-8388</div>
-        <div><b>公司地址：</b>新竹市東區光復路二段288號10樓</div>
-      </div>
-    </div>
-    
     <div class="print-footer-date" id="p_footer_date"></div>
   </div>
 
@@ -588,6 +543,7 @@
       if(sectionId === 'punchLog') { loadPunchLogs(); }
     }
 
+    // 班表覆蓋發布
     function submitNewSchedule() {
       const empSelect = document.getElementById("schedEmpSelect"); const empId = empSelect ? empSelect.value : ""; const month = document.getElementById("schedMonthSelect").value.trim();
       if(!empId) { alert("請選擇排班同仁！"); return; }
@@ -617,8 +573,6 @@
       });
     }
 
-    document.write('<!-- debug anchor -->');
-
     function auditLeave(rowId, statusResult) {
       showMask("處理中...");
       fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); });
@@ -642,6 +596,9 @@
     function submitAnnouncement() {
       fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "publishAnnouncement", unit: document.getElementById("annUnit").value, content: document.getElementById("annContent").value }) }).then(() => { alert("公告成功！"); document.getElementById("annContent").value=""; });
     }
+
+    function showMask(txt) { document.getElementById("globalMask").style.display = "flex"; document.getElementById("maskText").innerText = txt; }
+    function hideMask() { document.getElementById("globalMask").style.display = "none"; }
   </script>
 </body>
 </html>
