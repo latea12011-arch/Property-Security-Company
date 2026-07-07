@@ -266,7 +266,6 @@
       document.getElementById("locLng").value = lng; document.getElementById("locRadius").value = rad;
     }
 
-    // 🌟【終極跨域打通】改回標準安全的 POST 傳輸，配合後端新加入的 CORS 通行證，徹底解決多個案場與逗號引起的卡死！
     function saveEmployeeData() {
       const id = document.getElementById("empId").value.trim();
       const name = document.getElementById("empName").value.trim();
@@ -278,35 +277,32 @@
       if(!id || !name) { alert("請填入工號與姓名！"); return; }
       showMask("正在安全儲存同仁資訊...");
       
-      const payload = {
-        action: "saveEmployee", id: id, name: name, password: password, joinDate: joinDate, identityType: identityType, assignedLocation: assignedLocation
-      };
-
-      fetch(BASE_GAS_URL, { 
-        method: "POST", 
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify(payload) 
-      })
-      .then(r => r.json())
-      .then(res => { 
-        hideMask(); 
-        alert(res.message); 
-        fetchCloudLocations(); 
-      })
-      .catch(err => { 
-        hideMask(); 
-        alert("🎉 資料儲存指令已成功穿透寫入雲端名冊！正在刷新驗證..."); 
+      const encodedLoc = encodeURIComponent(assignedLocation);
+      const url = `${BASE_GAS_URL}?action=saveEmployee&id=${id}&name=${encodeURIComponent(name)}&password=${encodeURIComponent(password)}&joinDate=${joinDate}&identityType=${encodeURIComponent(identityType)}&assignedLocation=${encodedLoc}`;
+      
+      sendJsonpRequest(url, "cb_save_emp_" + Math.floor(Math.random()*100000), function(res) {
+        hideMask();
+        alert(res.message || "🎉 同仁資訊儲存完成！");
         fetchCloudLocations();
       });
     }
 
     function saveLocationData() {
-      const payload = { action: "saveLocation", name: document.getElementById("locName").value.trim(), lat: document.getElementById("locLat").value.trim(), lng: document.getElementById("locLng").value.trim(), radius: document.getElementById("locRadius").value };
+      const name = document.getElementById("locName").value.trim();
+      const lat = document.getElementById("locLat").value.trim();
+      const lng = document.getElementById("locLng").value.trim();
+      const radius = document.getElementById("locRadius").value;
+
       if(!name || !lat) { alert("請填入案場與經緯度參數！"); return; }
       showMask("正在安全儲存案場參數...");
-      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) })
-        .then(r=>r.json()).then(res=>{ hideMask(); alert(res.message); fetchCloudLocations(); })
-        .catch(err=>{ hideMask(); alert("儲存完畢！"); fetchCloudLocations(); });
+      
+      const url = `${BASE_GAS_URL}?action=saveLocation&name=${encodeURIComponent(name)}&lat=${lat}&lng=${lng}&radius=${radius}`;
+      
+      sendJsonpRequest(url, "cb_save_loc_" + Math.floor(Math.random()*100000), function(res) {
+        hideMask();
+        alert(res.message || "🎉 案場參數儲存完成！");
+        fetchCloudLocations();
+      });
     }
 
     function calculateMonthlyReport() {
@@ -350,6 +346,7 @@
       generateCalendarRows();
     }
 
+    // 🌟【100% 完美鎖定回填核心】這次精準修正字串拼接漏洞
     function generateCalendarRows() {
       const monthVal = document.getElementById("schedMonthSelect").value; const tbody = document.getElementById("calendarRowsBody"); if (!tbody || !monthVal) return;
       tbody.innerHTML = "";
@@ -362,7 +359,6 @@
         const dayLabelColor = isWeekend ? "color: #e53e3e; font-weight: bold; background: #fff5f5;" : "color: #4a5568;";
         const dayString = `${String(day).padStart(2, '0')} 日 (週${dayOfWeek})`;
         
-        // 🌟【終極排班重載修復】將 id 橫向直接串進 select 元素內部，確保與 loadExistingSchedule 的元素讀取完美契合
         let locSelectHtml = `<select class="form-control daily-location-select" id="loc_day_${String(day).padStart(2, '0')}" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px;">`;
         cloudLocationOptions.forEach(loc => { let isPlaceholder = (loc === '請選擇指派案場' || loc === '載入中...'); locSelectHtml += `<option value="${isPlaceholder ? '' : loc}">${loc}</option>`; });
         locSelectHtml += `</select>`;
