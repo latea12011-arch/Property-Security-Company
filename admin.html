@@ -38,7 +38,7 @@
     .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
     .card h3 { margin-bottom: 15px; color: #4a5568; border-left: 4px solid #4e54c8; padding-left: 10px; }
     table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-    th { background: #edf2f7; color: #4a5568; text-align: left; padding: 12px; border-bottom: 2px solid #cbd5e0; }
+    th { background: #edf2f7; color: #4a5568; text-align: left; padding: 12px; border-bottom: 2px solid #cbd5e0; position: sticky; top: 0; z-index: 5; }
     td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
     .btn { padding: 8px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; text-decoration: none; display: inline-block; }
     .btn-primary { background: #4e54c8; color: white; }
@@ -122,8 +122,8 @@
           <div id="reportResultArea" style="margin-top: 15px; font-size: 14px; line-height: 1.8; display: none; padding: 12px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0;"></div>
         </div>
         <div class="card" style="width: 320px; margin-bottom: 0; display: flex; flex-direction: column;">
-          <h3>🗺️ 打卡 GPS 軌跡追蹤</h3>
-          <div id="mapContainer" style="flex: 1; margin-top:10px; background: #edf2f7; border-radius: 8px; display: flex; justify-content: center; align-items: center; text-align: center; color: #a0aec0; font-size: 13px; font-weight: bold; min-height: 120px;">
+          <h3>🗺️ 打卡 GPS 位置追蹤</h3>
+          <div id="mapContainer" style="flex: 1; margin-top:10px; background: #edf2f7; border-radius: 8px; display: flex; justify-content: center; align-items: center; text-align: center; color: #a0aec0; font-size: 13px; font-weight: bold; min-height: 140px;">
             請點擊下方打卡流水帳的<br>「定位查看」進行內嵌監控
           </div>
         </div>
@@ -147,10 +147,10 @@
           <label style="font-size:12px; font-weight:bold;">入職日期：</label><input type="date" id="empDate" class="form-control">
           <label style="font-size:12px; font-weight:bold;">身分類別：</label>
           <select id="empType" class="form-control"><option value="正職人員">正職人員</option><option value="機動人員">機動人員</option></select>
-          <label style="font-size:12px; font-weight:bold;">綁定案場 (機動同仁用逗號隔開)：</label><input type="text" id="empLoc" class="form-control" placeholder="例如：花園廣場">
+          <label style="font-size:12px; font-weight:bold;">負責案場 (機動同仁用逗號隔開)：</label><input type="text" id="empLoc" class="form-control" placeholder="例如：花園廣場">
           <button class="btn btn-success" style="width: 100%; padding:12px;" onclick="saveEmployeeData()"><i class="fa-solid fa-user-plus"></i> 儲存同仁資訊</button>
         </div>
-        <div class="card" style="flex: 1;">
+        <div class="card" style="flex: 1; max-height: 550px; overflow-y: auto;">
           <h3>現有同仁清單名冊</h3>
           <table>
             <thead><tr><th>工號</th><th>姓名</th><th>類別</th><th>負責案場</th><th>入職日期</th><th>操作</th></tr></thead>
@@ -170,7 +170,7 @@
           <label style="font-size:12px; font-weight:bold;">允許打卡誤差半徑 (米)：</label><input type="number" id="locRadius" class="form-control" value="200">
           <button class="btn btn-primary" style="width: 100%; padding:12px;" onclick="saveLocationData()"><i class="fa-solid fa-map-location-dot"></i> 儲存案場設定</button>
         </div>
-        <div class="card" style="flex: 1;">
+        <div class="card" style="flex: 1; max-height: 550px; overflow-y: auto;">
           <h3>系統案場維護清單</h3>
           <table>
             <thead><tr><th>案場名稱</th><th>緯度基準</th><th>經度基準</th><th>打卡半徑</th><th>操作</th></tr></thead>
@@ -201,6 +201,11 @@
     let globalEmployees = [];
     let globalPunchLogs = [];
 
+    // ✨【超級關鍵修正】確保網頁在桌面端一打開，立刻發起雲端請求，把現有同仁、案場清單通通載入！
+    document.addEventListener("DOMContentLoaded", function() {
+      fetchCloudLocations();
+    });
+
     function fetchCloudLocations() {
       showMask("正在從雲端同步最新案場與同仁名冊...");
       const url = `${BASE_GAS_URL}?action=fetchLocationsList`;
@@ -219,6 +224,8 @@
             sSelect.innerHTML = html; rSelect.innerHTML = html;
           }
           renderAdminLists(res);
+        } else {
+          alert("雲端同步異常：" + res.message);
         }
         initAdminMonthSelector();
       });
@@ -256,20 +263,24 @@
 
     function saveEmployeeData() {
       const payload = {
-        action: "saveEmployee", id: document.getElementById("empId").value, name: document.getElementById("empName").value,
-        password: document.getElementById("empPwd").value, joinDate: document.getElementById("empDate").value,
-        identityType: document.getElementById("empType").value, assignedLocation: document.getElementById("empLoc").value
+        action: "saveEmployee", id: document.getElementById("empId").value.trim(), name: document.getElementById("empName").value.trim(),
+        password: document.getElementById("empPwd").value.trim(), joinDate: document.getElementById("empDate").value,
+        identityType: document.getElementById("empType").value, assignedLocation: document.getElementById("empLoc").value.trim()
       };
       if(!payload.id || !payload.name) { alert("請填入工號與姓名！"); return; }
       showMask("正在安全儲存同仁資訊...");
-      fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify(payload) }).then(r=>r.json()).then(res=>{ hideMask(); alert(res.message); fetchCloudLocations(); });
+      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) })
+        .then(r=>r.json()).then(res=>{ hideMask(); alert(res.message); fetchCloudLocations(); })
+        .catch(err=>{ hideMask(); alert("儲存失敗，請檢查網路或重新部署後端！"); });
     }
 
     function saveLocationData() {
-      const payload = { action: "saveLocation", name: document.getElementById("locName").value, lat: document.getElementById("locLat").value, lng: document.getElementById("locLng").value, radius: document.getElementById("locRadius").value };
+      const payload = { action: "saveLocation", name: document.getElementById("locName").value.trim(), lat: document.getElementById("locLat").value.trim(), lng: document.getElementById("locLng").value.trim(), radius: document.getElementById("locRadius").value };
       if(!payload.name || !payload.lat) { alert("請填入案場與經緯度參數！"); return; }
       showMask("正在安全儲存案場參數...");
-      fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify(payload) }).then(r=>r.json()).then(res=>{ hideMask(); alert(res.message); fetchCloudLocations(); });
+      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) })
+        .then(r=>r.json()).then(res=>{ hideMask(); alert(res.message); fetchCloudLocations(); })
+        .catch(err=>{ hideMask(); alert("儲存失敗，請檢查網路！"); });
     }
 
     function calculateMonthlyReport() {
@@ -293,10 +304,11 @@
       `;
     }
 
-    function inlineMapLocate(lat, lng, locName) {
+    // ✨【修正地圖顯示】修正內嵌 iframe 呼叫網址，完整呈現 GPS 基準位置
+    function inlineMapLocate(lat, lng) {
       const container = document.getElementById("mapContainer");
-      if(lat === "0" || lng === "0") {
-        container.innerHTML = "無法讀取該打卡定位座標。";
+      if(!lat || !lng || lat === "0" || lng === "0" || lat === "undefined") {
+        container.innerHTML = "無法解析該打卡點的 GPS 座標數值。";
         return;
       }
       container.innerHTML = `<iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius:8px;" src="https://maps.google.com/maps?q=${lat},${lng}&hl=zh-TW&z=16&output=embed"></iframe>`;
@@ -360,7 +372,7 @@
         lines.push(`${day}:${locVal}-${shiftVal}`);
       }
       showMask("正在安全發布新班表...");
-      fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "updateSchedule", employeeId: empId, month: month, scheduleLines: lines.join("\n") }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message); });
+      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "updateSchedule", employeeId: empId, month: month, scheduleLines: lines.join("\n") }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message); });
     }
 
     function loadLeaveApplications() {
@@ -379,7 +391,7 @@
 
     function auditLeave(rowId, statusResult) {
       showMask("處理中...");
-      fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); });
+      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); });
     }
 
     function loadPunchLogs() {
@@ -390,20 +402,16 @@
           let html = "";
           res.logs.forEach(log => {
             let typeTag = log.type === 'clockIn' ? '<span style="color:#27ae60;font-weight:bold;">[上班]</span>' : '<span style="color:#f39c12;font-weight:bold;">[下班]</span>';
-            html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td><button class="btn btn-primary" style="padding:4px 10px;" onclick="inlineMapLocate('${log.lat}','${log.lng}','${log.location}')"><i class="fa-solid fa-map-location-dot"></i> 定位查看</button></td></tr>`;
+            html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td><button class="btn btn-primary" style="padding:4px 10px;" onclick="inlineMapLocate('${log.lat}','${log.lng}')"><i class="fa-solid fa-map-location-dot"></i> 定位查看</button></td></tr>`;
           });
           tbody.innerHTML = html;
         } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">今日尚無紀錄。</td></tr>`; }
       });
     }
 
-    // 發布公告
     function submitAnnouncement() {
-      fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "publishAnnouncement", unit: document.getElementById("annUnit").value, content: document.getElementById("annContent").value }) }).then(() => { alert("公告成功！"); document.getElementById("annContent").value=""; });
+      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "publishAnnouncement", unit: document.getElementById("annUnit").value, content: document.getElementById("annContent").value }) }).then(() => { alert("公告成功！"); document.getElementById("annContent").value=""; });
     }
-
-    function showMask(txt) { document.getElementById("globalMask").style.display = "flex"; document.getElementById("maskText").innerText = txt; }
-    function hideMask() { document.getElementById("globalMask").style.display = "none"; }
   </script>
 </body>
 </html>
