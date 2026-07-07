@@ -49,6 +49,20 @@
     .loading-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
     .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #4e54c8; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* 📄 A4 列印區專屬隱藏樣式 */
+    #printTemplateArea { display: none; }
+    @media print {
+      body * { display: none !important; }
+      #printTemplateArea, #printTemplateArea * { display: block !important; }
+      #printTemplateArea { display: block !important; position: absolute; left: 0; top: 0; width: 100%; padding: 40px; color: #000; background: white; font-family: 'Noto Sans TC', sans-serif; }
+      .print-title { text-align: center; font-size: 26px; font-weight: bold; margin-bottom: 30px; letter-spacing: 2px; }
+      .print-table { width: 100%; border: 2px solid #000 !important; border-collapse: collapse; margin-bottom: 25px; }
+      .print-table th, .print-table td { border: 1px solid #000 !important; padding: 14px 18px !important; font-size: 15px; color: #000 !important; background: none !important; }
+      .print-table th { font-weight: bold; text-align: center; width: 25%; background-color: #f2f2f2 !important; }
+      .print-sign-area { margin-top: 50px; display: flex; justify-content: space-between; font-size: 16px; padding: 0 20px; }
+      .print-footer-date { margin-top: 80px; text-align: right; font-size: 14px; padding-right: 20px; }
+    }
   </style>
 </head>
 <body>
@@ -64,11 +78,14 @@
     <button class="menu-btn" onclick="switchSection('empMgmt', this)"><i class="fa-solid fa-users-gear"></i>同仁名冊維護</button>
     <button class="menu-btn" onclick="switchSection('locMgmt', this)"><i class="fa-solid fa-map-pin"></i>案場GPS設定</button>
     <button class="menu-btn" onclick="switchSection('announcementMgmt', this)"><i class="fa-solid fa-bullhorn"></i>發布公告事項</button>
+    <!-- 🌟 新增側邊欄：離職證明單按鈕 -->
+    <button class="menu-btn" onclick="switchSection('resignationSection', this)"><i class="fa-solid fa-print"></i>離職證明書列印</button>
   </div>
 
   <div class="main-content">
     <div class="top-bar"><span id="currentSectionTitle">管理總覽</span><div><i class="fa-solid fa-user-shield"></i> 後勤核心管理人員</div></div>
 
+    <!-- 1. 管理總覽 -->
     <div class="content-body active" id="dashboard">
       <div class="card">
         <h3>系統連線狀態</h3>
@@ -76,6 +93,7 @@
       </div>
     </div>
 
+    <!-- 2. 班表排程調整 -->
     <div class="content-body" id="scheduleMgmt">
       <div class="card">
         <h3>發布 / 覆蓋員工班表</h3>
@@ -101,6 +119,7 @@
       </div>
     </div>
 
+    <!-- 3. 請假單審核 -->
     <div class="content-body" id="leaveAudit">
       <div class="card">
         <h3>待處理假單清單</h3>
@@ -111,6 +130,7 @@
       </div>
     </div>
 
+    <!-- 4. 即時打卡監控 -->
     <div class="content-body" id="punchLog">
       <div style="display: flex; gap: 20px; margin-bottom: 20px;">
         <div class="card" style="flex: 1; margin-bottom: 0;">
@@ -137,6 +157,7 @@
       </div>
     </div>
 
+    <!-- 5. 同仁名冊維護 -->
     <div class="content-body" id="empMgmt">
       <div style="display: flex; gap: 20px;">
         <div class="card" style="width: 300px; flex-shrink: 0;">
@@ -160,6 +181,7 @@
       </div>
     </div>
 
+    <!-- 6. 案場GPS設定 -->
     <div class="content-body" id="locMgmt">
       <div style="display: flex; gap: 20px;">
         <div class="card" style="width: 300px; flex-shrink: 0;">
@@ -180,6 +202,7 @@
       </div>
     </div>
 
+    <!-- 7. 發布公告事項 -->
     <div class="content-body" id="announcementMgmt">
       <div class="card">
         <h3>新增發布公告</h3>
@@ -190,10 +213,69 @@
         </div>
       </div>
     </div>
+
+    <!-- 🌟 8. 【全新面冊】離職證明書填寫與生成面板 -->
+    <div class="content-body" id="resignationSection">
+      <div class="card" style="max-width: 600px;">
+        <h3>填寫離職證明資訊</h3>
+        <p style="font-size: 13px; color:#718096; margin-bottom:15px;">後勤填寫完下方資訊後，點擊最下方按鈕即可同步寫入雲端並啟動 A4 格式列印視窗。</p>
+        
+        <label style="font-size:12px; font-weight:bold;">選擇離職同仁：</label>
+        <select id="resigEmpSelect" class="form-control" onchange="autoFillResigDetails()"></select>
+        
+        <label style="font-size:12px; font-weight:bold;">身分證字號：</label>
+        <input type="text" id="resigIdCard" class="form-control" placeholder="A123456789">
+        
+        <label style="font-size:12px; font-weight:bold;">出生年月日：</label>
+        <input type="date" id="resigBirth" class="form-control">
+        
+        <label style="font-size:12px; font-weight:bold;">入職日期 (到職日)：</label>
+        <input type="date" id="resigJoinDate" class="form-control">
+        
+        <label style="font-size:12px; font-weight:bold;">離職生效日期：</label>
+        <input type="date" id="resigLeaveDate" class="form-control">
+        
+        <label style="font-size:12px; font-weight:bold;">離職原因說明：</label>
+        <select id="resigReason" class="form-control">
+          <option value="個人生涯規劃 (自願離職)">個人生涯規劃 (自願離職)</option>
+          <option value="勞動基準法第十一條第二款 (業務緊縮)">勞動基準法第十一條第二款 (業務緊縮)</option>
+          <option value="勞動基準法第十一條第四款 (業務變更)">勞動基準法第十一條第四款 (業務變更)</option>
+          <option value="定期契約期滿離職">定期契約期滿離職</option>
+          <option value="其他原因自願離職">其他原因自願離職</option>
+        </select>
+
+        <button class="btn btn-success" style="width:100%; padding:14px; font-size:14px;" onclick="submitAndPrintResignation()">
+          <i class="fa-solid fa-print"></i> 儲存雲端並發起 A4 列印
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🌟 📄 隱藏的 A4 標準列印專用 HTML 骨架庫 -->
+  <div id="printTemplateArea">
+    <div class="print-title">離 職 證 明 書</div>
+    <table class="print-table">
+      <tr><th>員工姓名</th><td id="p_name"></td></tr>
+      <tr><th>身分證字號</th><td id="p_idcard"></td></tr>
+      <tr><th>出生年月日</th><td id="p_birth"></td></tr>
+      <tr><th>任職工號</th><td id="p_id"></td></tr>
+      <tr><th>擔任職務</th><td id="p_type"></td></tr>
+      <tr><th>負責執勤案場</th><td id="p_loc"></td></tr>
+      <tr><th>到職日期</th><td id="p_join"></td></tr>
+      <tr><th>離職日期</th><td id="p_leave"></td></tr>
+      <tr><th>離職原因</th><td id="p_reason"></td></tr>
+    </table>
+    <p style="font-size:14px; line-height:1.8; margin-top:40px; text-indent: 2em;">
+      查本公司同仁於任職期間遵守各項物業後勤管理規範，表現良好。茲證明其與本公司之勞雇關係確實已依法終止，特發此證，以茲證明。
+    </p>
+    <div class="print-sign-area">
+      <div><b>開具單位蓋章：</b><br><br><br>紘嘉物業管理股份有限公司</div>
+      <div><b>負責人簽章：</b></div>
+    </div>
+    <div class="print-footer-date" id="p_footer_date"></div>
   </div>
 
   <script>
-    // 🌟 請在這裡貼上您在 Google Apps Script 中建立部署後獲得的 exec 連結
     const BASE_GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
 
     const SHIFT_OPTIONS = ["請選擇班別", "日班", "夜班", "機動班", "特勤班", "輪休", "特休", "事假", "病假"];
@@ -217,16 +299,77 @@
           
           const sSelect = document.getElementById("schedEmpSelect");
           const rSelect = document.getElementById("reportEmpSelect");
-          if(sSelect && rSelect) {
+          const resigSelect = document.getElementById("resigEmpSelect"); // 🌟 綁定離職證明選單
+          
+          if(sSelect && rSelect && resigSelect) {
             let html = `<option value="">-- 請選擇排班同仁 --</option>`;
             globalEmployees.forEach(e => { html += `<option value="${e.id}">${e.id} - ${e.name}</option>`; });
-            sSelect.innerHTML = html; rSelect.innerHTML = html;
+            sSelect.innerHTML = html; rSelect.innerHTML = html; resigSelect.innerHTML = html;
           }
           renderAdminLists(res);
         } else {
           alert("雲端同步異常：" + res.message);
         }
         initAdminMonthSelector();
+      });
+    }
+
+    // 🌟 離職同仁智慧自動回填
+    function autoFillResigDetails() {
+      const targetId = document.getElementById("resigEmpSelect").value;
+      const emp = globalEmployees.find(e => e.id === targetId);
+      if(emp) {
+        document.getElementById("resigJoinDate").value = emp.joinDate || "";
+      }
+    }
+
+    // 🌟 核心：儲存雲端並發起列印
+    function submitAndPrintResignation() {
+      const targetId = document.getElementById("resigEmpSelect").value;
+      const emp = globalEmployees.find(e => e.id === targetId);
+      if(!targetId || !emp) { alert("請先選取離職同仁！"); return; }
+      
+      const payload = {
+        action: "saveResignation",
+        employeeId: targetId,
+        employeeName: emp.name,
+        idCard: document.getElementById("resigIdCard").value.trim(),
+        birth: document.getElementById("resigBirth").value,
+        joinDate: document.getElementById("resigJoinDate").value,
+        leaveDate: document.getElementById("resigLeaveDate").value,
+        reason: document.getElementById("resigReason").value,
+        identityType: emp.identityType,
+        location: emp.assignedLocation
+      };
+
+      if(!payload.leaveDate || !payload.idCard) { alert("請完整填寫身分證與離職生效日期！"); return; }
+      showMask("正在將離職存檔寫入雲端中央庫...");
+
+      // 改用超穩定 JSONP 穿透式管道發佈
+      const url = `${BASE_GAS_URL}?action=saveResignation&id=${payload.employeeId}&name=${encodeURIComponent(payload.employeeName)}&idCard=${payload.idCard}&birth=${payload.birth}&joinDate=${payload.joinDate}&leaveDate=${payload.leaveDate}&reason=${encodeURIComponent(payload.reason)}&identityType=${encodeURIComponent(payload.identityType)}&location=${encodeURIComponent(payload.location)}`;
+      
+      sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) {
+        hideMask();
+        if(res.success) {
+          // 填入 A4 隱藏骨架內
+          document.getElementById("p_name").innerText = payload.employeeName;
+          document.getElementById("p_idcard").innerText = payload.idCard;
+          document.getElementById("p_birth").innerText = payload.birth;
+          document.getElementById("p_id").innerText = payload.employeeId;
+          document.getElementById("p_type").innerText = payload.identityType;
+          document.getElementById("p_loc").innerText = payload.location;
+          document.getElementById("p_join").innerText = payload.joinDate;
+          document.getElementById("p_leave").innerText = payload.leaveDate;
+          document.getElementById("p_reason").innerText = payload.reason;
+          
+          const today = new Date();
+          document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
+          
+          // 🚀 喚醒列印視窗
+          setTimeout(() => { window.print(); }, 500);
+        } else {
+          alert("存檔失敗：" + res.message);
+        }
       });
     }
 
@@ -276,7 +419,7 @@
       
       sendJsonpRequest(url, "cb_save_emp_" + Math.floor(Math.random()*100000), function(res) {
         hideMask();
-        alert(res.message || "🎉 同仁資訊儲存完成！");
+        alert(res.message || "🎉 同仁資訊儲存成功！");
         fetchCloudLocations();
       });
     }
@@ -320,15 +463,6 @@
       `;
     }
 
-    function inlineMapLocate(lat, lng) {
-      const container = document.getElementById("mapContainer");
-      if(!lat || !lng || lat === "0" || lng === "0" || lat === "undefined") {
-        container.innerHTML = "無法解析該打卡點的 GPS 座標數值。";
-        return;
-      }
-      container.innerHTML = `<iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius:8px;" src="https://maps.google.com/maps?q=${lat},${lng}&hl=zh-TW&z=16&output=embed"></iframe>`;
-    }
-
     function initAdminMonthSelector() {
       const select = document.getElementById("schedMonthSelect"); if (!select) return; select.innerHTML = "";
       const now = new Date();
@@ -340,7 +474,6 @@
       generateCalendarRows();
     }
 
-    // 🌟【終極回填修正】將 id 屬性安全地揉進標籤內，徹底防止刷新網頁時班表流失！
     function generateCalendarRows() {
       const monthVal = document.getElementById("schedMonthSelect").value; const tbody = document.getElementById("calendarRowsBody"); if (!tbody || !monthVal) return;
       tbody.innerHTML = "";
@@ -460,9 +593,6 @@
     function submitAnnouncement() {
       fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "publishAnnouncement", unit: document.getElementById("annUnit").value, content: document.getElementById("annContent").value }) }).then(() => { alert("公告成功！"); document.getElementById("annContent").value=""; });
     }
-
-    function showMask(txt) { document.getElementById("globalMask").style.display = "flex"; document.getElementById("maskText").innerText = txt; }
-    function hideMask() { document.getElementById("globalMask").style.display = "none"; }
   </script>
 </body>
 </html>
