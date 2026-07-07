@@ -84,7 +84,7 @@
         <div style="display: flex; gap: 15px; max-width: 650px; flex-direction: column; margin-bottom: 20px;">
           <div style="display: flex; gap: 15px;">
             <div style="flex: 1;"><label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">選擇同仁 (工號/姓名)：</label><select id="schedEmpSelect" class="form-control" style="margin-bottom:0;" onchange="loadExistingSchedule()"></select></div>
-            <div style="flex: 1;"><label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">排班月份：</label><select id="schedMonthSelect" class="form-control" style="margin-bottom:0;" onchange="loadExistingSchedule()"></select></div>
+            <div style="flex: 1;"><label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">排班月份：</label><select id="schedMonthSelect" class="form-control" style="margin-bottom:0;" onchange="generateCalendarRows()"></select></div>
           </div>
         </div>
         <div style="border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; max-height: 400px; overflow-y: auto; margin-bottom: 20px; max-width: 650px;">
@@ -266,7 +266,6 @@
       document.getElementById("locLng").value = lng; document.getElementById("locRadius").value = rad;
     }
 
-    // 🌟【終極通訊打通】全面改用 JSONP 加密保護管道，徹底解決 GitHub 的 CORS 多逗號阻擋！
     function saveEmployeeData() {
       const id = document.getElementById("empId").value.trim();
       const name = document.getElementById("empName").value.trim();
@@ -278,18 +277,16 @@
       if(!id || !name) { alert("請填入工號與姓名！"); return; }
       showMask("正在安全儲存同仁資訊...");
       
-      // 改用 JSONP 穿透式傳輸
       const encodedLoc = encodeURIComponent(assignedLocation);
       const url = `${BASE_GAS_URL}?action=saveEmployee&id=${id}&name=${encodeURIComponent(name)}&password=${encodeURIComponent(password)}&joinDate=${joinDate}&identityType=${encodeURIComponent(identityType)}&assignedLocation=${encodedLoc}`;
       
       sendJsonpRequest(url, "cb_save_emp_" + Math.floor(Math.random()*100000), function(res) {
         hideMask();
-        alert(res.message || "🎉 同仁資訊儲存完成！");
+        alert(res.message || "🎉 同仁資訊儲存成功！");
         fetchCloudLocations();
       });
     }
 
-    // 🌟【終極通訊打通】全面改用 JSONP 穿透式傳輸案場參數
     function saveLocationData() {
       const name = document.getElementById("locName").value.trim();
       const lat = document.getElementById("locLat").value.trim();
@@ -338,17 +335,15 @@
       container.innerHTML = `<iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius:8px;" src="https://maps.google.com/maps?q=${lat},${lng}&hl=zh-TW&z=16&output=embed"></iframe>`;
     }
 
-    if (typeof initAdminMonthSelector !== 'function') {
-      window.initAdminMonthSelector = function() {
-        const select = document.getElementById("schedMonthSelect"); if (!select) return; select.innerHTML = "";
-        const now = new Date();
-        for (let i = -3; i <= 3; i++) {
-          let d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-          let mStr = d.getFullYear() + "年" + String(d.getMonth() + 1).padStart(2, '0') + "月";
-          let opt = document.createElement("option"); opt.value = mStr; opt.innerText = mStr; if (i === 0) opt.selected = true; select.appendChild(opt);
-        }
-        generateCalendarRows();
+    function initAdminMonthSelector() {
+      const select = document.getElementById("schedMonthSelect"); if (!select) return; select.innerHTML = "";
+      const now = new Date();
+      for (let i = -3; i <= 3; i++) {
+        let d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+        let mStr = d.getFullYear() + "年" + String(d.getMonth() + 1).padStart(2, '0') + "月";
+        let opt = document.createElement("option"); opt.value = mStr; opt.innerText = mStr; if (i === 0) opt.selected = true; select.appendChild(opt);
       }
+      generateCalendarRows();
     }
 
     function generateCalendarRows() {
@@ -363,11 +358,12 @@
         const dayLabelColor = isWeekend ? "color: #e53e3e; font-weight: bold; background: #fff5f5;" : "color: #4a5568;";
         const dayString = `${String(day).padStart(2, '0')} 日 (週${dayOfWeek})`;
         
-        let locSelectHtml = `<select class="form-control daily-location-select" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px;">`;
+        // 🌟【終極回填修正】將 id 橫向精準揉進 select 的屬性字串中，否則歷史排班永遠無法正確抓取！
+        let locSelectHtml = `<select class="form-control daily-location-select" id="loc_day_${String(day).padStart(2, '0')}" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px;">`;
         cloudLocationOptions.forEach(loc => { let isPlaceholder = (loc === '請選擇指派案場' || loc === '載入中...'); locSelectHtml += `<option value="${isPlaceholder ? '' : loc}">${loc}</option>`; });
         locSelectHtml += `</select>`;
         
-        let shiftSelectHtml = `<select class="form-control daily-shift-select" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px;">`;
+        let shiftSelectHtml = `<select class="form-control daily-shift-select" id="shift_day_${String(day).padStart(2, '0')}" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px;">`;
         SHIFT_OPTIONS.forEach(opt => { shiftSelectHtml += `<option value="${opt === '請選擇班別' ? '' : opt}">${opt}</option>`; });
         shiftSelectHtml += `</select>`;
         
@@ -375,6 +371,7 @@
         tr.innerHTML = `<td style="padding: 10px 15px; vertical-align: middle; ${dayLabelColor}">${dayString}</td><td style="padding: 6px 15px; ${isWeekend ? 'background: #fff5f5;' : ''}">${locSelectHtml}</td><td style="padding: 6px 15px; ${isWeekend ? 'background: #fff5f5;' : ''}">${shiftSelectHtml}</td>`;
         tbody.appendChild(tr);
       }
+      // 生成完空白列，立刻發起歷史紀錄調閱回填
       loadExistingSchedule();
     }
 
@@ -387,8 +384,11 @@
       const empId = document.getElementById("schedEmpSelect").value;
       const month = document.getElementById("schedMonthSelect").value;
       if (!empId || !month) return;
+      
+      // 先把全部分頁清空重置
       document.querySelectorAll(".daily-location-select").forEach(sel => sel.value = "");
       document.querySelectorAll(".daily-shift-select").forEach(sel => sel.value = "");
+      
       const url = `${BASE_GAS_URL}?action=fetchSchedule&employeeId=${empId}&month=${month}`;
       sendJsonpRequest(url, "cb_load_exist_" + Math.floor(Math.random()*100000), function(res) {
         if (res.success && res.schedule && res.schedule.length > 0) {
@@ -398,6 +398,7 @@
               let parts = rawContent.split("-");
               let locPart = parts[0] || ""; let shiftPart = parts[1] || "";
               let dayKey = String(item.date).replace("日", "").trim().padStart(2, '0');
+              
               let locElement = document.getElementById(`loc_day_${dayKey}`);
               let shiftElement = document.getElementById(`shift_day_${dayKey}`);
               if (locElement) { locElement.value = locPart; }
@@ -457,7 +458,7 @@
           let html = "";
           res.logs.forEach(log => {
             let typeTag = log.type === 'clockIn' ? '<span style="color:#27ae60;font-weight:bold;">[上班]</span>' : '<span style="color:#f39c12;font-weight:bold;">[下班]</span>';
-            html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td><button class="btn btn-primary" style="padding:4px 8px;" onclick="inlineMapLocate('${log.lat}','${log.lng}')"><i class="fa-solid fa-map-location-dot"></i> 定位查看</button></td></tr>`;
+            html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td><button class="btn btn-primary" style="padding:4px 10px;" onclick="inlineMapLocate('${log.lat}','${log.lng}')"><i class="fa-solid fa-map-location-dot"></i> 定位查看</button></td></tr>`;
           });
           tbody.innerHTML = html;
         } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">今日尚無紀錄。</td></tr>`; }
