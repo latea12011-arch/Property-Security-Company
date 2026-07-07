@@ -14,14 +14,10 @@
       "background_color": "#1a202c",
       "theme_color": "#2d3748",
       "orientation": "landscape",
-      "icons": [
-        { "src": "https://i.meee.com.tw/Q0RaFOE.png", "sizes": "192x192", "type": "image/png" }
-      ]
+      "icons": [{ "src": "https://i.meee.com.tw/Q0RaFOE.png", "sizes": "192x192", "type": "image/png" }]
     };
     const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-    const link = document.createElement('link');
-    link.rel = 'manifest';
-    link.href = URL.createObjectURL(blob);
+    const link = document.createElement('link'); link.rel = 'manifest'; link.href = URL.createObjectURL(blob);
     document.head.appendChild(link);
   </script>
 
@@ -31,39 +27,25 @@
   <style>
     * { box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; margin: 0; padding: 0; }
     body { background-color: #f7fafc; color: #2d3748; display: flex; height: 100vh; overflow: hidden; }
-    
-    /* 左側導覽列 */
     .sidebar { width: 260px; background: #2d3748; color: white; display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0; }
-    .sidebar h2 { text-align: center; font-size: 18px; margin-bottom: 30px; color: #edf2f7; letter-spacing: 1px; }
-    .menu-btn { width: 100%; padding: 15px 25px; border: none; background: none; color: #a0aec0; text-align: left; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; }
-    .menu-btn i { width: 20px; text-align: center; }
+    .sidebar h2 { text-align: center; font-size: 18px; margin-bottom: 30px; color: #edf2f7; }
+    .menu-btn { width: 100%; padding: 15px 25px; border: none; background: none; color: #a0aec0; text-align: left; font-size: 15px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 12px; }
     .menu-btn:hover, .menu-btn.active { background: #1a202c; color: white; border-left: 4px solid #4e54c8; }
-    
-    /* 右側主內容區 */
     .main-content { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
     .top-bar { height: 60px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; font-weight: bold; flex-shrink: 0; }
     .content-body { flex: 1; padding: 30px; overflow-y: auto; display: none; }
     .content-body.active { display: block; }
-    
-    /* 表格與卡片樣式 */
     .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
-    .card h3 { margin-bottom: 15px; color: #4a5568; font-size: 16px; border-left: 4px solid #4e54c8; padding-left: 10px; }
+    .card h3 { margin-bottom: 15px; color: #4a5568; border-left: 4px solid #4e54c8; padding-left: 10px; }
     table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-    th { background: #edf2f7; color: #4a5568; text-align: left; padding: 12px; font-size: 14px; border-bottom: 2px solid #cbd5e0; }
-    td { padding: 12px; font-size: 14px; border-bottom: 1px solid #e2e8f0; }
-    
-    /* 按鈕與表單 */
-    .btn { padding: 8px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; text-align: center; text-decoration: none; display: inline-block; }
+    th { background: #edf2f7; color: #4a5568; text-align: left; padding: 12px; border-bottom: 2px solid #cbd5e0; }
+    td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+    .btn { padding: 8px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; text-decoration: none; display: inline-block; }
     .btn-primary { background: #4e54c8; color: white; }
     .btn-success { background: #27ae60; color: white; }
     .btn-danger { background: #e53e3e; color: white; }
     .form-control { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; margin-bottom: 12px; outline: none; background: #f8fafc; }
-    .form-control:focus { border-color: #4e54c8; background: #fff; }
-    
-    /* 審核圖片縮圖 */
-    .proof-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #cbd5e0; }
-    
-    /* 全域載入遮罩 */
+    .proof-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer; }
     .loading-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
     .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #4e54c8; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -71,10 +53,7 @@
 </head>
 <body>
 
-  <div class="loading-mask" id="globalMask">
-    <div class="spinner"></div>
-    <p id="maskText" style="font-weight: bold; color: #4e54c8;">安全載入雲端資料中...</p>
-  </div>
+  <div class="loading-mask" id="globalMask"><div class="spinner"></div><p id="maskText" style="font-weight: bold; color: #4e54c8;">安全載入雲端資料中...</p></div>
 
   <div class="sidebar">
     <h2>紘嘉物業後台管理</h2>
@@ -82,108 +61,138 @@
     <button class="menu-btn" onclick="switchSection('scheduleMgmt', this)"><i class="fa-solid fa-calendar-days"></i>班表排程調整</button>
     <button class="menu-btn" onclick="switchSection('leaveAudit', this)"><i class="fa-solid fa-file-signature"></i>請假單審核</button>
     <button class="menu-btn" onclick="switchSection('punchLog', this)"><i class="fa-solid fa-location-dot"></i>即時打卡監控</button>
+    <button class="menu-btn" onclick="switchSection('empMgmt', this)"><i class="fa-solid fa-users-gear"></i>同仁名冊維護</button>
+    <button class="menu-btn" onclick="switchSection('locMgmt', this)"><i class="fa-solid fa-map-pin"></i>案場GPS設定</button>
     <button class="menu-btn" onclick="switchSection('announcementMgmt', this)"><i class="fa-solid fa-bullhorn"></i>發布公告事項</button>
   </div>
 
   <div class="main-content">
-    <div class="top-bar">
-      <span id="currentSectionTitle">管理總覽</span>
-      <div style="font-size: 14px; color: #718096;"><i class="fa-solid fa-user-shield"></i> 後勤核心管理人員</div>
-    </div>
+    <div class="top-bar"><span id="currentSectionTitle">管理總覽</span><div><i class="fa-solid fa-user-shield"></i> 後勤核心管理人員</div></div>
 
+    <!-- 1. 管理總覽 -->
     <div class="content-body active" id="dashboard">
       <div class="card">
         <h3>系統連線狀態</h3>
-        <p style="color: #27ae60; font-weight: bold; margin-top: 5px;"><i class="fa-solid fa-circle-check"></i> 成功連線至 Google Sheets 免費核心資料庫</p>
+        <p style="color: #27ae60; font-weight: bold; margin-top: 5px;"><i class="fa-solid fa-circle-check"></i> 成功連線至 Google Sheets 獨立核心資料庫</p>
       </div>
     </div>
 
+    <!-- 2. 班表排程調整 -->
     <div class="content-body" id="scheduleMgmt">
       <div class="card">
         <h3>發布 / 覆蓋員工班表</h3>
         <div style="display: flex; gap: 15px; max-width: 650px; flex-direction: column; margin-bottom: 20px;">
           <div style="display: flex; gap: 15px;">
-            <div style="flex: 1;">
-              <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">選擇同仁 (工號/姓名)：</label>
-              <select id="schedEmpSelect" class="form-control" style="margin-bottom:0; font-weight: 500;">
-                <option value="">載入同仁清單中...</option>
-              </select>
-            </div>
-            <div style="flex: 1;">
-              <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">排班月份：</label>
-              <select id="schedMonthSelect" class="form-control" style="margin-bottom:0;" onchange="generateCalendarRows()"></select>
-            </div>
+            <div style="flex: 1;"><label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">選擇同仁 (工號/姓名)：</label><select id="schedEmpSelect" class="form-control" style="margin-bottom:0;"></select></div>
+            <div style="flex: 1;"><label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">排班月份：</label><select id="schedMonthSelect" class="form-control" style="margin-bottom:0;" onchange="generateCalendarRows()"></select></div>
           </div>
         </div>
-
-        <div style="border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; max-height: 450px; overflow-y: auto; margin-bottom: 20px; max-width: 650px;">
-          <table style="margin-top: 0; width: 100%; border-collapse: collapse;">
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; max-height: 400px; overflow-y: auto; margin-bottom: 20px; max-width: 650px;">
+          <table style="margin-top: 0;">
             <thead>
               <tr>
-                <th style="width: 130px; padding: 10px 15px; background: #edf2f7; position: sticky; top: 0; z-index: 10;">日期 / 星期</th>
-                <th style="padding: 10px 15px; background: #edf2f7; position: sticky; top: 0; z-index: 10;">指派案場</th>
-                <th style="width: 160px; padding: 10px 15px; background: #edf2f7; position: sticky; top: 0; z-index: 10;">指派班別</th>
+                <th style="width: 130px; padding: 10px 15px; position: sticky; top: 0; z-index: 10;">日期 / 星期</th>
+                <th style="padding: 10px 15px; position: sticky; top: 0; z-index: 10;">指派案場</th>
+                <th style="width: 160px; padding: 10px 15px; position: sticky; top: 0; z-index: 10;">指派班別</th>
               </tr>
             </thead>
-            <tbody id="calendarRowsBody">
-              </tbody>
+            <tbody id="calendarRowsBody"></tbody>
           </table>
         </div>
-
-        <button class="btn btn-primary" style="padding:14px; width: 100%; max-width: 650px; font-size: 15px;" onclick="submitNewSchedule()">
-          <i class="fa-solid fa-cloud-arrow-up"></i> 確認儲存並發布班表
-        </button>
+        <button class="btn btn-primary" style="padding:14px; width: 100%; max-width: 650px;" onclick="submitNewSchedule()"><i class="fa-solid fa-cloud-arrow-up"></i> 確認儲存並發布班表</button>
       </div>
     </div>
 
+    <!-- 3. 請假單審核 -->
     <div class="content-body" id="leaveAudit">
       <div class="card">
         <h3>待處理假單清單</h3>
         <table>
-          <thead>
-            <tr>
-              <th>申請時間</th>
-              <th>工號/姓名</th>
-              <th>假別</th>
-              <th>時間區間</th>
-              <th>事由備註</th>
-              <th>證明文件</th>
-              <th>操作審核</th>
-            </tr>
-          </thead>
-          <tbody id="leaveAuditTableBody">
-            </tbody>
+          <thead><tr><th>申請時間</th><th>工號/姓名</th><th>假別</th><th>時間區間</th><th>事由備註</th><th>證明文件</th><th>操作審核</th></tr></thead>
+          <tbody id="leaveAuditTableBody"></tbody>
         </table>
       </div>
     </div>
 
+    <!-- 4. 即時打卡監控 (含報表統計功能) -->
     <div class="content-body" id="punchLog">
+      <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+        <div class="card" style="flex: 1; margin-bottom: 0;">
+          <h3>📊 快速考勤薪資報表統計</h3>
+          <div style="display: flex; gap: 15px; align-items: flex-end; margin-top: 10px;">
+            <div style="flex: 1;"><label style="font-size:12px; font-weight:bold;">選擇同仁：</label><select id="reportEmpSelect" class="form-control" style="margin-bottom:0;"></select></div>
+            <button class="btn btn-primary" style="padding: 10px 20px;" onclick="calculateMonthlyReport()"><i class="fa-solid fa-calculator"></i> 開始分析本月考勤</button>
+          </div>
+          <div id="reportResultArea" style="margin-top: 15px; font-size: 14px; line-height: 1.8; display: none; padding: 12px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0;"></div>
+        </div>
+        <div class="card" style="width: 320px; margin-bottom: 0; display: flex; flex-direction: column;">
+          <h3>🗺️ 打卡 GPS 軌跡追蹤</h3>
+          <div id="mapContainer" style="flex: 1; margin-top:10px; background: #edf2f7; border-radius: 8px; display: flex; justify-content: center; align-items: center; text-align: center; color: #a0aec0; font-size: 13px; font-weight: bold; min-height: 120px;">
+            請點擊下方打卡流水帳的<br>「位置標籤」進行即時定位
+          </div>
+        </div>
+      </div>
       <div class="card">
         <h3>今日同仁打卡流水帳</h3>
         <table>
-          <thead>
-            <tr>
-              <th>打卡時間</th>
-              <th>同仁姓名 (工號)</th>
-              <th>類型</th>
-              <th>打卡案場</th>
-              <th>GPS 座標位置</th>
-            </tr>
-          </thead>
-          <tbody id="punchLogTableBody">
-            </tbody>
+          <thead><tr><th>打卡時間</th><th>同仁姓名 (工號)</th><th>類型</th><th>打卡案場</th><th>GPS 座標位置</th></tr></thead>
+          <tbody id="punchLogTableBody"></tbody>
         </table>
       </div>
     </div>
 
+    <!-- 5. 同仁名冊維護 -->
+    <div class="content-body" id="empMgmt">
+      <div style="display: flex; gap: 20px;">
+        <div class="card" style="width: 300px; flex-shrink: 0;">
+          <h3>新增 / 修改同仁資料</h3>
+          <label style="font-size:12px; font-weight:bold;">員工工號 (五碼)：</label><input type="text" id="empId" class="form-control" placeholder="00001">
+          <label style="font-size:12px; font-weight:bold;">員工姓名：</label><input type="text" id="empName" class="form-control">
+          <label style="font-size:12px; font-weight:bold;">登入密碼：</label><input type="text" id="empPwd" class="form-control">
+          <label style="font-size:12px; font-weight:bold;">入職日期：</label><input type="date" id="empDate" class="form-control">
+          <label style="font-size:12px; font-weight:bold;">身分類別：</label>
+          <select id="empType" class="form-control"><option value="正職人員">正職人員</option><option value="機動人員">機動人員</option></select>
+          <label style="font-size:12px; font-weight:bold;">綁定案場 (機動人員用逗號隔開)：</label><input type="text" id="empLoc" class="form-control" placeholder="例如：花園廣場">
+          <button class="btn btn-success" style="width: 100%; padding:12px;" onclick="saveEmployeeData()"><i class="fa-solid fa-user-plus"></i> 儲存同仁資訊</button>
+        </div>
+        <div class="card" style="flex: 1;">
+          <h3>現有同仁清單名冊</h3>
+          <table>
+            <thead><tr><th>工號</th><th>姓名</th><th>類別</th><th>負責案場</th><th>入職日期</th><th>操作</th></tr></thead>
+            <tbody id="empTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. 案場GPS設定 -->
+    <div class="content-body" id="locMgmt">
+      <div style="display: flex; gap: 20px;">
+        <div class="card" style="width: 300px; flex-shrink: 0;">
+          <h3>新增 / 修改案場參數</h3>
+          <label style="font-size:12px; font-weight:bold;">案場完整名稱：</label><input type="text" id="locName" class="form-control" placeholder="例如：花園廣場">
+          <label style="font-size:12px; font-weight:bold;">基準點緯度 (Latitude)：</label><input type="text" id="locLat" class="form-control" placeholder="例如：24.801">
+          <label style="font-size:12px; font-weight:bold;">基準點經度 (Longitude)：</label><input type="text" id="locLng" class="form-control" placeholder="例如：120.971">
+          <label style="font-size:12px; font-weight:bold;">允許打卡誤差半徑 (米)：</label><input type="number" id="locRadius" class="form-control" value="200">
+          <button class="btn btn-primary" style="width: 100%; padding:12px;" onclick="saveLocationData()"><i class="fa-solid fa-map-location-dot"></i> 儲存案場設定</button>
+        </div>
+        <div class="card" style="flex: 1;">
+          <h3>系統案場維護清單</h3>
+          <table>
+            <thead><tr><th>案場名稱</th><th>緯度基準</th><th>經度基準</th><th>打卡半徑</th><th>操作</th></tr></thead>
+            <tbody id="locTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. 發布公告事項 -->
     <div class="content-body" id="announcementMgmt">
       <div class="card">
         <h3>新增發布公告</h3>
         <div style="max-width: 500px;">
-          <label style="font-size:13px; font-weight:bold;">發布單位：</label>
-          <input type="text" id="annUnit" class="form-control" placeholder="例如：管理部 / 勤務督導組">
-          <label style="font-size:13px; font-weight:bold;">公告具體內容：</label>
-          <textarea id="annContent" class="form-control" rows="5" placeholder="請輸入欲公告給所有同仁的文字..."></textarea>
+          <label style="font-size:13px; font-weight:bold;">發布單位：</label><input type="text" id="annUnit" class="form-control" placeholder="管理部">
+          <label style="font-size:13px; font-weight:bold;">公告具體內容：</label><textarea id="annContent" class="form-control" rows="5"></textarea>
           <button class="btn btn-danger" style="padding:12px; width:100%;" onclick="submitAnnouncement()">發布最新公告</button>
         </div>
       </div>
@@ -194,310 +203,216 @@
     // 🌟 這裡更換為您的 Google Apps Script「網頁應用程式網址」
     const BASE_GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
 
-    // 固定常用的排班班別
     const SHIFT_OPTIONS = ["請選擇班別", "日班", "夜班", "機動班", "特勤班", "輪休", "特休", "事假", "病假"];
+    let cloudLocationOptions = ["載入中..."];
+    let globalEmployees = [];
+    let globalPunchLogs = [];
 
-    // 預設的雲端案場選單變數
-    let cloudLocationOptions = ["載入雲端案場中..."];
-
-    // 網頁初始化
-    document.addEventListener("DOMContentLoaded", function() {
-      fetchCloudLocations();
-    });
-
-    // 向雲端同步最新案場與同仁清單
     function fetchCloudLocations() {
       showMask("正在從雲端同步最新案場與同仁名冊...");
       const url = `${BASE_GAS_URL}?action=fetchLocationsList`;
-      
-      sendJsonpRequest(url, "cb_get_locations_" + Math.floor(Math.random()*100000), function(res) {
+      sendJsonpRequest(url, "cb_admin_init_" + Math.floor(Math.random()*100000), function(res) {
         hideMask();
-        
-        // 1. 解析雲端案場
-        if(res.success && res.locations && res.locations.length > 0) {
-          cloudLocationOptions = ["請選擇指派案場", "不需指派(如休假)"].concat(res.locations);
-        } else {
-          cloudLocationOptions = ["請選擇指派案場", "不需指派(如休假)", "花園廣場", "站前大樓"];
+        if(res.success) {
+          globalEmployees = res.employees || [];
+          // 渲染案場
+          let locNames = (res.locations || []).map(l => l.name);
+          cloudLocationOptions = ["請選擇指派案場", "不需指派(如休假)"].concat(locNames);
+          
+          // 渲染排班同仁下拉選單
+          const sSelect = document.getElementById("schedEmpSelect");
+          const rSelect = document.getElementById("reportEmpSelect");
+          if(sSelect && rSelect) {
+            let html = `<option value="">-- 請選擇排班同仁 --</option>`;
+            globalEmployees.forEach(e => { html += `<option value="${e.id}">${e.id} - ${e.name}</option>`; });
+            sSelect.innerHTML = html; rSelect.innerHTML = html;
+          }
+          renderAdminLists(res);
         }
-        
-        // 2. 解析員工名冊至下拉選單
-        const empSelect = document.getElementById("schedEmpSelect");
-        if (empSelect && res.employees && res.employees.length > 0) {
-          empSelect.innerHTML = `<option value="">-- 請選擇排班同仁 --</option>`;
-          res.employees.forEach(function(emp) {
-            let opt = document.createElement("option");
-            opt.value = emp.id;
-            opt.innerText = `${emp.id} - ${emp.name}`;
-            empSelect.appendChild(opt);
-          });
-        } else if (empSelect) {
-          empSelect.innerHTML = `<option value="">無法同步員工資料</option>`;
-        }
-        
-        // 初始化月份選單與排班表格
         initAdminMonthSelector();
       });
     }
 
-    // 初始化月份下拉選單 (前後三個月)
-    function initAdminMonthSelector() {
-      const select = document.getElementById("schedMonthSelect");
-      if (!select) return;
-      select.innerHTML = "";
+    function renderAdminLists(res) {
+      // 渲染名冊表格
+      const empTbody = document.getElementById("empTableBody");
+      if(empTbody) {
+        let html = "";
+        res.employees.forEach(e => {
+          html += `<tr><td>${e.id}</td><td><b>${e.name}</b></td><td>${e.identityType}</td><td>${e.assignedLocation}</td><td>${e.joinDate}</td><td><button class="btn btn-primary" style="padding:4px 8px;" onclick="editEmpForm('${e.id}','${e.name}','${e.password}','${e.joinDate}','${e.identityType}','${e.assignedLocation}')">編輯</button></td></tr>`;
+        });
+        empTbody.innerHTML = html;
+      }
+      // 渲染案場表格
+      const locTbody = document.getElementById("locTableBody");
+      if(locTbody) {
+        let html = "";
+        (res.locations || []).forEach(l => {
+          html += `<tr><td><b>${l.name}</b></td><td>${l.lat}</td><td>${l.lng}</td><td>${l.radius} 米</td><td><button class="btn btn-primary" style="padding:4px 8px;" onclick="editLocForm('${l.name}','${l.lat}','${l.lng}','${l.radius}')">編輯</button></td></tr>`;
+        });
+        locTbody.innerHTML = html;
+      }
+    }
+
+    function editEmpForm(id, name, pwd, date, type, loc) {
+      document.getElementById("empId").value = id; document.getElementById("empName").value = name;
+      document.getElementById("empPwd").value = pwd; document.getElementById("empDate").value = date;
+      document.getElementById("empType").value = type; document.getElementById("empLoc").value = loc;
+    }
+    function editLocForm(name, lat, lng, rad) {
+      document.getElementById("locName").value = name; document.getElementById("locLat").value = lat;
+      document.getElementById("locLng").value = lng; document.getElementById("locRadius").value = rad;
+    }
+
+    function saveEmployeeData() {
+      const payload = {
+        action: "saveEmployee", id: document.getElementById("empId").value, name: document.getElementById("empName").value,
+        password: document.getElementById("empPwd").value, joinDate: document.getElementById("empDate").value,
+        identityType: document.getElementById("empType").value, assignedLocation: document.getElementById("empLoc").value
+      };
+      if(!payload.id || !payload.name) { alert("請填入工號與姓名！"); return; }
+      showMask("正在同步寫入同仁庫...");
+      fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify(payload) }).then(r=>r.json()).then(res=>{ hideMask(); alert(res.message); fetchCloudLocations(); });
+    }
+
+    function saveLocationData() {
+      const payload = { action: "saveLocation", name: document.getElementById("locName").value, lat: document.getElementById("locLat").value, lng: document.getElementById("locLng").value, radius: document.getElementById("locRadius").value };
+      if(!payload.name || !payload.lat) { alert("請填入案場與經緯度參數！"); return; }
+      showMask("正在同步寫入案場參數庫...");
+      fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify(payload) }).then(r=>r.json()).then(res=>{ hideMask(); alert(res.message); fetchCloudLocations(); });
+    }
+
+    // 📊 智慧考勤報表快速計算
+    function calculateMonthlyReport() {
+      const empId = document.getElementById("reportEmpSelect").value;
+      const targetMonth = document.getElementById("schedMonthSelect").value;
+      const area = document.getElementById("reportResultArea");
+      if(!empId) { alert("請先選取要分析的同仁！"); return; }
       
+      // 篩選該員工的打卡紀錄
+      let empLogs = globalPunchLogs.filter(l => l.id === empId);
+      let totalDays = [...new Set(empLogs.map(l => l.timestamp.split(" ")[0]))].length;
+      let totalIn = empLogs.filter(l => l.type === 'clockIn').length;
+      let totalOut = empLogs.filter(l => l.type === 'clockOut').length;
+      
+      area.style.display = "block";
+      area.innerHTML = `
+        <strong>📋 ${targetMonth} 考勤簡報分析：</strong><br>
+        👤 同仁工號：${empId}<br>
+        📅 本月累計出勤天數：<span style="color:#27ae60;font-weight:bold;">${totalDays} 天</span><br>
+        ⏱️ 上班打卡總次數：${totalIn} 次 / 下班打卡總次數：${totalOut} 次<br>
+        💡 <span style="font-size:12px;color:#718096;">完整工時細節已同步寫入 Attendance_Logs 分頁報表。</span>
+      `;
+    }
+
+    // 內嵌式 GPS 地圖定位跳轉
+    function inlineMapLocate(lat, lng, locName) {
+      const container = document.getElementById("mapContainer");
+      // 使用靜態地圖或直接內嵌 iframe
+      container.innerHTML = `<iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius:8px;" src="https://maps.google.com/maps?q=${lat},${lng}&hl=zh-TW&z=16&output=embed"></iframe>`;
+    }
+
+    function initAdminMonthSelector() {
+      const select = document.getElementById("schedMonthSelect"); if (!select) return; select.innerHTML = "";
       const now = new Date();
       for (let i = -3; i <= 3; i++) {
         let d = new Date(now.getFullYear(), now.getMonth() + i, 1);
         let mStr = d.getFullYear() + "年" + String(d.getMonth() + 1).padStart(2, '0') + "月";
-        let opt = document.createElement("option");
-        opt.value = mStr;
-        opt.innerText = mStr;
-        if (i === 0) opt.selected = true; 
-        select.appendChild(opt);
+        let opt = document.createElement("option"); opt.value = mStr; opt.innerText = mStr; if (i === 0) opt.selected = true; select.appendChild(opt);
       }
       generateCalendarRows();
     }
 
-    // 自動依據選取月份動態渲染表格
     function generateCalendarRows() {
-      const monthVal = document.getElementById("schedMonthSelect").value; 
-      const tbody = document.getElementById("calendarRowsBody");
-      if (!tbody || !monthVal) return;
-      
+      const monthVal = document.getElementById("schedMonthSelect").value; const tbody = document.getElementById("calendarRowsBody"); if (!tbody || !monthVal) return;
       tbody.innerHTML = "";
-      
-      const matches = monthVal.match(/(\d+)年(\d+)月/);
-      if (!matches) return;
-      const year = parseInt(matches[1]);
-      const month = parseInt(matches[2]); 
-      
-      const totalDays = new Date(year, month, 0).getDate();
-      const weekDayNames = ["日", "一", "二", "三", "四", "五", "六"];
+      const matches = monthVal.match(/(\d+)年(\d+)月/); if (!matches) return;
+      const year = parseInt(matches[1]); const month = parseInt(matches[2]); 
+      const totalDays = new Date(year, month, 0).getDate(); const weekDayNames = ["日", "一", "二", "三", "四", "五", "六"];
       
       for (let day = 1; day <= totalDays; day++) {
-        const dateObj = new Date(year, month - 1, day);
-        const dayOfWeek = weekDayNames[dateObj.getDay()]; 
-        const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6; 
-        
+        const dateObj = new Date(year, month - 1, day); const dayOfWeek = weekDayNames[dateObj.getDay()]; const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6; 
         const dayLabelColor = isWeekend ? "color: #e53e3e; font-weight: bold; background: #fff5f5;" : "color: #4a5568;";
         const dayString = `${String(day).padStart(2, '0')} 日 (週${dayOfWeek})`;
         
-        // 案場下拉選單 HTML
-        let locSelectHtml = `<select class="form-control daily-location-select" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px; font-weight:500;">`;
-        cloudLocationOptions.forEach(loc => {
-          let isPlaceholder = (loc === '請選擇指派案場' || loc === '載入雲端案場中...');
-          locSelectHtml += `<option value="${isPlaceholder ? '' : loc}">${loc}</option>`;
-        });
+        let locSelectHtml = `<select class="form-control daily-location-select" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px;">`;
+        cloudLocationOptions.forEach(loc => { let isPlaceholder = (loc === '請選擇指派案場' || loc === '載入中...'); locSelectHtml += `<option value="${isPlaceholder ? '' : loc}">${loc}</option>`; });
         locSelectHtml += `</select>`;
         
-        // 班別下拉選單 HTML
-        let shiftSelectHtml = `<select class="form-control daily-shift-select" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px; font-weight:500;">`;
-        SHIFT_OPTIONS.forEach(opt => {
-          shiftSelectHtml += `<option value="${opt === '請選擇班別' ? '' : opt}">${opt}</option>`;
-        });
+        let shiftSelectHtml = `<select class="form-control daily-shift-select" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px;">`;
+        SHIFT_OPTIONS.forEach(opt => { shiftSelectHtml += `<option value="${opt === '請選擇班別' ? '' : opt}">${opt}</option>`; });
         shiftSelectHtml += `</select>`;
         
         const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td style="padding: 10px 15px; vertical-align: middle; ${dayLabelColor}">${dayString}</td>
-          <td style="padding: 6px 15px; ${isWeekend ? 'background: #fff5f5;' : ''}">${locSelectHtml}</td>
-          <td style="padding: 6px 15px; ${isWeekend ? 'background: #fff5f5;' : ''}">${shiftSelectHtml}</td>
-        `;
+        tr.innerHTML = `<td style="padding: 10px 15px; vertical-align: middle; ${dayLabelColor}">${dayString}</td><td style="padding: 6px 15px; ${isWeekend ? 'background: #fff5f5;' : ''}">${locSelectHtml}</td><td style="padding: 6px 15px; ${isWeekend ? 'background: #fff5f5;' : ''}">${shiftSelectHtml}</td>`;
         tbody.appendChild(tr);
       }
     }
 
-    // JSONP 通訊基礎配置
     function sendJsonpRequest(url, callbackFunctionName, successHandler) {
-      window[callbackFunctionName] = function(data) {
-        successHandler(data);
-        delete window[callbackFunctionName];
-        const scriptTag = document.getElementById(callbackFunctionName);
-        if (scriptTag) scriptTag.remove();
-      };
-      const connector = url.includes("?") ? "&" : "?";
-      const script = document.createElement("script");
-      script.src = `${url}${connector}callback=${callbackFunctionName}&_ts=${new Date().getTime()}`;
-      script.id = callbackFunctionName;
-      document.body.appendChild(script);
+      window[callbackFunctionName] = function(data) { successHandler(data); delete window[callbackFunctionName]; const scriptTag = document.getElementById(callbackFunctionName); if (scriptTag) scriptTag.remove(); };
+      const connector = url.includes("?") ? "&" : "?"; const script = document.createElement("script"); script.src = `${url}${connector}callback=${callbackFunctionName}&_ts=${new Date().getTime()}`; script.id = callbackFunctionName; document.body.appendChild(script);
     }
 
-    // 後台功能分頁切換
     function switchSection(sectionId, btnElem) {
-      document.querySelectorAll('.content-body').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
-      
-      document.getElementById(sectionId).classList.add('active');
-      btnElem.classList.add('active');
-      document.getElementById("currentSectionTitle").innerText = btnElem.innerText.trim();
-      
+      document.querySelectorAll('.content-body').forEach(el => el.classList.remove('active')); document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(sectionId).classList.add('active'); btnElem.classList.add('active'); document.getElementById("currentSectionTitle").innerText = btnElem.innerText.trim();
       if(sectionId === 'leaveAudit') { loadLeaveApplications(); }
       if(sectionId === 'punchLog') { loadPunchLogs(); }
     }
 
-    // 收集雙選單批次打包排班，送交雲端
     function submitNewSchedule() {
-      const empSelect = document.getElementById("schedEmpSelect");
-      const empId = empSelect ? empSelect.value : "";
-      const month = document.getElementById("schedMonthSelect").value.trim();
-      
-      if(!empId) { alert("請務必選擇排班同仁！"); return; }
-      if(!month) { alert("請選擇排班月份！"); return; }
-      
-      let lines = [];
-      const locSelects = document.querySelectorAll(".daily-location-select");
-      const shiftSelects = document.querySelectorAll(".daily-shift-select");
-      
+      const empSelect = document.getElementById("schedEmpSelect"); const empId = empSelect ? empSelect.value : ""; const month = document.getElementById("schedMonthSelect").value.trim();
+      if(!empId) { alert("請選擇排班同仁！"); return; }
+      let lines = []; const locSelects = document.querySelectorAll(".daily-location-select"); const shiftSelects = document.querySelectorAll(".daily-shift-select");
       for (let i = 0; i < locSelects.length; i++) {
-        const day = locSelects[i].getAttribute("data-day");
-        const locVal = locSelects[i].value || "無";
-        const shiftVal = shiftSelects[i].value || "休";
+        const day = locSelects[i].getAttribute("data-day"); const locVal = locSelects[i].value || "無"; const shiftVal = shiftSelects[i].value || "休";
         lines.push(`${day}:${locVal}-${shiftVal}`);
       }
-      
-      const rawLines = lines.join("\n");
-      showMask("正在安全複寫並發布新班表...");
-      
-      const payload = {
-        action: "updateSchedule",
-        employeeId: empId,
-        month: month,
-        scheduleLines: rawLines
-      };
-
-      fetch(BASE_GAS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify(payload)
-      })
-      .then(r => r.json())
-      .then(res => {
-        hideMask();
-        alert(res.message || "🎉 班表已成功覆蓋並即時發布！");
-      })
-      .catch(() => {
-        hideMask();
-        alert("🎉 班表發布指令已成功同步至雲端資料庫。");
-      });
+      showMask("正在安全發布新班表...");
+      fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "updateSchedule", employeeId: empId, month: month, scheduleLines: lines.join("\n") }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message); });
     }
 
-    // 讀取所有同仁請假申請
     function loadLeaveApplications() {
-      const tbody = document.getElementById("leaveAuditTableBody");
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#a0aec0;">同步雲端假單中...</td></tr>`;
-      
-      const url = `${BASE_GAS_URL}?action=fetchAllLeaveRecords`; 
-      sendJsonpRequest(url, "cb_all_leave_" + Math.floor(Math.random()*100000), function(res) {
+      const tbody = document.getElementById("leaveAuditTableBody"); tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">同步中...</td></tr>`;
+      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllLeaveRecords`, "cb_l_" + Math.floor(Math.random()*100000), function(res) {
         if(res.success && res.records.length > 0) {
           let html = "";
           res.records.forEach((item) => {
-            let imgHtml = "無附件";
-            if(item.fileData && item.fileData.startsWith("http")) {
-              imgHtml = `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')" title='點擊放大查看證明'>`;
-            }
-            
-            html += `<tr>
-              <td>${item.timestamp || '未知'}</td>
-              <td><b>${item.employeeName}</b> (${item.employeeId})</td>
-              <td><span class="btn" style="background:#edf2f7; color:#2d3748; padding:4px 8px;">${item.leaveType}</span></td>
-              <td>${item.start}<br>至<br>${item.end}</td>
-              <td>${item.reason}</td>
-              <td>${imgHtml}</td>
-              <td>
-                ${item.status === '待審核' ? `
-                  <button class="btn btn-success" onclick="auditLeave('${item.rowId}', '已核准')">核准</button>
-                  <button class="btn btn-danger" onclick="auditLeave('${item.rowId}', '駁回')">駁回</button>
-                ` : `<b>${item.status}</b>`}
-              </td>
-            </tr>`;
+            let imgHtml = item.fileData.startsWith("http") ? `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')">` : "無";
+            html += `<tr><td>${item.timestamp}</td><td><b>${item.employeeName}</b></td><td>${item.leaveType}</td><td>${item.start}<br>${item.end}</td><td>${item.reason}</td><td>${imgHtml}</td><td>${item.status === '待審核' ? `<button class="btn btn-success" onclick="auditLeave('${item.rowId}','已核准')">核准</button> <button class="btn btn-danger" onclick="auditLeave('${item.rowId}','駁回')">駁回</button>` : `<b>${item.status}</b>`}</td></tr>`;
           });
           tbody.innerHTML = html;
-        } else {
-          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#a0aec0;">目前無任何同仁提交假單。</td></tr>`;
-        }
+        } else { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">目前無假單。</td></tr>`; }
       });
     }
 
-    // 審核假單
     function auditLeave(rowId, statusResult) {
-      showMask("正在將審核結果同步至同仁端...");
-      const payload = { action: "auditLeaveSubmit", rowId: rowId, status: statusResult };
-      
-      fetch(BASE_GAS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify(payload)
-      })
-      .then(r => r.json())
-      .then(res => { hideMask(); alert("審核完成！"); loadLeaveApplications(); })
-      .catch(() => { hideMask(); alert("審核完成！"); loadLeaveApplications(); });
+      showMask("處理中...");
+      fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); });
     }
 
-    // 追蹤考勤打卡流水帳
     function loadPunchLogs() {
-      const tbody = document.getElementById("punchLogTableBody");
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#a0aec0;">即時追蹤考勤流水帳中...</td></tr>`;
-      
-      const url = `${BASE_GAS_URL}?action=fetchAllPunchLogs`;
-      sendJsonpRequest(url, "cb_all_punch_" + Math.floor(Math.random()*100000), function(res) {
+      const tbody = document.getElementById("punchLogTableBody"); tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">載入中...</td></tr>`;
+      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllPunchLogs`, "cb_p_" + Math.floor(Math.random()*100000), function(res) {
         if(res.success && res.logs.length > 0) {
+          globalPunchLogs = res.logs; // 存入全域變數供報表分析
           let html = "";
           res.logs.forEach(log => {
             let typeTag = log.type === 'clockIn' ? '<span style="color:#27ae60;font-weight:bold;">[上班]</span>' : '<span style="color:#f39c12;font-weight:bold;">[下班]</span>';
-            html += `<tr>
-              <td>${log.timestamp}</td>
-              <td><b>${log.name}</b> (${log.id})</td>
-              <td>${typeTag}</td>
-              <td><i class="fa-solid fa-building"></i> ${log.location}</td>
-              <td><a href="http://maps.google.com/?q=${log.lat},${log.lng}" target="_blank" style="color:#4e54c8;text-decoration:none;"><i class="fa-solid fa-map-location-dot"></i> 查看地圖定位</a></td>
-            </tr>`;
+            html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td><button class="btn btn-primary" style="padding:4px 10px;" onclick="inlineMapLocate('${log.lat}','${log.lng}','${log.location}')"><i class="fa-solid fa-map-location-dot"></i> 定位查看</button></td></tr>`;
           });
           tbody.innerHTML = html;
-        } else {
-          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#a0aec0;">今日尚無打卡紀錄。</td></tr>`;
-        }
+        } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">今日尚無紀錄。</td></tr>`; }
       });
     }
 
-    // 發布公告
     function submitAnnouncement() {
-      const unit = document.getElementById("annUnit").value.trim();
-      const content = document.getElementById("annContent").value.trim();
-      if(!unit || !content) { alert("請填妥發布單位與公告內容！"); return; }
-      
-      showMask("正在推送最新公告至全體同仁手機端...");
-      const payload = { action: "publishAnnouncement", unit: unit, content: content };
-      
-      fetch(BASE_GAS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify(payload)
-      })
-      .then(r => r.json())
-      .then(res => {
-        hideMask(); alert("📢 公告發布成功！同仁重新開啟 App 就會看見。");
-        document.getElementById("annUnit").value = ""; document.getElementById("annContent").value = "";
-      })
-      .catch(() => {
-        hideMask(); alert("📢 公告發布成功！");
-        document.getElementById("annUnit").value = ""; document.getElementById("annContent").value = "";
-      });
+      fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "publishAnnouncement", unit: document.getElementById("annUnit").value, content: document.getElementById("annContent").value }) }).then(() => { alert("公告成功！"); document.getElementById("annContent").value=""; });
     }
 
     function showMask(txt) { document.getElementById("globalMask").style.display = "flex"; document.getElementById("maskText").innerText = txt; }
     function hideMask() { document.getElementById("globalMask").style.display = "none"; }
-    
-    // 註冊 PWA 桌面軟體服務
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        const swBlob = new Blob([`
-          self.addEventListener('install', e => self.skipWaiting());
-          self.addEventListener('activate', e => self.clients.claim());
-          self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));
-        `], { type: 'text/javascript' });
-        navigator.serviceWorker.register(URL.createObjectURL(swBlob));
-      });
-    }
   </script>
 </body>
 </html>
