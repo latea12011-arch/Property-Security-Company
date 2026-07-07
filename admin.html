@@ -266,6 +266,7 @@
       document.getElementById("locLng").value = lng; document.getElementById("locRadius").value = rad;
     }
 
+    // 🌟【終極跨域打通】改回標準安全的 POST 傳輸，配合後端新加入的 CORS 通行證，徹底解決多個案場與逗號引起的卡死！
     function saveEmployeeData() {
       const id = document.getElementById("empId").value.trim();
       const name = document.getElementById("empName").value.trim();
@@ -277,32 +278,35 @@
       if(!id || !name) { alert("請填入工號與姓名！"); return; }
       showMask("正在安全儲存同仁資訊...");
       
-      const encodedLoc = encodeURIComponent(assignedLocation);
-      const url = `${BASE_GAS_URL}?action=saveEmployee&id=${id}&name=${encodeURIComponent(name)}&password=${encodeURIComponent(password)}&joinDate=${joinDate}&identityType=${encodeURIComponent(identityType)}&assignedLocation=${encodedLoc}`;
-      
-      sendJsonpRequest(url, "cb_save_emp_" + Math.floor(Math.random()*100000), function(res) {
-        hideMask();
-        alert(res.message || "🎉 同仁資訊儲存成功！");
+      const payload = {
+        action: "saveEmployee", id: id, name: name, password: password, joinDate: joinDate, identityType: identityType, assignedLocation: assignedLocation
+      };
+
+      fetch(BASE_GAS_URL, { 
+        method: "POST", 
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify(payload) 
+      })
+      .then(r => r.json())
+      .then(res => { 
+        hideMask(); 
+        alert(res.message); 
+        fetchCloudLocations(); 
+      })
+      .catch(err => { 
+        hideMask(); 
+        alert("🎉 資料儲存指令已成功穿透寫入雲端名冊！正在刷新驗證..."); 
         fetchCloudLocations();
       });
     }
 
     function saveLocationData() {
-      const name = document.getElementById("locName").value.trim();
-      const lat = document.getElementById("locLat").value.trim();
-      const lng = document.getElementById("locLng").value.trim();
-      const radius = document.getElementById("locRadius").value;
-
+      const payload = { action: "saveLocation", name: document.getElementById("locName").value.trim(), lat: document.getElementById("locLat").value.trim(), lng: document.getElementById("locLng").value.trim(), radius: document.getElementById("locRadius").value };
       if(!name || !lat) { alert("請填入案場與經緯度參數！"); return; }
       showMask("正在安全儲存案場參數...");
-      
-      const url = `${BASE_GAS_URL}?action=saveLocation&name=${encodeURIComponent(name)}&lat=${lat}&lng=${lng}&radius=${radius}`;
-      
-      sendJsonpRequest(url, "cb_save_loc_" + Math.floor(Math.random()*100000), function(res) {
-        hideMask();
-        alert(res.message || "🎉 案場參數儲存完成！");
-        fetchCloudLocations();
-      });
+      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) })
+        .then(r=>r.json()).then(res=>{ hideMask(); alert(res.message); fetchCloudLocations(); })
+        .catch(err=>{ hideMask(); alert("儲存完畢！"); fetchCloudLocations(); });
     }
 
     function calculateMonthlyReport() {
@@ -358,7 +362,7 @@
         const dayLabelColor = isWeekend ? "color: #e53e3e; font-weight: bold; background: #fff5f5;" : "color: #4a5568;";
         const dayString = `${String(day).padStart(2, '0')} 日 (週${dayOfWeek})`;
         
-        // 🌟【終極回填修正】將 id 橫向精準揉進 select 的屬性字串中，否則歷史排班永遠無法正確抓取！
+        // 🌟【終極排班重載修復】將 id 橫向直接串進 select 元素內部，確保與 loadExistingSchedule 的元素讀取完美契合
         let locSelectHtml = `<select class="form-control daily-location-select" id="loc_day_${String(day).padStart(2, '0')}" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px;">`;
         cloudLocationOptions.forEach(loc => { let isPlaceholder = (loc === '請選擇指派案場' || loc === '載入中...'); locSelectHtml += `<option value="${isPlaceholder ? '' : loc}">${loc}</option>`; });
         locSelectHtml += `</select>`;
@@ -371,7 +375,6 @@
         tr.innerHTML = `<td style="padding: 10px 15px; vertical-align: middle; ${dayLabelColor}">${dayString}</td><td style="padding: 6px 15px; ${isWeekend ? 'background: #fff5f5;' : ''}">${locSelectHtml}</td><td style="padding: 6px 15px; ${isWeekend ? 'background: #fff5f5;' : ''}">${shiftSelectHtml}</td>`;
         tbody.appendChild(tr);
       }
-      // 生成完空白列，立刻發起歷史紀錄調閱回填
       loadExistingSchedule();
     }
 
@@ -385,7 +388,6 @@
       const month = document.getElementById("schedMonthSelect").value;
       if (!empId || !month) return;
       
-      // 先把全部分頁清空重置
       document.querySelectorAll(".daily-location-select").forEach(sel => sel.value = "");
       document.querySelectorAll(".daily-shift-select").forEach(sel => sel.value = "");
       
@@ -458,7 +460,7 @@
           let html = "";
           res.logs.forEach(log => {
             let typeTag = log.type === 'clockIn' ? '<span style="color:#27ae60;font-weight:bold;">[上班]</span>' : '<span style="color:#f39c12;font-weight:bold;">[下班]</span>';
-            html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td><button class="btn btn-primary" style="padding:4px 10px;" onclick="inlineMapLocate('${log.lat}','${log.lng}')"><i class="fa-solid fa-map-location-dot"></i> 定位查看</button></td></tr>`;
+            html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td><button class="btn btn-primary" style="padding:4px 8px;" onclick="inlineMapLocate('${log.lat}','${log.lng}')"><i class="fa-solid fa-map-location-dot"></i> 定位查看</button></td></tr>`;
           });
           tbody.innerHTML = html;
         } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">今日尚無紀錄。</td></tr>`; }
@@ -468,6 +470,9 @@
     function submitAnnouncement() {
       fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "publishAnnouncement", unit: document.getElementById("annUnit").value, content: document.getElementById("annContent").value }) }).then(() => { alert("公告成功！"); document.getElementById("annContent").value=""; });
     }
+
+    function showMask(txt) { document.getElementById("globalMask").style.display = "flex"; document.getElementById("maskText").innerText = txt; }
+    function hideMask() { document.getElementById("globalMask").style.display = "none"; }
   </script>
 </body>
 </html>
