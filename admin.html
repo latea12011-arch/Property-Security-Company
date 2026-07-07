@@ -543,6 +543,7 @@
       if(sectionId === 'punchLog') { loadPunchLogs(); }
     }
 
+    // 班表覆蓋發布
     function submitNewSchedule() {
       const empSelect = document.getElementById("schedEmpSelect"); const empId = empSelect ? empSelect.value : ""; const month = document.getElementById("schedMonthSelect").value.trim();
       if(!empId) { alert("請選擇排班同仁！"); return; }
@@ -595,6 +596,9 @@
     function submitAnnouncement() {
       fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "publishAnnouncement", unit: document.getElementById("annUnit").value, content: document.getElementById("annContent").value }) }).then(() => { alert("公告成功！"); document.getElementById("annContent").value=""; });
     }
+
+    function showMask(txt) { document.getElementById("globalMask").style.display = "flex"; document.getElementById("maskText").innerText = txt; }
+    function hideMask() { document.getElementById("globalMask").style.display = "none"; }
   </script>
 </body>
 </html>
