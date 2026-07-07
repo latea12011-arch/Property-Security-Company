@@ -104,8 +104,10 @@
         <div style="display: flex; gap: 15px; max-width: 650px; flex-direction: column; margin-bottom: 20px;">
           <div style="display: flex; gap: 15px;">
             <div style="flex: 1;">
-              <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">員工工號：</label>
-              <input type="text" id="schedEmpId" class="form-control" placeholder="例如：00001" style="margin-bottom:0;">
+              <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">選擇同仁 (工號/姓名)：</label>
+              <select id="schedEmpSelect" class="form-control" style="margin-bottom:0; font-weight: 500;">
+                <option value="">載入同仁清單中...</option>
+              </select>
             </div>
             <div style="flex: 1;">
               <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">排班月份：</label>
@@ -115,7 +117,7 @@
         </div>
 
         <div style="border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; max-height: 450px; overflow-y: auto; margin-bottom: 20px; max-width: 650px;">
-          <table style="margin-top: 0;">
+          <table style="margin-top: 0; width: 100%; border-collapse: collapse;">
             <thead>
               <tr>
                 <th style="width: 130px; padding: 10px 15px; background: #edf2f7; position: sticky; top: 0; z-index: 10;">日期 / 星期</th>
@@ -189,40 +191,55 @@
   </div>
 
   <script>
-    // 🌟 這裡請換成您在 Google Apps Script 上部署完產生的最新 exec 網址
+    // 🌟 這裡更換為您的 Google Apps Script「網頁應用程式網址」
     const BASE_GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
 
-    // 🌟 固定常用的排班班別（休假或不需排案場的選項也都放在這）
+    // 固定常用的排班班別
     const SHIFT_OPTIONS = ["請選擇班別", "日班", "夜班", "機動班", "特勤班", "輪休", "特休", "事假", "病假"];
 
-    // 🌟 預設的動態案場變數（系統啟動時會立刻向 Google Sheets 自動抓取最新清單覆蓋這裡）
+    // 預設的雲端案場選單變數
     let cloudLocationOptions = ["載入雲端案場中..."];
 
-    // 當網頁載入完畢，立刻先向雲端抓取最新的案場清單，再初始化日曆選單
+    // 網頁初始化
     document.addEventListener("DOMContentLoaded", function() {
       fetchCloudLocations();
     });
 
-    // ─── 核心功能：向 Google Sheets 即時抓取最新案場清單 ───
+    // 向雲端同步最新案場與同仁清單
     function fetchCloudLocations() {
-      showMask("正在從雲端同步最新案場清單...");
+      showMask("正在從雲端同步最新案場與同仁名冊...");
       const url = `${BASE_GAS_URL}?action=fetchLocationsList`;
       
       sendJsonpRequest(url, "cb_get_locations_" + Math.floor(Math.random()*100000), function(res) {
         hideMask();
+        
+        // 1. 解析雲端案場
         if(res.success && res.locations && res.locations.length > 0) {
-          // 成功抓到雲端最新案場表格清單
           cloudLocationOptions = ["請選擇指派案場", "不需指派(如休假)"].concat(res.locations);
         } else {
-          // 防呆備用方案（如果沒抓到或網路異常）
-          cloudLocationOptions = ["請選擇指派案場", "不需指派(如休假)", "花園廣場", "站前大樓", "特勤總部"];
+          cloudLocationOptions = ["請選擇指派案場", "不需指派(如休假)", "花園廣場", "站前大樓"];
         }
-        // 案場選單準備好後，開始渲染月份與日曆選單
+        
+        // 2. 解析員工名冊至下拉選單
+        const empSelect = document.getElementById("schedEmpSelect");
+        if (empSelect && res.employees && res.employees.length > 0) {
+          empSelect.innerHTML = `<option value="">-- 請選擇排班同仁 --</option>`;
+          res.employees.forEach(function(emp) {
+            let opt = document.createElement("option");
+            opt.value = emp.id;
+            opt.innerText = `${emp.id} - ${emp.name}`;
+            empSelect.appendChild(opt);
+          });
+        } else if (empSelect) {
+          empSelect.innerHTML = `<option value="">無法同步員工資料</option>`;
+        }
+        
+        // 初始化月份選單與排班表格
         initAdminMonthSelector();
       });
     }
 
-    // ─── 核心功能：動態生成前後三個月選單 ───
+    // 初始化月份下拉選單 (前後三個月)
     function initAdminMonthSelector() {
       const select = document.getElementById("schedMonthSelect");
       if (!select) return;
@@ -241,7 +258,7 @@
       generateCalendarRows();
     }
 
-    // ─── 核心功能：依據選取月份與最新雲端案場，動態渲染雙選單表格 ───
+    // 自動依據選取月份動態渲染表格
     function generateCalendarRows() {
       const monthVal = document.getElementById("schedMonthSelect").value; 
       const tbody = document.getElementById("calendarRowsBody");
@@ -265,7 +282,7 @@
         const dayLabelColor = isWeekend ? "color: #e53e3e; font-weight: bold; background: #fff5f5;" : "color: #4a5568;";
         const dayString = `${String(day).padStart(2, '0')} 日 (週${dayOfWeek})`;
         
-        // 1. 案場選單 (Cloud Dynamic)
+        // 案場下拉選單 HTML
         let locSelectHtml = `<select class="form-control daily-location-select" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px; font-weight:500;">`;
         cloudLocationOptions.forEach(loc => {
           let isPlaceholder = (loc === '請選擇指派案場' || loc === '載入雲端案場中...');
@@ -273,7 +290,7 @@
         });
         locSelectHtml += `</select>`;
         
-        // 2. 班別選單 (Fixed)
+        // 班別下拉選單 HTML
         let shiftSelectHtml = `<select class="form-control daily-shift-select" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px; font-weight:500;">`;
         SHIFT_OPTIONS.forEach(opt => {
           shiftSelectHtml += `<option value="${opt === '請選擇班別' ? '' : opt}">${opt}</option>`;
@@ -290,7 +307,7 @@
       }
     }
 
-    // JSONP 跨網域通訊封裝
+    // JSONP 通訊基礎配置
     function sendJsonpRequest(url, callbackFunctionName, successHandler) {
       window[callbackFunctionName] = function(data) {
         successHandler(data);
@@ -305,7 +322,7 @@
       document.body.appendChild(script);
     }
 
-    // 切換後台選單
+    // 後台功能分頁切換
     function switchSection(sectionId, btnElem) {
       document.querySelectorAll('.content-body').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
@@ -318,12 +335,14 @@
       if(sectionId === 'punchLog') { loadPunchLogs(); }
     }
 
-    // ─── 排班儲存發布：同時打包「案場」與「班別」格式送至雲端 ───
+    // 收集雙選單批次打包排班，送交雲端
     function submitNewSchedule() {
-      const empId = document.getElementById("schedEmpId").value.trim();
+      const empSelect = document.getElementById("schedEmpSelect");
+      const empId = empSelect ? empSelect.value : "";
       const month = document.getElementById("schedMonthSelect").value.trim();
       
-      if(!empId || !month) { alert("請務必填寫員工工號！"); return; }
+      if(!empId) { alert("請務必選擇排班同仁！"); return; }
+      if(!month) { alert("請選擇排班月份！"); return; }
       
       let lines = [];
       const locSelects = document.querySelectorAll(".daily-location-select");
@@ -333,8 +352,6 @@
         const day = locSelects[i].getAttribute("data-day");
         const locVal = locSelects[i].value || "無";
         const shiftVal = shiftSelects[i].value || "休";
-        
-        // 格式完美打包： "01:花園廣場-日班" 或者是 "02:不需指派(如休假)-輪休"
         lines.push(`${day}:${locVal}-${shiftVal}`);
       }
       
@@ -364,7 +381,7 @@
       });
     }
 
-    // ─── 假單審核載入 ───
+    // 讀取所有同仁請假申請
     function loadLeaveApplications() {
       const tbody = document.getElementById("leaveAuditTableBody");
       tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#a0aec0;">同步雲端假單中...</td></tr>`;
@@ -375,7 +392,7 @@
           let html = "";
           res.records.forEach((item) => {
             let imgHtml = "無附件";
-            if(item.fileData && item.fileData.startsWith("data:image")) {
+            if(item.fileData && item.fileData.startsWith("http")) {
               imgHtml = `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')" title='點擊放大查看證明'>`;
             }
             
@@ -401,6 +418,7 @@
       });
     }
 
+    // 審核假單
     function auditLeave(rowId, statusResult) {
       showMask("正在將審核結果同步至同仁端...");
       const payload = { action: "auditLeaveSubmit", rowId: rowId, status: statusResult };
@@ -415,7 +433,7 @@
       .catch(() => { hideMask(); alert("審核完成！"); loadLeaveApplications(); });
     }
 
-    // ─── 打卡監控流水帳 ───
+    // 追蹤考勤打卡流水帳
     function loadPunchLogs() {
       const tbody = document.getElementById("punchLogTableBody");
       tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#a0aec0;">即時追蹤考勤流水帳中...</td></tr>`;
@@ -431,7 +449,7 @@
               <td><b>${log.name}</b> (${log.id})</td>
               <td>${typeTag}</td>
               <td><i class="fa-solid fa-building"></i> ${log.location}</td>
-              <td><a href="http://googleusercontent.com/maps.google.com/?q=${log.lat},${log.lng}" target="_blank" style="color:#4e54c8;text-decoration:none;"><i class="fa-solid fa-map-location-dot"></i> 查看地圖定位</a></td>
+              <td><a href="http://maps.google.com/?q=${log.lat},${log.lng}" target="_blank" style="color:#4e54c8;text-decoration:none;"><i class="fa-solid fa-map-location-dot"></i> 查看地圖定位</a></td>
             </tr>`;
           });
           tbody.innerHTML = html;
@@ -441,7 +459,7 @@
       });
     }
 
-    // ─── 公告發布 ───
+    // 發布公告
     function submitAnnouncement() {
       const unit = document.getElementById("annUnit").value.trim();
       const content = document.getElementById("annContent").value.trim();
