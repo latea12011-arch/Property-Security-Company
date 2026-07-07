@@ -33,7 +33,7 @@
     body { background-color: #f7fafc; color: #2d3748; display: flex; height: 100vh; overflow: hidden; }
     
     /* 左側導覽列 */
-    .sidebar { width: 260px; background: #2d3748; color: white; display: flex; flex-direction: column; padding: 20px 0; }
+    .sidebar { width: 260px; background: #2d3748; color: white; display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0; }
     .sidebar h2 { text-align: center; font-size: 18px; margin-bottom: 30px; color: #edf2f7; letter-spacing: 1px; }
     .menu-btn { width: 100%; padding: 15px 25px; border: none; background: none; color: #a0aec0; text-align: left; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; }
     .menu-btn i { width: 20px; text-align: center; }
@@ -41,7 +41,7 @@
     
     /* 右側主內容區 */
     .main-content { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
-    .top-bar { height: 60px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; font-weight: bold; }
+    .top-bar { height: 60px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; font-weight: bold; flex-shrink: 0; }
     .content-body { flex: 1; padding: 30px; overflow-y: auto; display: none; }
     .content-body.active { display: block; }
     
@@ -53,16 +53,17 @@
     td { padding: 12px; font-size: 14px; border-bottom: 1px solid #e2e8f0; }
     
     /* 按鈕與表單 */
-    .btn { padding: 8px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; }
+    .btn { padding: 8px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; text-align: center; text-decoration: none; display: inline-block; }
     .btn-primary { background: #4e54c8; color: white; }
     .btn-success { background: #27ae60; color: white; }
     .btn-danger { background: #e53e3e; color: white; }
-    .form-control { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; margin-bottom: 12px; }
+    .form-control { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; margin-bottom: 12px; outline: none; background: #f8fafc; }
+    .form-control:focus { border-color: #4e54c8; background: #fff; }
     
     /* 審核圖片縮圖 */
     .proof-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #cbd5e0; }
     
-    /* 遮罩 */
+    /* 全域載入遮罩 */
     .loading-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
     .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #4e54c8; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -100,21 +101,35 @@
     <div class="content-body" id="scheduleMgmt">
       <div class="card">
         <h3>發布 / 覆蓋員工班表</h3>
-        <div style="display: flex; gap: 15px; max-width: 600px; flex-direction: column;">
-          <div>
-            <label style="font-size:13px; font-weight:bold;">員工工號：</label>
-            <input type="text" id="schedEmpId" class="form-control" placeholder="例如：00001">
+        <div style="display: flex; gap: 15px; max-width: 600px; flex-direction: column; margin-bottom: 20px;">
+          <div style="display: flex; gap: 15px;">
+            <div style="flex: 1;">
+              <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">員工工號：</label>
+              <input type="text" id="schedEmpId" class="form-control" placeholder="例如：00001" style="margin-bottom:0;">
+            </div>
+            <div style="flex: 1;">
+              <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">排班月份：</label>
+              <select id="schedMonthSelect" class="form-control" style="margin-bottom:0;" onchange="generateCalendarRows()"></select>
+            </div>
           </div>
-          <div>
-            <label style="font-size:13px; font-weight:bold;">排班月份：</label>
-            <input type="text" id="schedMonth" class="form-control" placeholder="例如：2026年07月">
-          </div>
-          <div>
-            <label style="font-size:13px; font-weight:bold;">排班資料 (日期:班別，每行一筆)：</label>
-            <textarea id="schedData" class="form-control" rows="8" placeholder="01:日班&#10;02:日班&#10;03:夜班&#10;04:輪休"></textarea>
-          </div>
-          <button class="btn btn-primary" style="padding:12px;" onclick="submitNewSchedule()">確認儲存並發布班表</button>
         </div>
+
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; max-height: 450px; overflow-y: auto; margin-bottom: 20px; max-width: 600px;">
+          <table style="margin-top: 0;">
+            <thead>
+              <tr>
+                <th style="width: 150px; padding: 10px 15px; background: #edf2f7; position: sticky; top: 0; z-index: 10;">日期 / 星期</th>
+                <th style="padding: 10px 15px; background: #edf2f7; position: sticky; top: 0; z-index: 10;">指派班別 / 案場名稱</th>
+              </tr>
+            </thead>
+            <tbody id="calendarRowsBody">
+              </tbody>
+          </table>
+        </div>
+
+        <button class="btn btn-primary" style="padding:14px; width: 100%; max-width: 600px; font-size: 15px;" onclick="submitNewSchedule()">
+          <i class="fa-solid fa-cloud-arrow-up"></i> 確認儲存並發布班表
+        </button>
       </div>
     </div>
 
@@ -173,9 +188,82 @@
   </div>
 
   <script>
-    // 🌟 請換成您後台對應的 Google Apps Script 部署網址
+    // 🌟 這裡請務必更換為您在 Google Apps Script 上部署完產生的最新 exec 網址
     const BASE_GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
 
+    // 🌟 定義後台排班選單中常用的班別選項，您可以依照需求自由增減
+    const SHIFT_OPTIONS = ["請選擇班別", "花園早班", "花園夜班", "特勤早班", "特勤夜班", "機動早班", "機動夜班", "輪休", "特休", "事假", "病假"];
+
+    // 當網頁載入完畢，立刻啟動初始化月份下拉選單
+    document.addEventListener("DOMContentLoaded", function() {
+      initAdminMonthSelector();
+    });
+
+    // ─── 核心功能：動態生成前後三個月選單 (包含當月、前3、後3，共7個月) ───
+    function initAdminMonthSelector() {
+      const select = document.getElementById("schedMonthSelect");
+      if (!select) return;
+      select.innerHTML = "";
+      
+      const now = new Date();
+      // 迴圈產生前三個月 (-3) 到 後三個月 (+3) 
+      for (let i = -3; i <= 3; i++) {
+        let d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+        let mStr = d.getFullYear() + "年" + String(d.getMonth() + 1).padStart(2, '0') + "月";
+        let opt = document.createElement("option");
+        opt.value = mStr;
+        opt.innerText = mStr;
+        if (i === 0) opt.selected = true; // 預設停在當前月份
+        select.appendChild(opt);
+      }
+      // 生成月份後，緊接著拉出該月份的日曆表格
+      generateCalendarRows();
+    }
+
+    // ─── 核心功能：依據選取月份自動算出天數與星期，生成下拉選單表格 ───
+    function generateCalendarRows() {
+      const monthVal = document.getElementById("schedMonthSelect").value; 
+      const tbody = document.getElementById("calendarRowsBody");
+      if (!tbody || !monthVal) return;
+      
+      tbody.innerHTML = "";
+      
+      // 解析年份與月份
+      const matches = monthVal.match(/(\d+)年(\d+)月/);
+      if (!matches) return;
+      const year = parseInt(matches[1]);
+      const month = parseInt(matches[2]); 
+      
+      // 算出當月總天數
+      const totalDays = new Date(year, month, 0).getDate();
+      const weekDayNames = ["日", "一", "二", "三", "四", "五", "六"];
+      
+      for (let day = 1; day <= totalDays; day++) {
+        const dateObj = new Date(year, month - 1, day);
+        const dayOfWeek = weekDayNames[dateObj.getDay()]; 
+        const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6; // 判斷是否為週六日
+        
+        // 週六日用紅色高亮方便後勤排班人員看清楚
+        const dayLabelColor = isWeekend ? "color: #e53e3e; font-weight: bold; background: #fff5f5;" : "color: #4a5568;";
+        const dayString = `${String(day).padStart(2, '0')} 日 (週${dayOfWeek})`;
+        
+        // 組合班別下拉選單
+        let selectHtml = `<select class="form-control daily-shift-select" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px; font-weight:500;">`;
+        SHIFT_OPTIONS.forEach(opt => {
+          selectHtml += `<option value="${opt === '請選擇班別' ? '' : opt}">${opt}</option>`;
+        });
+        selectHtml += `</select>`;
+        
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td style="padding: 10px 15px; vertical-align: middle; ${dayLabelColor}">${dayString}</td>
+          <td style="padding: 6px 15px; ${isWeekend ? 'background: #fff5f5;' : ''}">${selectHtml}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    // JSONP 跨網域封裝指令
     function sendJsonpRequest(url, callbackFunctionName, successHandler) {
       window[callbackFunctionName] = function(data) {
         successHandler(data);
@@ -190,6 +278,7 @@
       document.body.appendChild(script);
     }
 
+    // 切換後台選單
     function switchSection(sectionId, btnElem) {
       document.querySelectorAll('.content-body').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
@@ -202,14 +291,27 @@
       if(sectionId === 'punchLog') { loadPunchLogs(); }
     }
 
-    // ─── 班表調整功能 ───
+    // ─── 排班儲存發布：自動收集所有下拉選單的結果 ───
     function submitNewSchedule() {
       const empId = document.getElementById("schedEmpId").value.trim();
-      const month = document.getElementById("schedMonth").value.trim();
-      const rawLines = document.getElementById("schedData").value.trim();
+      const month = document.getElementById("schedMonthSelect").value.trim();
       
-      if(!empId || !month || !rawLines) { alert("請完整填寫工號、月份與排班內文！"); return; }
+      if(!empId || !month) { alert("請務必填寫員工工號！"); return; }
       
+      let lines = [];
+      const selects = document.querySelectorAll(".daily-shift-select");
+      
+      selects.forEach(sel => {
+        const day = sel.getAttribute("data-day");
+        const val = sel.value;
+        if(val) {
+          lines.push(`${day}:${val}`);
+        } else {
+          lines.push(`${day}:休`); // 如果下拉選單留空「請選擇班別」，系統預設判定為休
+        }
+      });
+      
+      const rawLines = lines.join("\n");
       showMask("正在安全複寫並發布新班表...");
       
       const payload = {
@@ -231,21 +333,20 @@
       })
       .catch(() => {
         hideMask();
-        alert("🎉 班表發布指令已成功送達。");
+        alert("🎉 班表發布指令已成功同步。");
       });
     }
 
-    // ─── 請假單審核載入與處理 ───
+    // ─── 假單審核載入 ───
     function loadLeaveApplications() {
       const tbody = document.getElementById("leaveAuditTableBody");
       tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#a0aec0;">同步雲端假單中...</td></tr>`;
       
-      const url = `${BASE_GAS_URL}?action=fetchAllLeaveRecords`; // 後台專用抓取全部假單
+      const url = `${BASE_GAS_URL}?action=fetchAllLeaveRecords`; 
       sendJsonpRequest(url, "cb_all_leave_" + Math.floor(Math.random()*100000), function(res) {
         if(res.success && res.records.length > 0) {
           let html = "";
-          res.records.forEach((item, index) => {
-            // 只顯示待審核的，或者全部顯示
+          res.records.forEach((item) => {
             let imgHtml = "無附件";
             if(item.fileData && item.fileData.startsWith("data:image")) {
               imgHtml = `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')" title='點擊放大查看證明'>`;
@@ -287,7 +388,7 @@
       .catch(() => { hideMask(); alert("審核完成！"); loadLeaveApplications(); });
     }
 
-    // ─── 即時打卡流水帳 ───
+    // ─── 打卡監控流水帳 ───
     function loadPunchLogs() {
       const tbody = document.getElementById("punchLogTableBody");
       tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#a0aec0;">即時追蹤考勤流水帳中...</td></tr>`;
@@ -303,7 +404,7 @@
               <td><b>${log.name}</b> (${log.id})</td>
               <td>${typeTag}</td>
               <td><i class="fa-solid fa-building"></i> ${log.location}</td>
-              <td><a href="https://www.google.com/maps/search/?api=1&query=${log.lat},${log.lng}" target="_blank" style="color:#4e54c8;text-decoration:none;"><i class="fa-solid fa-map-location-dot"></i> ${log.lat}, ${log.lng} (地圖查看)</a></td>
+              <td><a href="https://maps.google.com/?q=${log.lat},${log.lng}" target="_blank" style="color:#4e54c8;text-decoration:none;"><i class="fa-solid fa-map-location-dot"></i> 查看地圖定位</a></td>
             </tr>`;
           });
           tbody.innerHTML = html;
@@ -313,7 +414,7 @@
       });
     }
 
-    // ─── 發布最新公告 ───
+    // ─── 公告發布 ───
     function submitAnnouncement() {
       const unit = document.getElementById("annUnit").value.trim();
       const content = document.getElementById("annContent").value.trim();
@@ -341,7 +442,7 @@
     function showMask(txt) { document.getElementById("globalMask").style.display = "flex"; document.getElementById("maskText").innerText = txt; }
     function hideMask() { document.getElementById("globalMask").style.display = "none"; }
     
-    // 啟動 PWA 引擎
+    // 註冊 PWA 桌面軟體服務
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swBlob = new Blob([`
