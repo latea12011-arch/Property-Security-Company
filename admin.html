@@ -50,7 +50,6 @@
     .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #4e54c8; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* 📄 A4 列印區專屬隱藏樣式 */
     #printTemplateArea { display: none; }
     @media print {
       body * { display: none !important; }
@@ -78,7 +77,6 @@
     <button class="menu-btn" onclick="switchSection('empMgmt', this)"><i class="fa-solid fa-users-gear"></i>同仁名冊維護</button>
     <button class="menu-btn" onclick="switchSection('locMgmt', this)"><i class="fa-solid fa-map-pin"></i>案場GPS設定</button>
     <button class="menu-btn" onclick="switchSection('announcementMgmt', this)"><i class="fa-solid fa-bullhorn"></i>發布公告事項</button>
-    <!-- 🌟 新增側邊欄：離職證明單按鈕 -->
     <button class="menu-btn" onclick="switchSection('resignationSection', this)"><i class="fa-solid fa-print"></i>離職證明書列印</button>
   </div>
 
@@ -214,7 +212,7 @@
       </div>
     </div>
 
-    <!-- 🌟 8. 【全新面冊】離職證明書填寫與生成面板 -->
+    <!-- 8. 離職證明書填寫與生成面板 -->
     <div class="content-body" id="resignationSection">
       <div class="card" style="max-width: 600px;">
         <h3>填寫離職證明資訊</h3>
@@ -251,7 +249,7 @@
     </div>
   </div>
 
-  <!-- 🌟 📄 隱藏的 A4 標準列印專用 HTML 骨架庫 -->
+  <!-- 📄 A4 標準列印專用 HTML 骨架庫 -->
   <div id="printTemplateArea">
     <div class="print-title">離 職 證 明 書</div>
     <table class="print-table">
@@ -299,7 +297,7 @@
           
           const sSelect = document.getElementById("schedEmpSelect");
           const rSelect = document.getElementById("reportEmpSelect");
-          const resigSelect = document.getElementById("resigEmpSelect"); // 🌟 綁定離職證明選單
+          const resigSelect = document.getElementById("resigEmpSelect"); 
           
           if(sSelect && rSelect && resigSelect) {
             let html = `<option value="">-- 請選擇排班同仁 --</option>`;
@@ -314,7 +312,6 @@
       });
     }
 
-    // 🌟 離職同仁智慧自動回填
     function autoFillResigDetails() {
       const targetId = document.getElementById("resigEmpSelect").value;
       const emp = globalEmployees.find(e => e.id === targetId);
@@ -323,7 +320,6 @@
       }
     }
 
-    // 🌟 核心：儲存雲端並發起列印
     function submitAndPrintResignation() {
       const targetId = document.getElementById("resigEmpSelect").value;
       const emp = globalEmployees.find(e => e.id === targetId);
@@ -345,13 +341,11 @@
       if(!payload.leaveDate || !payload.idCard) { alert("請完整填寫身分證與離職生效日期！"); return; }
       showMask("正在將離職存檔寫入雲端中央庫...");
 
-      // 改用超穩定 JSONP 穿透式管道發佈
       const url = `${BASE_GAS_URL}?action=saveResignation&id=${payload.employeeId}&name=${encodeURIComponent(payload.employeeName)}&idCard=${payload.idCard}&birth=${payload.birth}&joinDate=${payload.joinDate}&leaveDate=${payload.leaveDate}&reason=${encodeURIComponent(payload.reason)}&identityType=${encodeURIComponent(payload.identityType)}&location=${encodeURIComponent(payload.location)}`;
       
       sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) {
         hideMask();
         if(res.success) {
-          // 填入 A4 隱藏骨架內
           document.getElementById("p_name").innerText = payload.employeeName;
           document.getElementById("p_idcard").innerText = payload.idCard;
           document.getElementById("p_birth").innerText = payload.birth;
@@ -365,7 +359,6 @@
           const today = new Date();
           document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
           
-          // 🚀 喚醒列印視窗
           setTimeout(() => { window.print(); }, 500);
         } else {
           alert("存檔失敗：" + res.message);
@@ -451,7 +444,7 @@
       let empLogs = globalPunchLogs.filter(l => l.id === empId);
       let totalDays = [...new Set(empLogs.map(l => l.timestamp.split(" ")[0]))].length;
       let totalIn = empLogs.filter(l => l.type === 'clockIn').length;
-      let totalOut = empLogs.filter(l => l.type === 'clockOut').length;
+      let totalOut = globalPunchLogs.filter(l => l.id === empId && l.type === 'clockOut').length;
       
       area.style.display = "block";
       area.innerHTML = `
@@ -461,6 +454,15 @@
         ⏱️ 上班打卡總次數：${totalIn} 次 / 下班打卡總次數：${totalOut} 次<br>
         💡 <span style="font-size:12px;color:#718096;">工時流水帳細節已即時儲存在 Attendance_Logs 分頁。</span>
       `;
+    }
+
+    function inlineMapLocate(lat, lng) {
+      const container = document.getElementById("mapContainer");
+      if(!lat || !lng || lat === "0" || lng === "0" || lat === "undefined") {
+        container.innerHTML = "無法解析該打卡點的 GPS 座標數值。";
+        return;
+      }
+      container.innerHTML = `<iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius:8px;" src="https://maps.google.com/maps?q=${lat},${lng}&hl=zh-TW&z=16&output=embed"></iframe>`;
     }
 
     function initAdminMonthSelector() {
