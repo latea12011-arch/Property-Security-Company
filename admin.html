@@ -53,6 +53,7 @@
     .btn-success { background: #27ae60; color: white; }
     .btn-danger { background: #e53e3e; color: white; }
     .form-control { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; margin-bottom: 12px; outline: none; background: #f8fafc; }
+    .proof-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer; }
     .loading-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
     .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #4e54c8; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
 
@@ -61,8 +62,21 @@
 
     #printTemplateArea { display: none; }
     @media print {
+      @page { size: A4 portrait; margin: 15mm 20mm; }
       body * { display: none !important; }
       #printTemplateArea, #printTemplateArea * { display: block !important; }
+      #printTemplateArea { display: block !important; position: absolute; left: 0; top: 0; width: 100%; padding: 10px; color: #000; background: white; font-family: 'Noto Sans TC', sans-serif; }
+      .print-header-decor { width: 100%; height: 4px; background: #000; margin-bottom: 25px; }
+      .print-title { text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 35px; letter-spacing: 6px; color: #000; }
+      .print-table { width: 100%; border: 1.5px solid #000 !important; border-collapse: collapse; margin-bottom: 30px; }
+      .print-table th, .print-table td { border: 1px solid #000 !important; padding: 10px 14px !important; font-size: 14px; color: #000 !important; background: none !important; height: 42px; }
+      .print-table th { font-weight: bold; text-align: center; width: 22%; background-color: #f2f2f2 !important; letter-spacing: 1px; }
+      .print-table td { text-align: left; font-weight: 500; }
+      .print-statement { font-size: 14px; line-height: 2; margin-top: 25px; text-align: justify; text-indent: 2.8em; color: #000; }
+      .print-sign-area { margin-top: 55px; display: flex; justify-content: space-between; font-size: 15px; padding: 0 10px; line-height: 2; }
+      .company-info-footer { margin-top: 65px; border-top: 1px solid #000; padding-top: 15px; font-size: 12px; color: #333; line-height: 1.6; }
+      .company-info-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+      .print-footer-date { text-align: right; font-size: 14px; font-weight: bold; margin-top: 20px; }
     }
   </style>
 </head>
@@ -90,6 +104,7 @@
     <button class="menu-btn" id="btn-locMgmt" onclick="switchSection('locMgmt', this)"><i class="fa-solid fa-map-pin"></i>案場GPS設定</button>
     <button class="menu-btn" id="btn-salaryAdvanceSection" onclick="switchSection('salaryAdvanceSection', this)"><i class="fa-solid fa-money-bill-transfer"></i>借支與薪資明細</button>
     <button class="menu-btn" id="btn-announcementMgmt" onclick="switchSection('announcementMgmt', this)"><i class="fa-solid fa-bullhorn"></i>發布公告事項</button>
+    <button class="menu-btn" id="btn-resignationSection" onclick="switchSection('resignationSection', this)"><i class="fa-solid fa-print"></i>離職證明書列印</button>
   </div>
 
   <div class="main-content" id="mainContent">
@@ -257,6 +272,35 @@
         </div>
       </div>
     </div>
+
+    <div class="content-body" id="resignationSection">
+      <div class="card" style="max-width: 600px;">
+        <h3>填寫離職證明資訊</h3>
+        <label style="font-size:12px; font-weight:bold;">選擇離職同仁：</label><select id="resigEmpSelect" class="form-control" onchange="autoFillResigDetails()"></select>
+        <label style="font-size:12px; font-weight:bold;">身分證字號：</label><input type="text" id="resigIdCard" class="form-control" placeholder="A123456789">
+        <label style="font-size:12px; font-weight:bold;">出生年月日：</label><input type="date" id="resigBirth" class="form-control">
+        <label style="font-size:12px; font-weight:bold;">入職日期 (到職日)：</label><input type="date" id="resigJoinDate" class="form-control">
+        <label style="font-size:12px; font-weight:bold;">離職生效日期：</label><input type="date" id="resigLeaveDate" class="form-control">
+        <label style="font-size:12px; font-weight:bold;">離職原因說明：</label><select id="resigReason" class="form-control"><option value="個人生涯規劃 (自願離職)">個人生涯規劃 (自願離職)</option><option value="勞動基準法第十一條第二款 (業務緊縮)">勞動基準法第十一條第二款 (業務緊縮)</option><option value="勞動基準法第十一條第四款 (業務變更)">勞動基準法第十一條第四款 (業務變更)</option><option value="定期契約期滿離職">定期契約期滿離職</option><option value="其他原因自願離職">其他原因自願離職</option></select>
+        <button class="btn btn-success" style="width:100%; padding:14px; font-size:14px;" onclick="submitAndPrintResignation()"><i class="fa-solid fa-print"></i> 儲存雲端並發起 A4 列印</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="printTemplateArea">
+    <div class="print-header-decor"></div><div class="print-title">離 職 證 明 書</div>
+    <table class="print-table">
+      <tr><th>員工姓名</th><td id="p_name"></td><th>身分證字號</th><td id="p_idcard"></td></tr>
+      <tr><th>出生年月日</th><td id="p_birth"></td><th>任職工號</th><td id="p_id"></td></tr>
+      <tr><th>擔任職務</th><td id="p_type"></td><th>負責執勤案場</th><td id="p_loc"></td></tr>
+      <tr><th>到職日期</th><td id="p_join"></td><th>離職日期</th><td id="p_leave"></td></tr>
+      <tr><th>離職原因</th><td colspan="3" id="p_reason"></td></tr>
+    </table>
+    <div class="print-statement">儲查本公司上述同仁於任職期間，負責盡職，恪尊各項現場維護 with 保全管理規範，工作表現深獲肯定。現因上述事由提出申請，經本公司依法審查，雙方勞雇關係確實已於離職日期正式依法宣告終止。同仁於離職前已依本公司規定將所保管之各項勤務機具、案場公物、執勤紀錄及業務相關檔案清點移交完畢，確認無誤，特發此證以茲證明。</div>
+    <div class="print-statement" style="font-size: 13px; color: #1a1a1a; font-weight: bold; margin-top: 15px; text-indent: 0;">※ 注意事項：本證明書依勞動基準法第十九條規定開立，開具後同仁仍應負有任職期間之職務保密義務。</div>
+    <div class="print-sign-area"><div><b>開具單位（蓋章）：</b><br>紘嘉物業管理股份有限公司</div><div style="width: 200px;"><b>負責人（簽章）：</b></div></div>
+    <div class="company-info-footer"><div class="company-info-row"><div><b>發證機關：</b>紘嘉物業管理股份有限公司</div><div><b>統一編號：</b>90562471</div></div><div class="company-info-row"><div><b>聯絡電話：</b>(03) 578-8388</div><div><b>公司地址：</b>新竹市東區光復路二段288號10樓</div></div></div>
+    <div class="print-footer-date" id="p_footer_date"></div>
   </div>
 
   <script>
@@ -298,7 +342,7 @@
         window[callbackFunctionName] = function(data) { successHandler(data); delete window[callbackFunctionName]; const scriptTag = document.getElementById(callbackFunctionName); if (scriptTag) scriptTag.remove(); resolve(); };
         const connector = url.includes("?") ? "&" : "?"; const script = document.createElement("script"); script.src = `${url}${connector}callback=${callbackFunctionName}&_ts=${new Date().getTime()}`; script.id = callbackFunctionName;
         script.onerror = () => { alert("🚨 通訊異常！請檢查 GAS URL。"); hideMask(); reject(); };
-        document.body.appendChild(script); // 🌟 核心修復：這行原本漏掉，現已完美補回！傳送請求啟動！
+        document.body.appendChild(script); 
       });
     }
 
@@ -320,6 +364,7 @@
           document.getElementById("reportEmpSelect").innerHTML = html;
           document.getElementById("cashEmpSelect").innerHTML = html;
           document.getElementById("salEmpSelect").innerHTML = html;
+          if(document.getElementById("resigEmpSelect")) document.getElementById("resigEmpSelect").innerHTML = html; // 🌟 核心防當修復：加入安全檢查判定
           
           let lHtml = `<option value="">-- 請選擇指定要下載的案場 --</option>`;
           locNames.forEach(name => { lHtml += `<option value="${name}">${name}</option>`; });
@@ -421,7 +466,7 @@
         wsData.push(["【項目分類】", "基本本薪", "事假扣款(天)", "病假扣款(天)", "勞健保/團保", "法院法扣/額外扣款", "本月預支借金"]);
         wsData.push(["應發/應扣明細", `NT$ ${s.baseSalary}`, `NT$ ${s.personalLeave} (${s.personalDays}天)`, `NT$ ${s.sickLeave} (${s.sickDays}天)`, `NT$ ${s.labor + s.health + s.groupIns}`, `法扣:${s.legalDeduct} / 額外:${s.extraDeduct}`, `NT$ ${s.advance}`]);
         wsData.push(["應付合計:", `NT$ ${s.baseSalary}`, "合計扣款總額:", `NT$ ${s.totalDeduct}`, "", "實發實領金額:", `NT$ ${s.finalPayout}`]);
-        wsData.push(["備註說明: 10日前洽管理部。 簽名簽章:_______________________ 日期:115年__月__日"]);
+        wsData.push(["備註說明: 10日前洽管理部。懲罰扣款依案場規範核實。 簽名簽章:_______________________ 日期:115年__月__日"]);
         wsData.push(["- - - - - - - - - - - - - - - - - - - - - - - - ( 裁 切 線 ) - - - - - - - - - - - - - - - - - - - - - - - -"]);
         wsData.push([""]); wsData.push([""]);
       });
@@ -500,6 +545,15 @@
       for (let i = 0; i < locSelects.length; i++) { const day = locSelects[i].getAttribute("data-day"); const locVal = locSelects[i].value || "無"; const shiftVal = shiftSelects[i].value || "休"; lines.push(`${day}:${locVal}-${shiftVal}`); }
       showMask("幕後發布新班表...");
       fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "updateSchedule", employeeId: empId, month: month, scheduleLines: lines.join("\n") }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message); loadExistingSchedule(); }).catch(() => { hideMask(); alert("儲存完畢！"); loadExistingSchedule(); });
+    }
+
+    function autoFillResigDetails() { const targetId = document.getElementById("resigEmpSelect").value; const emp = globalEmployees.find(e => e.id === targetId); if(emp) { document.getElementById("resigJoinDate").value = emp.joinDate || ""; } }
+    function submitAndPrintResignation() {
+      const targetId = document.getElementById("resigEmpSelect").value; const emp = globalEmployees.find(e => e.id === targetId); if(!targetId || !emp) { alert("請先選取離職同仁！"); return; }
+      const payload = { idCard: document.getElementById("resigIdCard").value.trim(), birth: document.getElementById("resigBirth").value, joinDate: document.getElementById("resigJoinDate").value, leaveDate: document.getElementById("resigLeaveDate").value, reason: document.getElementById("resigReason").value };
+      if(!payload.leaveDate || !payload.idCard) { alert("請完整填寫身分證與離職生效日期！"); return; } showMask("正在將離職存檔寫入雲端庫...");
+      const url = `${BASE_GAS_URL}?action=saveResignation&id=${targetId}&name=${encodeURIComponent(emp.name)}&idCard=${payload.idCard}&birth=${payload.birth}&joinDate=${payload.joinDate}&leaveDate=${payload.leaveDate}&reason=${encodeURIComponent(payload.reason)}&identityType=${encodeURIComponent(emp.identityType)}&location=${encodeURIComponent(emp.assignedLocation)}`;
+      sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) { document.getElementById("p_name").innerText = emp.name; document.getElementById("p_idcard").innerText = payload.idCard; document.getElementById("p_birth").innerText = payload.birth; document.getElementById("p_id").innerText = targetId; document.getElementById("p_type").innerText = emp.identityType; document.getElementById("p_loc").innerText = emp.assignedLocation; document.getElementById("p_join").innerText = payload.joinDate; document.getElementById("p_leave").innerText = payload.leaveDate; document.getElementById("p_reason").innerText = payload.reason; const today = new Date(); document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`; }).then(() => { hideMask(); setTimeout(() => { window.print(); }, 800); }).catch(() => {});
     }
 
     function switchSection(sectionId, btnElem) {
