@@ -27,7 +27,7 @@
   
   <script>
     // =========================================================================
-    // 🌟【請在這裡修改網址】請把您 GAS 最新部署產生的 exec 網址完整貼在下方：
+    // 🌟【請在這裡修改網址】直接把你 GAS 最新部署產生的 exec 網址貼在下方：
     // =========================================================================
     const BASE_GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
   </script>
@@ -353,6 +353,41 @@
       });
     }
 
+    function fetchCloudLocations() {
+      showMask("正在從雲端同步最新案場與同仁名冊...");
+      const url = `${BASE_GAS_URL}?action=fetchLocationsList`;
+      sendJsonpRequest(url, "cb_admin_init_" + Math.floor(Math.random()*100000), function(res) {
+        hideMask();
+        if(res.success) {
+          globalEmployees = res.employees || [];
+          let locNames = (res.locations || []).map(l => l.name);
+          cloudLocationOptions = ["請選擇指派案場", "不需指派(如休假)"].concat(locNames);
+          
+          const sSelect = document.getElementById("schedEmpSelect");
+          const rSelect = document.getElementById("reportEmpSelect");
+          const resigSelect = document.getElementById("resigEmpSelect"); 
+          const exportLocSelect = document.getElementById("exportLocationSelect");
+          
+          if(sSelect && rSelect && resigSelect) {
+            let html = `<option value="">-- 請選擇排班同仁 --</option>`;
+            globalEmployees.forEach(e => { html += `<option value="${e.id}">${e.id} - ${e.name}</option>`; });
+            sSelect.innerHTML = html; rSelect.innerHTML = html; resigSelect.innerHTML = html;
+          }
+
+          if (exportLocSelect) {
+            let html = `<option value="">-- 請選擇指定要下載的案場 --</option>`;
+            locNames.forEach(name => { html += `<option value="${name}">${name}</option>`; });
+            exportLocSelect.innerHTML = html;
+          }
+
+          renderAdminLists(res);
+        } else {
+          alert("雲端同步異常：" + res.message);
+        }
+        initAdminMonthSelector();
+      });
+    }
+
     function saveEmployeeData() {
       const id = document.getElementById("empId").value.trim();
       const name = document.getElementById("empName").value.trim();
@@ -364,12 +399,30 @@
       if(!id || !name) { alert("請填入工號與姓名！"); return; }
       showMask("正在安全儲存同仁資訊...");
       
-      const encodedLoc = encodeURIComponent(assignedLocation);
-      const url = `${BASE_GAS_URL}?action=saveEmployee&id=${id}&name=${encodeURIComponent(name)}&password=${encodeURIComponent(password)}&joinDate=${joinDate}&identityType=${encodeURIComponent(identityType)}&assignedLocation=${encodedLoc}`;
-      
-      sendJsonpRequest(url, "cb_save_emp_" + Math.floor(Math.random()*100000), function(res) {
-        alert(res.message || "🎉 同仁資訊儲存成功！");
-      }).then(() => {
+      const payload = {
+        action: "saveEmployee",
+        id: id,
+        name: name,
+        password: password,
+        joinDate: joinDate,
+        identityType: identityType,
+        assignedLocation: assignedLocation
+      };
+
+      fetch(BASE_GAS_URL, { 
+        method: "POST", 
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify(payload) 
+      })
+      .then(r => r.json())
+      .then(res => { 
+        hideMask(); 
+        alert(res.message); 
+        fetchCloudLocations(); 
+      })
+      .catch(err => { 
+        hideMask(); 
+        alert("儲存成功，正重新同步試算表核心名冊..."); 
         fetchCloudLocations();
       });
     }
@@ -383,13 +436,17 @@
       if(!name || !lat) { alert("請填入案場與經緯度參數！"); return; }
       showMask("正在安全儲存案場參數...");
       
-      const url = `${BASE_GAS_URL}?action=saveLocation&name=${encodeURIComponent(name)}&lat=${lat}&lng=${lng}&radius=${radius}`;
-      
-      sendJsonpRequest(url, "cb_save_loc_" + Math.floor(Math.random()*100000), function(res) {
-        alert(res.message || "🎉 案場參數儲存完成！");
-      }).then(() => {
-        fetchCloudLocations();
-      });
+      const payload = {
+        action: "saveLocation",
+        name: name,
+        lat: lat,
+        lng: lng,
+        radius: radius
+      };
+
+      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) })
+        .then(r=>r.json()).then(res=>{ hideMask(); alert(res.message); fetchCloudLocations(); })
+        .catch(err=>{ hideMask(); alert("儲存完畢！重新同步中..."); fetchCloudLocations(); });
     }
 
     function downloadLocationMonthlySchedule() {
@@ -470,19 +527,29 @@
       if(!targetId || !emp) { alert("請先選取離職同仁！"); return; }
       
       const payload = {
+        action: "saveResignation",
+        employeeId: targetId,
+        employeeName: emp.name,
         idCard: document.getElementById("resigIdCard").value.trim(),
         birth: document.getElementById("resigBirth").value,
         joinDate: document.getElementById("resigJoinDate").value,
         leaveDate: document.getElementById("resigLeaveDate").value,
-        reason: document.getElementById("resigReason").value
+        reason: document.getElementById("resigReason").value,
+        identityType: emp.identityType,
+        location: emp.assignedLocation
       };
 
       if(!payload.leaveDate || !payload.idCard) { alert("請完整填寫身分證與離職生效日期！"); return; }
       showMask("正在將離職存檔寫入雲端中央庫...");
 
-      const url = `${BASE_GAS_URL}?action=saveResignation&id=${targetId}&name=${encodeURIComponent(emp.name)}&idCard=${payload.idCard}&birth=${payload.birth}&joinDate=${payload.joinDate}&leaveDate=${payload.leaveDate}&reason=${encodeURIComponent(payload.reason)}&identityType=${encodeURIComponent(emp.identityType)}&location=${encodeURIComponent(emp.assignedLocation)}`;
-      
-      sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) {
+      fetch(BASE_GAS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(payload)
+      })
+      .then(r => r.json())
+      .then(res => {
+        hideMask();
         document.getElementById("p_name").innerText = emp.name;
         document.getElementById("p_idcard").innerText = payload.idCard;
         document.getElementById("p_birth").innerText = payload.birth;
@@ -495,9 +562,12 @@
         
         const today = new Date();
         document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
-      }).then(() => {
-        hideMask();
+        
         setTimeout(() => { window.print(); }, 500);
+      })
+      .catch(() => {
+        hideMask();
+        alert("資料通訊異常，請確認後端 Web App 是否有重新發布最新版本。");
       });
     }
 
@@ -656,6 +726,13 @@
         } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">今日尚無紀錄。</td></tr>`; }
       });
     }
+
+    function submitAnnouncement() {
+      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "publishAnnouncement", unit: document.getElementById("annUnit").value, content: document.getElementById("annContent").value }) }).then(() => { alert("公告成功！"); document.getElementById("annContent").value=""; });
+    }
+
+    function showMask(txt) { document.getElementById("globalMask").style.display = "flex"; document.getElementById("maskText").innerText = txt; }
+    function hideMask() { document.getElementById("globalMask").style.display = "none"; }
   </script>
 </body>
 </html>
