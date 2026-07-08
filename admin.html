@@ -39,7 +39,7 @@
     .sidebar h2 { text-align: center; font-size: 18px; margin-bottom: 30px; color: #edf2f7; }
     .menu-btn { width: 100%; padding: 15px 25px; border: none; background: none; color: #a0aec0; text-align: left; font-size: 15px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 12px; }
     .menu-btn:hover, .menu-btn.active { background: #1a202c; color: white; border-left: 4px solid #4e54c8; }
-    .main-content { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; display: none; } /* 預設先藏起來，登入成功才打開 */
+    .main-content { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; display: none; }
     .top-bar { height: 60px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; font-weight: bold; flex-shrink: 0; }
     .content-body { flex: 1; padding: 30px; overflow-y: auto; display: none; }
     .content-body.active { display: block; }
@@ -53,11 +53,11 @@
     .btn-success { background: #27ae60; color: white; }
     .btn-danger { background: #e53e3e; color: white; }
     .form-control { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; margin-bottom: 12px; outline: none; background: #f8fafc; }
+    .proof-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer; }
     .loading-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
     .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #4e54c8; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* 🌟 新增：登入安全大鎖視窗排版 */
     .login-overlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background:#1a202c; display:flex; justify-content:center; align-items:center; z-index:10000; }
     .login-box { background:white; padding:40px; border-radius:12px; width:360px; box-shadow:0 10px 25px rgba(0,0,0,0.3); text-align:center; }
 
@@ -71,7 +71,7 @@
 </head>
 <body>
 
-  <!-- 🌟 新增：登入安全解鎖介面 -->
+  <!-- 登入解鎖介面 -->
   <div class="login-overlay" id="loginOverlay">
     <div class="login-box">
       <h2 style="margin-bottom:10px; color:#2d3748;">後台核心管理系統</h2>
@@ -91,12 +91,9 @@
     <button class="menu-btn" id="btn-scheduleMgmt" onclick="switchSection('scheduleMgmt', this)"><i class="fa-solid fa-calendar-days"></i>班表排程調整</button>
     <button class="menu-btn" id="btn-leaveAudit" onclick="switchSection('leaveAudit', this)"><i class="fa-solid fa-file-signature"></i>請假單審核</button>
     <button class="menu-btn" id="btn-punchLog" onclick="switchSection('punchLog', this)"><i class="fa-solid fa-location-dot"></i>即時打卡監控</button>
-    
-    <!-- 🌟 這些敏感權限按鈕都綁定 ID，方便依據登入身分動態隱藏遮蔽 -->
     <button class="menu-btn" id="btn-empMgmt" onclick="switchSection('empMgmt', this)"><i class="fa-solid fa-users-gear"></i>同仁名冊維護</button>
     <button class="menu-btn" id="btn-locMgmt" onclick="switchSection('locMgmt', this)"><i class="fa-solid fa-map-pin"></i>案場GPS設定</button>
     <button class="menu-btn" id="btn-salaryAdvanceSection" onclick="switchSection('salaryAdvanceSection', this)"><i class="fa-solid fa-money-bill-transfer"></i>借支與薪資明細</button>
-    
     <button class="menu-btn" id="btn-announcementMgmt" onclick="switchSection('announcementMgmt', this)"><i class="fa-solid fa-bullhorn"></i>發布公告事項</button>
     <button class="menu-btn" id="btn-resignationSection" onclick="switchSection('resignationSection', this)"><i class="fa-solid fa-print"></i>離職證明書列印</button>
   </div>
@@ -245,8 +242,6 @@
           <label style="font-size:12px; font-weight:bold;">健保自付額 (元)：</label><input type="number" id="salHealth" class="form-control" value="0">
           <label style="font-size:12px; font-weight:bold;">員工團保 (元)：</label><input type="number" id="salGroupIns" class="form-control" value="0">
           <label style="font-size:12px; font-weight:bold;">法院強制執行扣薪 (元)：</label><input type="number" id="salLegal" class="form-control" value="0">
-          
-          <!-- 🌟 補齊：左側表單正式加入「額外扣款」輸入框格 -->
           <label style="font-size:12px; font-weight:bold; color:#e53e3e;">管委會發函 / 額外罰款扣款 (元)：</label><input type="number" id="salExtraDeduct" class="form-control" value="0">
           
           <button class="btn btn-primary" style="width: 100%; padding:12px; font-size:13px;" onclick="saveSalaryDetailData()"><i class="fa-solid fa-calculator"></i> 系統精算並存檔</button>
@@ -277,7 +272,7 @@
           </table>
         </div>
       </div>
-    </div> <!-- 安全閉合 -->
+    </div>
 
     <!-- 發布公告 -->
     <div class="content-body" id="announcementMgmt">
@@ -304,7 +299,7 @@
         <button class="btn btn-success" style="width:100%; padding:14px; font-size:14px;" onclick="submitAndPrintResignation()"><i class="fa-solid fa-print"></i> 儲存雲端並發起 A4 列印</button>
       </div>
     </div>
-  </div> <!-- 結構安全閉合 -->
+  </div>
 
   <div id="printTemplateArea">
     <div class="print-header-decor"></div><div class="print-title">離 職 證 明 書</div>
@@ -323,7 +318,6 @@
   </div>
 
   <script>
-    // 🌟 新增：安全登入通訊函式
     function submitAdminLogin() {
       const id = document.getElementById("loginUser").value.trim();
       const pwd = document.getElementById("loginPwd").value.trim();
@@ -340,7 +334,6 @@
           document.getElementById("mainContent").style.display = "flex";
           document.getElementById("adminIdentityTag").innerHTML = `<i class="fa-solid fa-user-shield"></i> 目前登入者：${res.adminName} (${res.adminRole === 'SuperAdmin' ? '最高超級管理權限' : '一般行政管理權限'})`;
           
-          // 🌟 核心防護：如果登入者只是一般管理員，直接將高敏感選單永久屏蔽移除，防範越權！
           if(res.adminRole === "Admin") {
             const sensitiveButtons = ["btn-empMgmt", "btn-locMgmt", "btn-salaryAdvanceSection"];
             sensitiveButtons.forEach(btnId => {
@@ -348,7 +341,7 @@
               if(btn) btn.remove();
             });
           }
-          fetchCloudLocations(); // 驗證通過才加載全數據
+          fetchCloudLocations();
         } else {
           alert(res.message);
         }
@@ -442,7 +435,7 @@
       const health = document.getElementById("salHealth").value;
       const groupIns = document.getElementById("salGroupIns").value;
       const legal = document.getElementById("salLegal").value;
-      const extraDeduct = document.getElementById("salExtraDeduct").value; // 🌟 新增對應
+      const extraDeduct = document.getElementById("salExtraDeduct").value;
       
       showMask("正在精算並儲存月度薪資明細...");
       const url = `${BASE_GAS_URL}?action=saveSalaryDetail&id=${empId}&name=${encodeURIComponent(empName)}&month=${month}&baseSalary=${baseSalary}&personalDays=${personalDays}&sickDays=${sickDays}&labor=${labor}&health=${health}&groupIns=${groupIns}&legalDeduct=${legal}&extraDeduct=${extraDeduct}`;
@@ -483,7 +476,7 @@
                 <td>${s.sickDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.sickLeave})</span></td>
                 <td>勞:${s.labor}<br>健:${s.health}<br>團:${s.groupIns}</td>
                 <td>${s.legalDeduct}</td>
-                <td style="color:#e53e3e; font-weight:bold;">NT$ ${s.extraDeduct}</td> <!-- 🌟 顯示額外扣款 -->
+                <td style="color:#e53e3e; font-weight:bold;">NT$ ${s.extraDeduct}</td>
                 <td style="color:#e53e3e; font-weight:bold;">NT$ ${s.advance}</td>
                 <td style="background:#e6fffa; color:#27ae60; font-weight:bold; font-size:14px;">NT$ ${s.finalPayout}</td>
                 <td style="background:#f7fafc; color:#718096;">NT$ ${s.totalDeduct}</td>
@@ -491,16 +484,16 @@
               </tr>`;
             });
             salTbody.innerHTML = sHtml;
-          } else { salTbody.innerHTML = `<tr><td colspan="12" style="text-align:center;">尚無結算資料。</td></tr>`; }
+          } else { salTbody.innerHTML = `<tr><td colspan="11" style="text-align:center;">尚無結算資料。</td></tr>`; }
         }
       });
     }
 
-    // A4 雙拼裁切匯出更新 (納入額外扣款)
     function downloadSalaryDetailExcel() {
       if (currentDetailsListCache.length === 0) { alert("💡 目前清單上沒有任何結算資料可以導出！"); return; }
       showMask("正在動態建構 A4 雙拼同仁簽名薪資明細表...");
-      const wb = XLSX.utils.book_new(); const wsData = [];
+      const wb = XLSX.utils.book_new();
+      const wsData = [];
       currentDetailsListCache.forEach((s) => {
         wsData.push(["紘嘉物業管理股份有限公司 薪資明細表", "", "", "", "", "所得月份:", s.month]);
         wsData.push(["員工姓名:", s.name, "員工工號:", s.id, "", "貨幣單位:", "新台幣 (NT$)"]);
@@ -511,8 +504,11 @@
         wsData.push(["- - - - - - - - - - - - - - - - - - - - - - - - ( 裁 切 線 ) - - - - - - - - - - - - - - - - - - - - - - - -"]);
         wsData.push([""]); wsData.push([""]);
       });
-      const ws = XLSX.utils.aoa_to_sheet(wsData); const wscols = [{wch: 16}, {wch: 16}, {wch: 22}, {wch: 22}, {wch: 20}, {wch: 24}, {wch: 18}]; ws['!cols'] = wscols;
-      XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, ws, "A4雙拼減半薪資條"); hideMask(); XLSX.writeFile(workbook, `紘嘉物業_減半雙拼員工簽名薪資表.xlsx`);
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      const wscols = [{wch: 16}, {wch: 16}, {wch: 22}, {wch: 22}, {wch: 20}, {wch: 24}, {wch: 18}];
+      ws['!cols'] = wscols;
+      XLSX.utils.book_append_sheet(wb, ws, "A4雙拼減半薪資條");
+      hideMask(); XLSX.writeFile(wb, `紘嘉物業_減半雙拼員工簽名薪資表.xlsx`);
     }
 
     function fillCashForm(id, month, amount) {
@@ -593,6 +589,24 @@
       for (let i = 0; i < locSelects.length; i++) { const day = locSelects[i].getAttribute("data-day"); const locVal = locSelects[i].value || "無"; const shiftVal = shiftSelects[i].value || "休"; lines.push(`${day}:${locVal}-${shiftVal}`); }
       showMask("幕後發布新班表...");
       fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "updateSchedule", employeeId: empId, month: month, scheduleLines: lines.join("\n") }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message); loadExistingSchedule(); }).catch(() => { hideMask(); alert("儲存完畢！"); loadExistingSchedule(); });
+    }
+
+    function downloadLocationMonthlySchedule() {
+      const month = document.getElementById("exportMonthSelect").value; const locationName = document.getElementById("exportLocationSelect").value; if (!month || !locationName) { alert("❌ 請先選擇下載月份與要統整的案場名稱！"); return; } showMask(`正在動態調閱並交叉統整 ${locationName} 總班表...`);
+      const matches = month.match(/(\d+)年(\d+)月/); const year = parseInt(matches[1]); const monthNum = parseInt(matches[2]); const totalDays = new Date(year, monthNum, 0).getDate();
+      let excelHeaders = ["工號", "姓名"]; for (let d = 1; d <= totalDays; d++) { excelHeaders.push(`${d}日`); } excelHeaders.push("當月指派天數"); let excelRows = []; let loadedCount = 0; if (globalEmployees.length === 0) { hideMask(); alert("目前名冊庫無同仁資料"); return; }
+      globalEmployees.forEach(emp => {
+        const url = `${BASE_GAS_URL}?action=fetchSchedule&employeeId=${emp.id}&month=${month}`;
+        sendJsonpRequest(url, "cb_exp_pack_" + emp.id + "_" + Math.floor(Math.random()*1000), function(res) {
+          loadedCount++;
+          if (res.success && res.schedule && res.schedule.length > 0) {
+            let rowObj = { "工號": emp.id, "姓名": emp.name }; let hasDutyAtLocation = false; let dutyDaysCount = 0; for (let d = 1; d <= totalDays; d++) { rowObj[`${d}日`] = ""; }
+            res.schedule.forEach(item => { let rawContent = String(item.shift).trim(); if (rawContent && rawContent.indexOf("-") !== -1) { let parts = rawContent.split("-"); if (parts[0] === locationName) { let dayNum = parseInt(String(item.date).replace("日", "").trim(), 10); rowObj[`${dayNum}日`] = parts[1] || ""; hasDutyAtLocation = true; dutyDaysCount++; } } });
+            if (hasDutyAtLocation) { rowObj["當月指派天數"] = dutyDaysCount + " 天"; excelRows.push(rowObj); }
+          }
+          if (loadedCount === globalEmployees.length) { hideMask(); if (excelRows.length === 0) { alert(`💡 查無同仁被指派在【${locationName}】案場值勤。`); return; } const worksheet = XLSX.utils.json_to_sheet(excelRows, { header: excelHeaders }); const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, "案場班表統整"); XLSX.writeFile(workbook, `${month}_${locationName}_全人員班表統整.xlsx`); }
+        }).catch(() => { if (loadedCount === globalEmployees.length) { hideMask(); } });
+      });
     }
 
     function switchSection(sectionId, btnElem) {
