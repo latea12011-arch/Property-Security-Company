@@ -23,6 +23,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   
   <style>
     * { box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; margin: 0; padding: 0; }
@@ -52,15 +53,21 @@
 
     #printTemplateArea { display: none; }
     @media print {
+      @page { size: A4 portrait; margin: 15mm 20mm; }
       body * { display: none !important; }
       #printTemplateArea, #printTemplateArea * { display: block !important; }
-      #printTemplateArea { display: block !important; position: absolute; left: 0; top: 0; width: 100%; padding: 40px; color: #000; background: white; font-family: 'Noto Sans TC', sans-serif; }
-      .print-title { text-align: center; font-size: 26px; font-weight: bold; margin-bottom: 30px; letter-spacing: 2px; }
-      .print-table { width: 100%; border: 2px solid #000 !important; border-collapse: collapse; margin-bottom: 25px; }
-      .print-table th, .print-table td { border: 1px solid #000 !important; padding: 14px 18px !important; font-size: 15px; color: #000 !important; background: none !important; }
-      .print-table th { font-weight: bold; text-align: center; width: 25%; background-color: #f2f2f2 !important; }
-      .print-sign-area { margin-top: 50px; display: flex; justify-content: space-between; font-size: 16px; padding: 0 20px; }
-      .print-footer-date { margin-top: 80px; text-align: right; font-size: 14px; padding-right: 20px; }
+      #printTemplateArea { display: block !important; position: absolute; left: 0; top: 0; width: 100%; padding: 10px; color: #000; background: white; font-family: 'Noto Sans TC', sans-serif; }
+      .print-header-decor { width: 100%; height: 4px; background: #000; margin-bottom: 25px; }
+      .print-title { text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 35px; letter-spacing: 6px; color: #000; }
+      .print-table { width: 100%; border: 1.5px solid #000 !important; border-collapse: collapse; margin-bottom: 30px; }
+      .print-table th, .print-table td { border: 1px solid #000 !important; padding: 10px 14px !important; font-size: 14px; color: #000 !important; background: none !important; height: 42px; }
+      .print-table th { font-weight: bold; text-align: center; width: 22%; background-color: #f2f2f2 !important; letter-spacing: 1px; }
+      .print-table td { text-align: left; font-weight: 500; }
+      .print-statement { font-size: 14px; line-height: 2; margin-top: 25px; text-align: justify; text-indent: 2.8em; color: #000; }
+      .print-sign-area { margin-top: 55px; display: flex; justify-content: space-between; font-size: 15px; padding: 0 10px; line-height: 2; }
+      .company-info-footer { margin-top: 65px; border-top: 1px solid #000; padding-top: 15px; font-size: 12px; color: #333; line-height: 1.6; }
+      .company-info-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+      .print-footer-date { text-align: right; font-size: 14px; font-weight: bold; margin-top: 20px; }
     }
   </style>
 </head>
@@ -83,7 +90,6 @@
   <div class="main-content">
     <div class="top-bar"><span id="currentSectionTitle">管理總覽</span><div><i class="fa-solid fa-user-shield"></i> 後勤核心管理人員</div></div>
 
-    <!-- 1. 管理總覽 -->
     <div class="content-body active" id="dashboard">
       <div class="card">
         <h3>系統連線狀態</h3>
@@ -91,33 +97,48 @@
       </div>
     </div>
 
-    <!-- 2. 班表排程調整 -->
     <div class="content-body" id="scheduleMgmt">
-      <div class="card">
-        <h3>發布 / 覆蓋員工班表</h3>
-        <div style="display: flex; gap: 15px; max-width: 650px; flex-direction: column; margin-bottom: 20px;">
-          <div style="display: flex; gap: 15px;">
-            <div style="flex: 1;"><label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">選擇同仁 (工號/姓名)：</label><select id="schedEmpSelect" class="form-control" style="margin-bottom:0;" onchange="loadExistingSchedule()"></select></div>
-            <div style="flex: 1;"><label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">排班月份：</label><select id="schedMonthSelect" class="form-control" style="margin-bottom:0;" onchange="generateCalendarRows()"></select></div>
+      <div style="display: flex; gap: 20px; align-items: flex-start;">
+        <div class="card" style="flex: 1;">
+          <h3>發布 / 覆蓋個別員工班表</h3>
+          <div style="display: flex; gap: 15px; flex-direction: column; margin-bottom: 20px;">
+            <div style="display: flex; gap: 15px;">
+              <div style="flex: 1;"><label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">選擇同仁 (工號/姓名)：</label><select id="schedEmpSelect" class="form-control" style="margin-bottom:0;" onchange="loadExistingSchedule()"></select></div>
+              <div style="flex: 1;"><label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">排班月份：</label><select id="schedMonthSelect" class="form-control" style="margin-bottom:0;" onchange="generateCalendarRows()"></select></div>
+            </div>
           </div>
+          <div style="border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
+            <table style="margin-top: 0; width: 100%;">
+              <thead>
+                <tr>
+                  <th style="width: 130px; padding: 10px 15px; position: sticky; top: 0; z-index: 10;">日期 / 星期</th>
+                  <th style="padding: 10px 15px; position: sticky; top: 0; z-index: 10;">指派案場</th>
+                  <th style="width: 160px; padding: 10px 15px; position: sticky; top: 0; z-index: 10;">指派班別</th>
+                </tr>
+              </thead>
+              <tbody id="calendarRowsBody"></tbody>
+            </table>
+          </div>
+          <button class="btn btn-primary" style="padding:14px; width: 100%;" onclick="submitNewSchedule()"><i class="fa-solid fa-cloud-arrow-up"></i> 確認儲存並發布班表</button>
         </div>
-        <div style="border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; max-height: 400px; overflow-y: auto; margin-bottom: 20px; max-width: 650px;">
-          <table style="margin-top: 0; width: 100%;">
-            <thead>
-              <tr>
-                <th style="width: 130px; padding: 10px 15px; position: sticky; top: 0; z-index: 10;">日期 / 星期</th>
-                <th style="padding: 10px 15px; position: sticky; top: 0; z-index: 10;">指派案場</th>
-                <th style="width: 160px; padding: 10px 15px; position: sticky; top: 0; z-index: 10;">指派班別</th>
-              </tr>
-            </thead>
-            <tbody id="calendarRowsBody"></tbody>
-          </table>
+
+        <div class="card" style="width: 360px; flex-shrink: 0;">
+          <h3>📥 案場總班表統整下載</h3>
+          <p style="font-size: 13px; color: #718096; margin-bottom: 15px;">選定月份與案場，系統會自動在背景交叉比對所有人的排班，並產出統整好的總表供您列印對帳。</p>
+          
+          <label style="font-size:12px; font-weight:bold;">1. 選擇統整月份：</label>
+          <select id="exportMonthSelect" class="form-control"></select>
+          
+          <label style="font-size:12px; font-weight:bold;">2. 選擇指定案場：</label>
+          <select id="exportLocationSelect" class="form-control"></select>
+          
+          <button class="btn btn-success" style="width: 100%; padding: 12px; font-size: 14px; margin-top: 5px;" onclick="downloadLocationMonthlySchedule()">
+            <i class="fa-solid fa-file-excel"></i> 一鍵生成並下載總班表
+          </button>
         </div>
-        <button class="btn btn-primary" style="padding:14px; width: 100%; max-width: 650px;" onclick="submitNewSchedule()"><i class="fa-solid fa-cloud-arrow-up"></i> 確認儲存並發布班表</button>
       </div>
     </div>
 
-    <!-- 3. 請假單審核 -->
     <div class="content-body" id="leaveAudit">
       <div class="card">
         <h3>待處理假單清單</h3>
@@ -128,7 +149,6 @@
       </div>
     </div>
 
-    <!-- 4. 即時打卡監控 -->
     <div class="content-body" id="punchLog">
       <div style="display: flex; gap: 20px; margin-bottom: 20px;">
         <div class="card" style="flex: 1; margin-bottom: 0;">
@@ -155,7 +175,6 @@
       </div>
     </div>
 
-    <!-- 5. 同仁名冊維護 -->
     <div class="content-body" id="empMgmt">
       <div style="display: flex; gap: 20px;">
         <div class="card" style="width: 300px; flex-shrink: 0;">
@@ -179,7 +198,6 @@
       </div>
     </div>
 
-    <!-- 6. 案場GPS設定 -->
     <div class="content-body" id="locMgmt">
       <div style="display: flex; gap: 20px;">
         <div class="card" style="width: 300px; flex-shrink: 0;">
@@ -200,7 +218,6 @@
       </div>
     </div>
 
-    <!-- 7. 發布公告事項 -->
     <div class="content-body" id="announcementMgmt">
       <div class="card">
         <h3>新增發布公告</h3>
@@ -212,7 +229,6 @@
       </div>
     </div>
 
-    <!-- 8. 離職證明書填寫與生成面板 -->
     <div class="content-body" id="resignationSection">
       <div class="card" style="max-width: 600px;">
         <h3>填寫離職證明資訊</h3>
@@ -249,42 +265,67 @@
     </div>
   </div>
 
-  <!-- 📄 A4 標準列印專用 HTML 骨架庫 -->
   <div id="printTemplateArea">
+    <div class="print-header-decor"></div>
     <div class="print-title">離 職 證 明 書</div>
+    
     <table class="print-table">
-      <tr><th>員工姓名</th><td id="p_name"></td></tr>
-      <tr><th>身分證字號</th><td id="p_idcard"></td></tr>
-      <tr><th>出生年月日</th><td id="p_birth"></td></tr>
-      <tr><th>任職工號</th><td id="p_id"></td></tr>
-      <tr><th>擔任職務</th><td id="p_type"></td></tr>
-      <tr><th>負責執勤案場</th><td id="p_loc"></td></tr>
-      <tr><th>到職日期</th><td id="p_join"></td></tr>
-      <tr><th>離職日期</th><td id="p_leave"></td></tr>
-      <tr><th>離職原因</th><td id="p_reason"></td></tr>
+      <tr>
+        <th>員工姓名</th><td id="p_name"></td>
+        <th>身分證字號</th><td id="p_idcard"></td>
+      </tr>
+      <tr>
+        <th>出生年月日</th><td id="p_birth"></td>
+        <th>任職工號</th><td id="p_id"></td>
+      </tr>
+      <tr>
+        <th>擔任職務</th><td id="p_type"></td>
+        <th>負責執勤案場</th><td id="p_loc"></td>
+      </tr>
+      <tr>
+        <th>到職日期</th><td id="p_join"></td>
+        <th>離職日期</th><td id="p_leave"></td>
+      </tr>
+      <tr>
+        <th>離職原因</th><td colspan="3" id="p_reason"></td>
+      </tr>
     </table>
-    <p style="font-size:14px; line-height:1.8; margin-top:40px; text-indent: 2em;">
-      查本公司同仁於任職期間遵守各項物業後勤管理規範，表現良好。茲證明其與本公司之勞雇關係確實已依法終止，特發此證，以茲證明。
-    </p>
-    <div class="print-sign-area">
-      <div><b>開具單位蓋章：</b><br><br><br>紘嘉物業管理股份有限公司</div>
-      <div><b>負責人簽章：</b></div>
+    
+    <div class="print-statement">
+      儲查本公司上述同仁於任職期間，負責盡職，恪遵各項現場維護與保全管理規範，工作表現深獲肯定。
+      現因上述事由提出申請，經本公司依法審查，雙方勞雇關係確實已於離職日期正式依法宣告終止。
+      同仁於離職前已依本公司規定將所保管之各項勤務機具、案場公物、執勤紀錄及業務相關檔案清點移交完畢，確認無誤，特發此證以茲證明。
     </div>
+    
+    <div class="print-statement" style="font-size: 13px; color: #1a1a1a; font-weight: bold; margin-top: 15px; text-indent: 0;">
+      ※ 注意事項：本證明書依勞動基準法第十九條規定開立，開具後同仁仍應負有任職期間之職務保密義務。
+    </div>
+    
+    <div class="print-sign-area">
+      <div>
+        <b>開具單位（蓋章）：</b><br>
+        紘嘉物業管理股份有限公司
+      </div>
+      <div style="width: 200px;">
+        <b>負責人（簽章）：</b>
+      </div>
+    </div>
+
+    <div class="company-info-footer">
+      <div class="company-info-row">
+        <div><b>發證機關：</b>紘嘉物業管理股份有限公司</div>
+        <div><b>統一編號：</b>90562471</div>
+      </div>
+      <div class="company-info-row">
+        <div><b>聯絡電話：</b>(03) 578-8388</div>
+        <div><b>公司地址：</b>新竹市東區光復路二段288號10樓</div>
+      </div>
+    </div>
+    
     <div class="print-footer-date" id="p_footer_date"></div>
   </div>
 
   <script>
-    const BASE_GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
-
-    const SHIFT_OPTIONS = ["請選擇班別", "日班", "夜班", "機動班", "特勤班", "輪休", "特休", "事假", "病假"];
-    let cloudLocationOptions = ["載入中..."];
-    let globalEmployees = [];
-    let globalPunchLogs = [];
-
-    document.addEventListener("DOMContentLoaded", function() {
-      fetchCloudLocations();
-    });
-
     function fetchCloudLocations() {
       showMask("正在從雲端同步最新案場與同仁名冊...");
       const url = `${BASE_GAS_URL}?action=fetchLocationsList`;
@@ -299,16 +340,128 @@
           const rSelect = document.getElementById("reportEmpSelect");
           const resigSelect = document.getElementById("resigEmpSelect"); 
           
+          // 🌟 同步渲染下載器的「案場下拉選單」
+          const exportLocSelect = document.getElementById("exportLocationSelect");
+          
           if(sSelect && rSelect && resigSelect) {
             let html = `<option value="">-- 請選擇排班同仁 --</option>`;
             globalEmployees.forEach(e => { html += `<option value="${e.id}">${e.id} - ${e.name}</option>`; });
             sSelect.innerHTML = html; rSelect.innerHTML = html; resigSelect.innerHTML = html;
           }
+
+          if (exportLocSelect) {
+            let html = `<option value="">-- 請選擇指定要下載的案場 --</option>`;
+            locNames.forEach(name => { html += `<option value="${name}">${name}</option>`; });
+            exportLocSelect.innerHTML = html;
+          }
+
           renderAdminLists(res);
         } else {
           alert("雲端同步異常：" + res.message);
         }
         initAdminMonthSelector();
+      });
+    }
+
+    // 🌟【全新黑科技】案場總班表自動交叉交叉交叉比對 Excel 下載引擎
+    function downloadLocationMonthlySchedule() {
+      const month = document.getElementById("exportMonthSelect").value;
+      const locationName = document.getElementById("exportLocationSelect").value;
+
+      if (!month || !locationName) {
+        alert("❌ 請先選擇下載月份與要統整的案場名稱！");
+        return;
+      }
+
+      showMask(`正在動態調閱並交叉統整 ${locationName} 總班表...`);
+
+      // 1. 獲取該月份的天數
+      const matches = month.match(/(\d+)年(\d+)月/);
+      const year = parseInt(matches[1]);
+      const monthNum = parseInt(matches[2]);
+      const totalDays = new Date(year, monthNum, 0).getDate();
+
+      // 建立 Excel 標頭：[工號, 姓名, 1日, 2日... 總值班天數]
+      let excelHeaders = ["工號", "姓名"];
+      for (let d = 1; d <= totalDays; d++) {
+        excelHeaders.push(`${d}日`);
+      }
+      excelHeaders.push("當月指派天數");
+
+      let excelRows = [];
+      let loadedCount = 0;
+      const targetEmployees = globalEmployees; // 掃描所有員工
+
+      if (targetEmployees.length === 0) {
+        hideMask();
+        alert("目前名冊庫無同仁資料");
+        return;
+      }
+
+      // 2. 迴圈向雲端大量拉取所有同仁當月的個人班表進行過濾
+      targetEmployees.forEach(emp => {
+        const url = `${BASE_GAS_URL}?action=fetchSchedule&employeeId=${emp.id}&month=${month}`;
+        sendJsonpRequest(url, "cb_exp_pack_" + emp.id + "_" + Math.floor(Math.random()*1000), function(res) {
+          loadedCount++;
+          
+          if (res.success && res.schedule && res.schedule.length > 0) {
+            let rowObj = { "工號": emp.id, "姓名": emp.name };
+            let hasDutyAtLocation = false;
+            let dutyDaysCount = 0;
+
+            // 初始化每天為空
+            for (let d = 1; d <= totalDays; d++) {
+              rowObj[`${d}日`] = "";
+            }
+
+            // 比對回填
+            res.schedule.forEach(item => {
+              let rawContent = String(item.shift).trim();
+              if (rawContent && rawContent.indexOf("-") !== -1) {
+                let parts = rawContent.split("-");
+                let locPart = parts[0] || "";
+                let shiftPart = parts[1] || "";
+                let dayNum = parseInt(String(item.date).replace("日", "").trim(), 10);
+
+                // 🌟 關鍵過濾：如果這天排的案場正是我們要下載的案場
+                if (locPart === locationName) {
+                  rowObj[`${dayNum}日`] = shiftPart; // 填入班別（如：日班、夜班）
+                  hasDutyAtLocation = true;
+                  dutyDaysCount++;
+                }
+              }
+            });
+
+            // 🌟 如果該同仁在這個月確實有在這個案場上過班，才把它塞入統計表中！
+            if (hasDutyAtLocation) {
+              rowObj["當月指派天數"] = dutyDaysCount + " 天";
+              excelRows.push(rowObj);
+            }
+          }
+
+          // 3. 當所有人背景拉取完畢，立刻生成 Excel 下載
+          if (loadedCount === targetEmployees.length) {
+            hideMask();
+            if (excelRows.length === 0) {
+              alert(`💡 提醒：該月份 (${month}) 查無任何同仁被指派在【${locationName}】案場值勤。`);
+              return;
+            }
+
+            // 使用 SheetJS 將物件陣列轉為活頁簿
+            const worksheet = XLSX.utils.json_to_sheet(excelRows, { header: excelHeaders });
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "案場班表統整");
+
+            // 調整欄寬美化
+            const maxW = [{ wch: 10 }, { wch: 12 }];
+            for (let d = 1; d <= totalDays; d++) maxW.push({ wch: 8 });
+            maxW.push({ wch: 14 });
+            worksheet["!cols"] = maxW;
+
+            // 觸發瀏覽器下載
+            XLSX.writeFile(workbook, `${month}_${locationName}_全人員班表統整.xlsx`);
+          }
+        });
       });
     }
 
@@ -456,22 +609,24 @@
       `;
     }
 
-    function inlineMapLocate(lat, lng) {
-      const container = document.getElementById("mapContainer");
-      if(!lat || !lng || lat === "0" || lng === "0" || lat === "undefined") {
-        container.innerHTML = "無法解析該打卡點的 GPS 座標數值。";
-        return;
-      }
-      container.innerHTML = `<iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius:8px;" src="https://maps.google.com/maps?q=${lat},${lng}&hl=zh-TW&z=16&output=embed"></iframe>`;
-    }
-
     function initAdminMonthSelector() {
-      const select = document.getElementById("schedMonthSelect"); if (!select) return; select.innerHTML = "";
+      const select = document.getElementById("schedMonthSelect"); 
+      const exSelect = document.getElementById("exportMonthSelect"); // 🌟 同步渲染下載器的月份下拉選單
+      if (!select) return; 
+      select.innerHTML = "";
+      if (exSelect) exSelect.innerHTML = "";
+
       const now = new Date();
       for (let i = -3; i <= 3; i++) {
         let d = new Date(now.getFullYear(), now.getMonth() + i, 1);
         let mStr = d.getFullYear() + "年" + String(d.getMonth() + 1).padStart(2, '0') + "月";
-        let opt = document.createElement("option"); opt.value = mStr; opt.innerText = mStr; if (i === 0) opt.selected = true; select.appendChild(opt);
+        
+        let opt = document.createElement("option"); opt.value = mStr; opt.innerText = mStr; 
+        let opt2 = document.createElement("option"); opt2.value = mStr; opt2.innerText = mStr;
+        if (i === 0) { opt.selected = true; opt2.selected = true; }
+        
+        select.appendChild(opt);
+        if (exSelect) exSelect.appendChild(opt2);
       }
       generateCalendarRows();
     }
@@ -543,7 +698,6 @@
       if(sectionId === 'punchLog') { loadPunchLogs(); }
     }
 
-    // 班表覆蓋發布
     function submitNewSchedule() {
       const empSelect = document.getElementById("schedEmpSelect"); const empId = empSelect ? empSelect.value : ""; const month = document.getElementById("schedMonthSelect").value.trim();
       if(!empId) { alert("請選擇排班同仁！"); return; }
