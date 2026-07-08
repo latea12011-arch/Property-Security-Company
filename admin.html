@@ -222,7 +222,7 @@
       </div>
     </div>
 
-    <!-- 🌟 核心升級：借支（上限管理）與 獨立薪資明細雙軌頁面 -->
+    <!-- 借支與 獨立薪資明細雙軌頁面 -->
     <div class="content-body" id="salaryAdvanceSection">
       
       <!-- 上半部：獨立的【1. 員工借支/預支登記】區塊 -->
@@ -236,7 +236,7 @@
           <button class="btn btn-danger" style="width: 100%; padding:10px; font-size:13px;" onclick="saveCashAdvanceData()"><i class="fa-solid fa-hand-holding-dollar"></i> 提交借支審查</button>
         </div>
         <div class="card" style="flex: 1; margin-bottom: 0; max-height: 250px; overflow-y: auto;">
-          <h3>📋 當月借支快顯備查簿</h3>
+          <h3>📋 當月借支快顯備查簿 (新台幣 NT$)</h3>
           <table>
             <thead><tr><th>同仁姓名 (工號)</th><th>借支月份</th><th>已撥支現金</th><th>操作</th></tr></thead>
             <tbody id="cashTableBody"></tbody>
@@ -246,24 +246,44 @@
 
       <!-- 下半部：獨立的【2. 月度薪資扣款明細結算】區塊 -->
       <div style="display: flex; gap: 20px;">
-        <div class="card" style="width: 320px; margin-bottom: 0; border: 2px solid #4e54c8;">
+        <div class="card" style="width: 340px; margin-bottom: 0; border: 2px solid #4e54c8;">
           <h3>📊 項目二：月度薪資明細結算</h3>
           <label style="font-size:12px; font-weight:bold;">選擇同仁：</label><select id="salEmpSelect" class="form-control"></select>
-          <label style="font-size:12px; font-weight:bold;">計薪月份：</label><select id="salMonthSelect" class="form-control"></select>
-          <label style="font-size:11px; color:#718096; display:block; margin-bottom:5px;">※ 提示：本月借支金額會由系統自動撈取，無須重複填寫。</label>
-          <hr style="margin: 10px 0; border: 0; border-top: 1px solid #cbd5e0;">
+          <label style="font-size:12px; font-weight:bold;">計薪結算月份：</label><select id="salMonthSelect" class="form-control"></select>
+          
+          <!-- 🌟 補齊：左側表單正式加入「原本基本薪資」輸入框 -->
+          <label style="font-size:12px; font-weight:bold; color:#4e54c8;">原本基本薪資 (元)：</label><input type="number" id="salBaseSalary" class="form-control" value="0" placeholder="例如：35000">
+          
+          <!-- 🌟 補齊：左側表單正式加入「事假天數」與「病假天數」輸入框 -->
+          <div style="display: flex; gap: 10px;">
+            <div style="flex:1;"><label style="font-size:12px; font-weight:bold;">事假天數 (天)：</label><input type="number" step="0.5" id="salPersonalDays" class="form-control" value="0"></div>
+            <div style="flex:1;"><label style="font-size:12px; font-weight:bold;">病假天數 (天)：</label><input type="number" step="0.5" id="salSickDays" class="form-control" value="0"></div>
+          </div>
+          
           <label style="font-size:12px; font-weight:bold;">勞保自付額 (元)：</label><input type="number" id="salLabor" class="form-control" value="0">
           <label style="font-size:12px; font-weight:bold;">健保自付額 (元)：</label><input type="number" id="salHealth" class="form-control" value="0">
           <label style="font-size:12px; font-weight:bold;">員工團保 (元)：</label><input type="number" id="salGroupIns" class="form-control" value="0">
-          <label style="font-size:12px; font-weight:bold;">事假扣款 (元)：</label><input type="number" id="salPersonal" class="form-control" value="0">
-          <label style="font-size:12px; font-weight:bold;">病假扣款 (元)：</label><input type="number" id="salSick" class="form-control" value="0">
           <label style="font-size:12px; font-weight:bold;">法院強制執行扣薪 (元)：</label><input type="number" id="salLegal" class="form-control" value="0">
-          <button class="btn btn-primary" style="width: 100%; padding:12px; font-size:13px;" onclick="saveSalaryDetailData()"><i class="fa-solid fa-calculator"></i> 結算並儲存薪資明細</button>
+          <button class="btn btn-primary" style="width: 100%; padding:12px; font-size:13px;" onclick="saveSalaryDetailData()"><i class="fa-solid fa-calculator"></i> 系統精算並存檔</button>
         </div>
-        <div class="card" style="flex: 1; margin-bottom: 0; max-height: 480px; overflow-y: auto;">
-          <h3>🧾 各案場同仁薪資結算總明細清單</h3>
+        <div class="card" style="flex: 1; margin-bottom: 0; max-height: 550px; overflow-y: auto;">
+          <h3>🧾 各案場同仁薪資結算明細總表 (新台幣格式)</h3>
           <table>
-            <thead><tr><th>同仁</th><th>計薪月</th><th>勞健保自付</th><th>團保</th><th>假扣款</th><th>法扣</th><th>本月借支</th><th>合計扣款</th><th>操作</th></tr></thead>
+            <thead>
+              <tr>
+                <th>同仁</th>
+                <th>計薪月</th>
+                <th>基本全薪</th>
+                <th>事假扣款</th>
+                <th>病假扣款</th>
+                <th>勞健/團保</th>
+                <th>法扣</th>
+                <th>本月借支</th>
+                <th style="color:#27ae60;">實際發薪</th>
+                <th>合計扣款</th>
+                <th>操作</th>
+              </tr>
+            </thead>
             <tbody id="salTableBody"></tbody>
           </table>
         </div>
@@ -347,7 +367,6 @@
           const resigSelect = document.getElementById("resigEmpSelect"); 
           const exportLocSelect = document.getElementById("exportLocationSelect");
           
-          // 🌟 獲取借支與薪資專用的下拉選單
           const cashEmpSelect = document.getElementById("cashEmpSelect");
           const salEmpSelect = document.getElementById("salEmpSelect");
           
@@ -391,7 +410,7 @@
       document.getElementById("locName").value = name; document.getElementById("locLat").value = lat; document.getElementById("locLng").value = lng; document.getElementById("locRadius").value = rad;
     }
 
-    // 🌟 新增：發送【借支/預支金】至雲端
+    // 發送【預支金】至雲端
     function saveCashAdvanceData() {
       const empSelect = document.getElementById("cashEmpSelect"); const empId = empSelect.value;
       if(!empId) { alert("❌ 請先選擇同仁！"); return; }
@@ -408,66 +427,67 @@
       });
     }
 
-    // 🌟 新增：發送【薪資明細】至雲端
+    // 發送【薪資明細】至雲端
     function saveSalaryDetailData() {
       const empSelect = document.getElementById("salEmpSelect"); const empId = empSelect.value;
       if(!empId) { alert("❌ 請先選擇同仁！"); return; }
       const empName = empSelect.options[empSelect.selectedIndex].text.split(" - ")[1];
       const month = document.getElementById("salMonthSelect").value;
       
+      const baseSalary = document.getElementById("salBaseSalary").value;
+      const personalDays = document.getElementById("salPersonalDays").value;
+      const sickDays = document.getElementById("salSickDays").value;
       const labor = document.getElementById("salLabor").value;
       const health = document.getElementById("salHealth").value;
       const groupIns = document.getElementById("salGroupIns").value;
-      const personal = document.getElementById("salPersonal").value;
-      const sick = document.getElementById("salSick").value;
       const legal = document.getElementById("salLegal").value;
       
       showMask("正在精算並儲存月度薪資明細...");
-      const url = `${BASE_GAS_URL}?action=saveSalaryDetail&id=${empId}&name=${encodeURIComponent(empName)}&month=${month}&labor=${labor}&health=${health}&groupIns=${groupIns}&personalLeave=${personal}&sickLeave=${sick}&legalDeduct=${legal}`;
+      const url = `${BASE_GAS_URL}?action=saveSalaryDetail&id=${empId}&name=${encodeURIComponent(empName)}&month=${month}&baseSalary=${baseSalary}&personalDays=${personalDays}&sickDays=${sickDays}&labor=${labor}&health=${health}&groupIns=${groupIns}&legalDeduct=${legal}`;
       sendJsonpRequest(url, "cb_sal_save_" + Math.floor(Math.random()*100000), function(res) {
         alert(res.message);
         if(res.success) loadSalaryDataSummaryHistory();
       });
     }
 
-    // 🌟 新增：加載打包回傳的借支與薪資雙表格歷史資料
+    // 歷史資料加載渲染（鎖定新台幣格式）
     function loadSalaryDataSummaryHistory() {
       const cashTbody = document.getElementById("cashTableBody");
       const salTbody = document.getElementById("salTableBody");
       if(cashTbody) cashTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">讀取中...</td></tr>`;
-      if(salTbody) salTbody.innerHTML = `<tr><td colspan="9" style="text-align:center;">讀取中...</td></tr>`;
+      if(salTbody) salTbody.innerHTML = `<tr><td colspan="11" style="text-align:center;">讀取中...</td></tr>`;
       
       const url = `${BASE_GAS_URL}?action=fetchSalaryDataSummary`;
       sendJsonpRequest(url, "cb_sum_fetch_" + Math.floor(Math.random()*100000), function(res) {
         hideMask();
         if(res.success) {
-          // 渲染借支表格
           let cHtml = "";
           if(res.advances && res.advances.length > 0) {
             res.advances.forEach(c => {
-              cHtml += `<tr><td><b>${c.name}</b> (${c.id})</td><td>${c.month}</td><td style="color:#e53e3e; font-weight:bold;">$${c.amount}</td><td><button class="btn btn-primary" style="padding:2px 6px; font-size:11px;" onclick="fillCashForm('${c.id}','${c.month}','${c.amount}')">改</button></td></tr>`;
+              cHtml += `<tr><td><b>${c.name}</b> (${c.id})</td><td>${c.month}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${c.amount}</td><td><button class="btn btn-primary" style="padding:2px 6px; font-size:11px;" onclick="fillCashForm('${c.id}','${c.month}','${c.amount}')">改</button></td></tr>`;
             });
             cashTbody.innerHTML = cHtml;
           } else { cashTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">本月尚無任何借支。</td></tr>`; }
           
-          // 渲染薪資明細明細表格
           let sHtml = "";
           if(res.details && res.details.length > 0) {
             res.details.forEach(s => {
               sHtml += `<tr>
                 <td><b>${s.name}</b> (${s.id})</td>
                 <td><span class="btn btn-primary" style="padding:2px 6px; font-size:11px;">${s.month}</span></td>
-                <td>勞保:${s.labor}<br>健保:${s.health}</td>
-                <td>${s.groupIns}</td>
-                <td>事假:${s.personalLeave}<br>病假:${s.sickLeave}</td>
-                <td style="color:#e53e3e; font-weight:bold;">${s.legalDeduct}</td>
-                <td style="color:#27ae60; font-weight:bold;">$${s.advance}</td>
-                <td style="background:#edf2f7; font-weight:700;">$${s.totalDeduct}</td>
-                <td><button class="btn btn-primary" style="padding:3px 8px; font-size:11px;" onclick="fillSalaryForm('${s.id}','${s.month}','${s.labor}','${s.health}','${s.groupIns}','${s.personalLeave}','${s.sickLeave}','${s.legalDeduct}')">修改</button></td>
+                <td style="font-weight:bold; color:#4e54c8;">NT$ ${s.baseSalary}</td>
+                <td>${s.personalDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.personalLeave})</span></td>
+                <td>${s.sickDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.sickLeave})</span></td>
+                <td>勞:${s.labor}<br>健:${s.health}<br>團:${s.groupIns}</td>
+                <td style="color:#e53e3e;">${s.legalDeduct}</td>
+                <td style="color:#e53e3e; font-weight:bold;">${s.advance}</td>
+                <td style="background:#e6fffa; color:#27ae60; font-weight:bold; font-size:14px;">NT$ ${s.finalPayout}</td>
+                <td style="background:#f7fafc; color:#718096;">$${s.totalDeduct}</td>
+                <td><button class="btn btn-primary" style="padding:3px 8px; font-size:11px;" onclick="fillSalaryForm('${s.id}','${s.month}','${s.baseSalary}','${s.personalDays}','${s.sickDays}','${s.labor}','${s.health}','${s.groupIns}','${s.legalDeduct}')">修改</button></td>
               </tr>`;
             });
             salTbody.innerHTML = sHtml;
-          } else { salTbody.innerHTML = `<tr><td colspan="9" style="text-align:center;">尚無結算資料。</td></tr>`; }
+          } else { salTbody.innerHTML = `<tr><td colspan="11" style="text-align:center;">尚無結算資料。</td></tr>`; }
         }
       });
     }
@@ -475,10 +495,12 @@
     function fillCashForm(id, month, amount) {
       document.getElementById("cashEmpSelect").value = id; document.getElementById("cashMonthSelect").value = month; document.getElementById("cashAmount").value = amount;
     }
-    function fillSalaryForm(id, month, labor, health, groupIns, personal, sick, legal) {
+    function fillSalaryForm(id, month, baseSalary, personalDays, sickDays, labor, health, groupIns, legal) {
       document.getElementById("salEmpSelect").value = id; document.getElementById("salMonthSelect").value = month;
+      document.getElementById("salBaseSalary").value = baseSalary;
+      document.getElementById("salPersonalDays").value = personalDays; document.getElementById("salSickDays").value = sickDays;
       document.getElementById("salLabor").value = labor; document.getElementById("salHealth").value = health; document.getElementById("salGroupIns").value = groupIns;
-      document.getElementById("salPersonal").value = personal; document.getElementById("salSick").value = sick; document.getElementById("salLegal").value = legal;
+      document.getElementById("salLegal").value = legal;
     }
 
     function saveEmployeeData() {
@@ -494,7 +516,6 @@
       sendJsonpRequest(url, "cb_save_loc_" + Math.floor(Math.random()*100000), function(res) { alert(res.message); fetchCloudLocations(); });
     }
 
-    // 月份選單初始化（同步支援新加載欄位）
     function initAdminMonthSelector() {
       const select = document.getElementById("schedMonthSelect"); const exSelect = document.getElementById("exportMonthSelect");
       const cashMonthSelect = document.getElementById("cashMonthSelect"); const salMonthSelect = document.getElementById("salMonthSelect");
