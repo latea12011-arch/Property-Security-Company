@@ -409,6 +409,7 @@
       });
     }
 
+    // 🌟 核心修正：讓右側案場表格能夠正確秀出傳回的經緯度與編輯按鈕
     function renderAdminLists(res) {
       const empTbody = document.getElementById("empTableBody");
       if(empTbody) {
@@ -483,7 +484,6 @@
       const url = `${BASE_GAS_URL}?action=saveLocation&name=${encodeURIComponent(name)}&lat=${lat}&lng=${lng}&radius=${radius}`;
       sendJsonpRequest(url, "cb_save_loc_" + Math.floor(Math.random()*100000), function(res) {
         alert(res.message || "🎉 案場參數儲存完成！");
-      }).then(() => {
         fetchCloudLocations();
       }).catch(() => {});
     }
@@ -519,7 +519,7 @@
                 let parts = rawContent.split("-");
                 if (parts[0] === locationName) {
                   let dayNum = parseInt(String(item.date).replace("日", "").trim(), 10);
-                  rowObj[`${dayNum}日`] = parts[1] || "";
+                  rowObj[`${dayNumNum}日`] = parts[1] || "";
                   hasDutyAtLocation = true;
                   dutyDaysCount++;
                 }
