@@ -335,6 +335,14 @@
   </div>
 
   <script>
+    function showMask(text) {
+      document.getElementById("maskText").innerText = text || "資料同步處理中...";
+      document.getElementById("globalMask").style.display = "flex";
+    }
+    function hideMask() {
+      document.getElementById("globalMask").style.display = "none";
+    }
+
     function sendJsonpRequest(url, callbackFunctionName, successHandler) {
       return new Promise((resolve, reject) => {
         window[callbackFunctionName] = function(data) {
@@ -365,15 +373,6 @@
     document.addEventListener("DOMContentLoaded", function() {
       fetchCloudLocations();
     });
-
-    function showMask(text) {
-      document.getElementById("globalMask").style.display = "flex";
-      document.getElementById("maskText").innerText = text || "資料同步處理中...";
-    }
-
-    function hideMask() {
-      document.getElementById("globalMask").style.display = "none";
-    }
 
     function fetchCloudLocations() {
       showMask("正在從雲端同步最新案場與同仁名冊...");
@@ -410,6 +409,48 @@
       });
     }
 
+    function renderAdminLists(res) {
+      const empTbody = document.getElementById("empTableBody");
+      if(empTbody) {
+        let html = "";
+        res.employees.forEach(e => {
+          html += `<tr><td>${e.id}</td><td><b>${e.name}</b></td><td>${e.identityType}</td><td>${e.assignedLocation}</td><td>${e.joinDate}</td><td><button class="btn btn-primary" style="padding:4px 8px;" onclick="editEmpForm('${e.id}','${e.name}','${e.password}','${e.joinDate}','${e.identityType}','${e.assignedLocation}')">編輯</button></td></tr>`;
+        });
+        empTbody.innerHTML = html;
+      }
+      
+      const locTbody = document.getElementById("locTableBody");
+      if(locTbody) {
+        let html = "";
+        (res.locations || []).forEach(l => {
+          html += `<tr>
+            <td><b>${l.name}</b></td>
+            <td>${l.lat ? l.lat : '--'}</td>
+            <td>${l.lng ? l.lng : '--'}</td>
+            <td>${l.radius ? l.radius + ' 米' : '--'}</td>
+            <td><button class="btn btn-primary" style="padding:4px 8px;" onclick="editLocForm('${l.name}','${l.lat}','${l.lng}','${l.radius}')">編輯</button></td>
+          </tr>`;
+        });
+        locTbody.innerHTML = html;
+      }
+    }
+
+    function editEmpForm(id, name, pwd, date, type, loc) {
+      document.getElementById("empId").value = id;
+      document.getElementById("empName").value = name;
+      document.getElementById("empPwd").value = pwd; 
+      document.getElementById("empDate").value = date;
+      document.getElementById("empType").value = type; 
+      document.getElementById("empLoc").value = loc;
+    }
+    
+    function editLocForm(name, lat, lng, rad) {
+      document.getElementById("locName").value = name;
+      document.getElementById("locLat").value = lat;
+      document.getElementById("locLng").value = lng; 
+      document.getElementById("locRadius").value = rad;
+    }
+
     function saveEmployeeData() {
       const id = document.getElementById("empId").value.trim();
       const name = document.getElementById("empName").value.trim();
@@ -417,7 +458,6 @@
       const joinDate = document.getElementById("empDate").value;
       const identityType = document.getElementById("empType").value;
       const assignedLocation = document.getElementById("empLoc").value.trim();
-
       if(!id || !name) { alert("請填入工號與姓名！"); return; }
       showMask("正在安全儲存同仁資訊...");
       
@@ -437,11 +477,10 @@
       const lng = document.getElementById("locLng").value.trim();
       const radius = document.getElementById("locRadius").value;
 
-      if(!name) { alert("請填入案場名稱！"); return; }
+      if(!name || !lat) { alert("請填入案場與經緯度參數！"); return; }
       showMask("正在安全儲存案場參數...");
       
       const url = `${BASE_GAS_URL}?action=saveLocation&name=${encodeURIComponent(name)}&lat=${lat}&lng=${lng}&radius=${radius}`;
-      
       sendJsonpRequest(url, "cb_save_loc_" + Math.floor(Math.random()*100000), function(res) {
         alert(res.message || "🎉 案場參數儲存完成！");
       }).then(() => {
@@ -502,6 +541,53 @@
       });
     }
 
+    function loadExistingSchedule() {
+      const empId = document.getElementById("schedEmpSelect").value;
+      const month = document.getElementById("schedMonthSelect").value;
+      if(!empId || !month) return;
+      showMask("正在調閱同仁該月雲端存檔班表...");
+      const url = `${BASE_GAS_URL}?action=fetchSchedule&employeeId=${empId}&month=${month}`;
+      sendJsonpRequest(url, "cb_load_sched_" + Math.floor(Math.random()*100000), function(res) {
+        hideMask();
+        document.querySelectorAll(".daily-location-select").forEach(s => s.value = "");
+        document.querySelectorAll(".daily-shift-select").forEach(s => s.value = "");
+        if(res.success && res.schedule) {
+          res.schedule.forEach(item => {
+            let dayNum = String(item.date).replace("日", "").trim();
+            let rawStr = String(item.shift).trim();
+            let locSelect = document.getElementById("loc_day_" + dayNum);
+            let shiftSelect = document.getElementById("shift_day_" + dayNum);
+            if(locSelect && shiftSelect && rawStr.indexOf("-") !== -1) {
+              let parts = rawStr.split("-");
+              locSelect.value = parts[0] === "無" ? "" : parts[0];
+              shiftSelect.value = parts[1] === "休" ? "" : parts[1];
+            }
+          });
+        }
+      });
+    }
+
+    function submitNewSchedule() {
+      const empSelect = document.getElementById("schedEmpSelect");
+      const empId = empSelect ? empSelect.value : ""; 
+      const month = document.getElementById("schedMonthSelect").value.trim();
+      if(!empId) { alert("請選擇排班同仁！"); return; }
+      let lines = []; 
+      const locSelects = document.querySelectorAll(".daily-location-select"); 
+      const shiftSelects = document.querySelectorAll(".daily-shift-select");
+      for (let i = 0; i < locSelects.length; i++) {
+        const day = locSelects[i].getAttribute("data-day");
+        const locVal = locSelects[i].value || "無"; 
+        const shiftVal = shiftSelects[i].value || "休";
+        lines.push(`${day}:${locVal}-${shiftVal}`);
+      }
+      showMask("正在安全發布新班表...");
+      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "updateSchedule", employeeId: empId, month: month, scheduleLines: lines.join("\n") }) })
+        .then(r => r.json())
+        .then(res => { hideMask(); alert(res.message); loadExistingSchedule(); })
+        .catch(() => { hideMask(); alert("儲存完畢！"); loadExistingSchedule(); });
+    }
+
     function autoFillResigDetails() {
       const targetId = document.getElementById("resigEmpSelect").value;
       const emp = globalEmployees.find(e => e.id === targetId);
@@ -520,12 +606,10 @@
         leaveDate: document.getElementById("resigLeaveDate").value,
         reason: document.getElementById("resigReason").value
       };
-
       if(!payload.leaveDate || !payload.idCard) { alert("請完整填寫身分證與離職生效日期！"); return; }
       showMask("正在將離職存檔寫入雲端中央庫...");
 
       const url = `${BASE_GAS_URL}?action=saveResignation&id=${targetId}&name=${encodeURIComponent(emp.name)}&idCard=${payload.idCard}&birth=${payload.birth}&joinDate=${payload.joinDate}&leaveDate=${payload.leaveDate}&reason=${encodeURIComponent(payload.reason)}&identityType=${encodeURIComponent(emp.identityType)}&location=${encodeURIComponent(emp.assignedLocation)}`;
-      
       sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) {
         document.getElementById("p_name").innerText = emp.name;
         document.getElementById("p_idcard").innerText = payload.idCard;
@@ -542,31 +626,6 @@
       }).then(() => {
         hideMask(); setTimeout(() => { window.print(); }, 800);
       }).catch(() => {});
-    }
-
-    function renderAdminLists(res) {
-      const empTbody = document.getElementById("empTableBody");
-      if(empTbody) {
-        let html = "";
-        res.employees.forEach(e => {
-          html += `<tr><td>${e.id}</td><td><b>${e.name}</b></td><td>${e.identityType}</td><td>${e.assignedLocation}</td><td>${e.joinDate}</td><td><button class="btn btn-primary" style="padding:4px 8px;" onclick="editEmpForm('${e.id}','${e.name}','${e.password}','${e.joinDate}','${e.identityType}','${e.assignedLocation}')">編輯</button></td></tr>`;
-        });
-        empTbody.innerHTML = html;
-      }
-      const locTbody = document.getElementById("locTableBody");
-      if(locTbody) {
-        let html = "";
-        (res.locations || []).forEach(l => {
-          html += `<tr><td><b>${l.name}</b></td><td>--</td><td>--</td><td>--</td><td>無密碼機制</td></tr>`;
-        });
-        locTbody.innerHTML = html;
-      }
-    }
-
-    function editEmpForm(id, name, pwd, date, type, loc) {
-      document.getElementById("empId").value = id; document.getElementById("empName").value = name;
-      document.getElementById("empPwd").value = pwd; document.getElementById("empDate").value = date;
-      document.getElementById("empType").value = type; document.getElementById("empLoc").value = loc;
     }
 
     function calculateMonthlyReport() {
@@ -590,9 +649,18 @@
       `;
     }
 
+    function inlineMapLocate(lat, lng) {
+      const container = document.getElementById("mapContainer");
+      if(!lat || !lng || lat === "0" || lng === "0") {
+        container.innerHTML = "無法解析該打卡點的 GPS 座標數值。";
+        return;
+      }
+      container.innerHTML = `<iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius:8px;" src="https://maps.google.com/maps?q=${lat},${lng}&hl=zh-TW&z=16&output=embed"></iframe>`;
+    }
+
     function initAdminMonthSelector() {
       const select = document.getElementById("schedMonthSelect"); 
-      const exSelect = document.getElementById("exportMonthSelect"); 
+      const exSelect = document.getElementById("exportMonthSelect");
       if (!select) return; 
       select.innerHTML = ""; if (exSelect) exSelect.innerHTML = "";
 
@@ -603,51 +671,25 @@
         let opt = document.createElement("option"); opt.value = mStr; opt.innerText = mStr; 
         let opt2 = document.createElement("option"); opt2.value = mStr; opt2.innerText = mStr;
         if (i === 0) { opt.selected = true; opt2.selected = true; }
-        select.appendChild(opt); if (exSelect) exSelect.appendChild(opt2);
+        select.appendChild(opt);
+        if (exSelect) exSelect.appendChild(opt2);
       }
       generateCalendarRows();
     }
 
-    function loadExistingSchedule() {
-      const empId = document.getElementById("schedEmpSelect").value;
-      const month = document.getElementById("schedMonthSelect").value;
-      if (!empId || !month) return;
-
-      showMask("正在載入該人員現有班表...");
-      const url = `${BASE_GAS_URL}?action=fetchSchedule&employeeId=${empId}&month=${month}`;
-      sendJsonpRequest(url, "cb_load_sched_" + Math.floor(Math.random()*100000), function(res) {
-        hideMask();
-        document.querySelectorAll(".daily-location-select").forEach(s => s.value = "");
-        document.querySelectorAll(".daily-shift-select").forEach(s => s.value = "");
-
-        if (res.success && res.schedule) {
-          res.schedule.forEach(item => {
-            const dayStr = String(item.date).replace("日", "").trim();
-            const locSelect = document.getElementById(`loc_day_${dayStr}`);
-            const shiftSelect = document.getElementById(`shift_day_${dayStr}`);
-            
-            let raw = String(item.shift).trim();
-            if (raw && raw.indexOf("-") !== -1) {
-              let parts = raw.split("-");
-              if (locSelect) locSelect.value = parts[0] || "";
-              if (shiftSelect) shiftSelect.value = parts[1] || "";
-            } else if (raw) {
-              if (shiftSelect) shiftSelect.value = raw;
-            }
-          });
-        }
-      }).catch(() => { hideMask(); });
-    }
-
     function generateCalendarRows() {
-      const monthVal = document.getElementById("schedMonthSelect").value; const tbody = document.getElementById("calendarRowsBody"); if (!tbody || !monthVal) return;
+      const monthVal = document.getElementById("schedMonthSelect").value; 
+      const tbody = document.getElementById("calendarRowsBody");
+      if (!tbody || !monthVal) return;
       tbody.innerHTML = "";
       const matches = monthVal.match(/(\d+)年(\d+)月/); if (!matches) return;
       const year = parseInt(matches[1]); const month = parseInt(matches[2]); 
-      const totalDays = new Date(year, month, 0).getDate(); const weekDayNames = ["日", "一", "二", "三", "四", "五", "六"];
-      
+      const totalDays = new Date(year, month, 0).getDate();
+      const weekDayNames = ["日", "一", "二", "三", "四", "五", "六"];
       for (let day = 1; day <= totalDays; day++) {
-        const dateObj = new Date(year, month - 1, day); const dayOfWeek = weekDayNames[dateObj.getDay()]; const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6; 
+        const dateObj = new Date(year, month - 1, day);
+        const dayOfWeek = weekDayNames[dateObj.getDay()]; 
+        const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6; 
         const dayLabelColor = isWeekend ? "color: #e53e3e; font-weight: bold; background: #fff5f5;" : "color: #4a5568;";
         const dayString = `${String(day).padStart(2, '0')} 日 (週${dayOfWeek})`;
         
@@ -667,34 +709,24 @@
     }
 
     function switchSection(sectionId, btnElem) {
-      document.querySelectorAll('.content-body').forEach(el => el.classList.remove('active')); document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
-      document.getElementById(sectionId).classList.add('active'); btnElem.classList.add('active'); document.getElementById("currentSectionTitle").innerText = btnElem.innerText.trim();
+      document.querySelectorAll('.content-body').forEach(el => el.classList.remove('active')); 
+      document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(sectionId).classList.add('active');
+      btnElem.classList.add('active'); 
+      document.getElementById("currentSectionTitle").innerText = btnElem.innerText.trim();
       if(sectionId === 'leaveAudit') { loadLeaveApplications(); }
       if(sectionId === 'punchLog') { loadPunchLogs(); }
     }
 
-    function submitNewSchedule() {
-      const empSelect = document.getElementById("schedEmpSelect"); const empId = empSelect ? empSelect.value : ""; const month = document.getElementById("schedMonthSelect").value.trim();
-      if(!empId) { alert("請選擇排班同仁！"); return; }
-      let lines = []; const locSelects = document.querySelectorAll(".daily-location-select"); const shiftSelects = document.querySelectorAll(".daily-shift-select");
-      for (let i = 0; i < locSelects.length; i++) {
-        const day = locSelects[i].getAttribute("data-day"); const locVal = locSelects[i].value || "無"; const shiftVal = shiftSelects[i].value || "休";
-        lines.push(`${day}:${locVal}-${shiftVal}`);
-      }
-      showMask("正在安全發布新班表...");
-      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "updateSchedule", employeeId: empId, month: month, scheduleLines: lines.join("\n") }) })
-        .then(r => r.json())
-        .then(res => { hideMask(); alert(res.message); loadExistingSchedule(); })
-        .catch(() => { hideMask(); alert("儲存完畢！"); loadExistingSchedule(); });
-    }
-
     function loadLeaveApplications() {
-      const tbody = document.getElementById("leaveAuditTableBody"); tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">同步中...</td></tr>`;
+      const tbody = document.getElementById("leaveAuditTableBody");
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">同步中...</td></tr>`;
       sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllLeaveRecords`, "cb_l_" + Math.floor(Math.random()*100000), function(res) {
         if(res.success && res.records.length > 0) {
           let html = "";
           res.records.forEach((item) => {
-            html += `<tr><td>${item.timestamp}</td><td><b>${item.employeeName}</b></td><td>${item.leaveType}</td><td>${item.start}<br>${item.end}</td><td>${item.reason}</td><td>無</td><td>${item.status === '待審核' ? `<button class="btn btn-success" onclick="auditLeave('${item.rowId}','已核准')">核准</button> <button class="btn btn-danger" onclick="auditLeave('${item.rowId}','駁回')">駁回</button>` : `<b>${item.status}</b>`}</td></tr>`;
+            let imgHtml = item.fileData.startsWith("http") ? `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')">` : "無";
+            html += `<tr><td>${item.timestamp}</td><td><b>${item.employeeName}</b></td><td>${item.leaveType}</td><td>${item.start}<br>${item.end}</td><td>${item.reason}</td><td>${imgHtml}</td><td>${item.status === '待審核' ? `<button class="btn btn-success" onclick="auditLeave('${item.rowId}','已核准')">核准</button> <button class="btn btn-danger" onclick="auditLeave('${item.rowId}','駁回')">駁回</button>` : `<b>${item.status}</b>`}</td></tr>`;
           });
           tbody.innerHTML = html;
         } else { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">目前無假單。</td></tr>`; }
@@ -703,17 +735,19 @@
 
     function auditLeave(rowId, statusResult) {
       showMask("處理中...");
-      fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeavePOST", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); });
+      fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); });
     }
 
     function loadPunchLogs() {
-      const tbody = document.getElementById("punchLogTableBody"); tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">載入中...</td></tr>`;
+      const tbody = document.getElementById("punchLogTableBody");
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">載入中...</td></tr>`;
       sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllPunchLogs`, "cb_p_" + Math.floor(Math.random()*100000), function(res) {
         if(res.success && res.logs.length > 0) {
           globalPunchLogs = res.logs;
           let html = "";
           res.logs.forEach(log => {
-            html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${log.type}</td><td>${log.location}</td><td>--</td></tr>`;
+            let typeTag = log.type === 'clockIn' ? '<span style="color:#27ae60;font-weight:bold;">[上班]</span>' : '<span style="color:#f39c12;font-weight:bold;">[下班]</span>';
+            html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td><button class="btn btn-primary" style="padding:4px 8px;" onclick="inlineMapLocate('${log.lat}','${log.lng}')"><i class="fa-solid fa-map-location-dot"></i> 定位查看</button></td></tr>`;
           });
           tbody.innerHTML = html;
         } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">今日尚無紀錄。</td></tr>`; }
