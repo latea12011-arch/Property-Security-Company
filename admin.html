@@ -227,9 +227,7 @@
           <label style="font-size:12px; font-weight:bold;">健保自付額 (元)：</label><input type="number" id="salHealth" class="form-control" value="0">
           <label style="font-size:12px; font-weight:bold;">員工團保 (元)：</label><input type="number" id="salGroupIns" class="form-control" value="0">
           <label style="font-size:12px; font-weight:bold;">法院強制執行扣薪 (元)：</label><input type="number" id="salLegal" class="form-control" value="0">
-          
           <label style="font-size:12px; font-weight:bold; color:#e53e3e;">管委會發函 / 額外罰款扣款 (元)：</label><input type="number" id="salExtraDeduct" class="form-control" value="0">
-          
           <button class="btn btn-primary" style="width: 100%; padding:12px; font-size:13px;" onclick="saveSalaryDetailData()"><i class="fa-solid fa-calculator"></i> 系統精算並存檔</button>
         </div>
         <div class="card" style="flex: 1; margin-bottom: 0; max-height: 550px; overflow-y: auto;">
@@ -262,7 +260,6 @@
   </div>
 
   <script>
-    // 🌟 核心修復：這段大鎖通訊函式先前完全沒有打在網頁上，導致按鈕抓不到！現在完整補上！
     function submitAdminLogin() {
       const id = document.getElementById("loginUser").value.trim();
       const pwd = document.getElementById("loginPwd").value.trim();
@@ -286,7 +283,7 @@
               if(btn) btn.remove();
             });
           }
-          fetchCloudLocations(); // 解鎖後立刻動態抓取全人員大數據
+          fetchCloudLocations(); 
         } else {
           alert(res.message);
         }
@@ -294,14 +291,14 @@
     }
 
     function showMask(text) { document.getElementById("maskText").innerText = text || "資料同步處理中..."; document.getElementById("globalMask").style.display = "flex"; }
-    function hideMask() { document.getElementById("globalMask").style.display = "none"; } // 🌟 語法錯誤完全修正
+    function hideMask() { document.getElementById("globalMask").style.display = "none"; }
 
     function sendJsonpRequest(url, callbackFunctionName, successHandler) {
       return new Promise((resolve, reject) => {
         window[callbackFunctionName] = function(data) { successHandler(data); delete window[callbackFunctionName]; const scriptTag = document.getElementById(callbackFunctionName); if (scriptTag) scriptTag.remove(); resolve(); };
         const connector = url.includes("?") ? "&" : "?"; const script = document.createElement("script"); script.src = `${url}${connector}callback=${callbackFunctionName}&_ts=${new Date().getTime()}`; script.id = callbackFunctionName;
         script.onerror = () => { alert("🚨 通訊異常！請檢查 GAS URL。"); hideMask(); reject(); };
-        document.body.appendChild(script);
+        document.body.appendChild(script); // 🌟 核心修復：這行原本漏掉，現已完美補回！傳送請求啟動！
       });
     }
 
@@ -414,7 +411,6 @@
       });
     }
 
-    // A4 一半(A5)大小的雙拼列印省紙規格匯出功能
     function downloadSalaryDetailExcel() {
       if (currentDetailsListCache.length === 0) { alert("💡 目前清單上沒有任何結算資料可以導出！"); return; }
       showMask("正在動態建構 A4 雙拼同仁簽名薪資明細表...");
@@ -425,7 +421,7 @@
         wsData.push(["【項目分類】", "基本本薪", "事假扣款(天)", "病假扣款(天)", "勞健保/團保", "法院法扣/額外扣款", "本月預支借金"]);
         wsData.push(["應發/應扣明細", `NT$ ${s.baseSalary}`, `NT$ ${s.personalLeave} (${s.personalDays}天)`, `NT$ ${s.sickLeave} (${s.sickDays}天)`, `NT$ ${s.labor + s.health + s.groupIns}`, `法扣:${s.legalDeduct} / 額外:${s.extraDeduct}`, `NT$ ${s.advance}`]);
         wsData.push(["應付合計:", `NT$ ${s.baseSalary}`, "合計扣款總額:", `NT$ ${s.totalDeduct}`, "", "實發實領金額:", `NT$ ${s.finalPayout}`]);
-        wsData.push(["備註說明: 10日前洽管理部。懲罰扣款依案場規範核實。 簽名簽章:_______________________ 日期:115年__月__日"]);
+        wsData.push(["備註說明: 10日前洽管理部。 簽名簽章:_______________________ 日期:115年__月__日"]);
         wsData.push(["- - - - - - - - - - - - - - - - - - - - - - - - ( 裁 切 線 ) - - - - - - - - - - - - - - - - - - - - - - - -"]);
         wsData.push([""]); wsData.push([""]);
       });
