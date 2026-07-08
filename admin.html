@@ -25,6 +25,13 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   
+  <script>
+    // =========================================================================
+    // 🌟【請在這裡修改網址】直接把你 GAS 部署產生的 exec 網址貼在下方引號內：
+    // =========================================================================
+    const BASE_GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
+  </script>
+  
   <style>
     * { box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; margin: 0; padding: 0; }
     body { background-color: #f7fafc; color: #2d3748; display: flex; height: 100vh; overflow: hidden; }
@@ -72,8 +79,6 @@
   </style>
 </head>
 <body>
-
-  <div class="loading-mask" id="globalMask"><div class="spinner"></div><p id="maskText" style="font-weight: bold; color: #4e54c8;">安全載入雲端資料中...</p></div>
 
   <div class="sidebar">
     <h2>紘嘉物業後台管理</h2>
@@ -328,7 +333,6 @@
   </div>
 
   <script>
-    // 🌟【終極排隊同步機制】用序列式 Promise 阻斷非同步衝撞，徹底消滅名單刷新卡死的現象
     function sendJsonpRequest(url, callbackFunctionName, successHandler) {
       return new Promise((resolve, reject) => {
         window[callbackFunctionName] = function(data) {
@@ -336,7 +340,7 @@
           delete window[callbackFunctionName];
           const scriptTag = document.getElementById(callbackFunctionName);
           if (scriptTag) scriptTag.remove();
-          resolve(); // 只有執行完畢，才放行下一個連線
+          resolve();
         };
         const connector = url.includes("?") ? "&" : "?";
         const script = document.createElement("script");
@@ -361,11 +365,10 @@
       const encodedLoc = encodeURIComponent(assignedLocation);
       const url = `${BASE_GAS_URL}?action=saveEmployee&id=${id}&name=${encodeURIComponent(name)}&password=${encodeURIComponent(password)}&joinDate=${joinDate}&identityType=${encodeURIComponent(identityType)}&assignedLocation=${encodedLoc}`;
       
-      // 🌟 強制順序：等後端回傳成功，才去執行拉取刷新
       sendJsonpRequest(url, "cb_save_emp_" + Math.floor(Math.random()*100000), function(res) {
         alert(res.message || "🎉 同仁資訊儲存成功！");
       }).then(() => {
-        fetchCloudLocations(); // 名冊刷新被乖乖排在後面，絕對不會再死鎖跑掉！
+        fetchCloudLocations();
       });
     }
 
@@ -412,7 +415,6 @@
       
       if (globalEmployees.length === 0) { hideMask(); alert("目前名冊庫無同仁資料"); return; }
 
-      // 智慧佇列：批次排隊處理
       globalEmployees.forEach(emp => {
         const url = `${BASE_GAS_URL}?action=fetchSchedule&employeeId=${emp.id}&month=${month}`;
         sendJsonpRequest(url, "cb_exp_pack_" + emp.id + "_" + Math.floor(Math.random()*1000), function(res) {
@@ -540,7 +542,7 @@
       
       area.style.display = "block";
       area.innerHTML = `
-        <strong>📋 ${targetMonth} 考勤簡報分析：</strong><br>
+        <strong>📋 ${targetMonth} 考勤簡報 analysis：</strong><br>
         👤 同仁工號：${empId}<br>
         📅 本月累計出勤天數：<span style="color:#27ae60;font-weight:bold;">${totalDays} 天</span><br>
         ⏱️ 上班打卡總次數：${totalIn} 次 / 下班打卡總次數：${totalOut} 次<br>
@@ -600,57 +602,6 @@
         tbody.appendChild(tr);
       }
       loadExistingSchedule();
-    }
-
-    function switchSection(sectionId, btnElem) {
-      document.querySelectorAll('.content-body').forEach(el => el.classList.remove('active')); document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
-      document.getElementById(sectionId).classList.add('active'); btnElem.classList.add('active'); document.getElementById("currentSectionTitle").innerText = btnElem.innerText.trim();
-      if(sectionId === 'leaveAudit') { loadLeaveApplications(); }
-      if(sectionId === 'punchLog') { loadPunchLogs(); }
-    }
-
-    function submitNewSchedule() {
-      const empSelect = document.getElementById("schedEmpSelect"); const empId = empSelect ? empSelect.value : ""; const month = document.getElementById("schedMonthSelect").value.trim();
-      if(!empId) { alert("請選擇排班同仁！"); return; }
-      let lines = []; const locSelects = document.querySelectorAll(".daily-location-select"); const shiftSelects = document.querySelectorAll(".daily-shift-select");
-      for (let i = 0; i < locSelects.length; i++) {
-        const day = locSelects[i].getAttribute("data-day"); const locVal = locSelects[i].value || "無"; const shiftVal = shiftSelects[i].value || "休";
-        lines.push(`${day}:${locVal}-${shiftVal}`);
-      }
-      showMask("正在安全發布新班表...");
-      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "updateSchedule", employeeId: empId, month: month, scheduleLines: lines.join("\n") }) })
-        .then(r => r.json())
-        .then(res => { hideMask(); alert(res.message); loadExistingSchedule(); })
-        .catch(() => { hideMask(); alert("儲存完畢！"); loadExistingSchedule(); });
-    }
-
-    function loadLeaveApplications() {
-      const tbody = document.getElementById("leaveAuditTableBody"); tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">同步中...</td></tr>`;
-      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllLeaveRecords`, "cb_l_" + Math.floor(Math.random()*100000), function(res) {
-        if(res.success && res.records.length > 0) {
-          let html = "";
-          res.records.forEach((item) => {
-            let imgHtml = item.fileData.startsWith("http") ? `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')">` : "無";
-            html += `<tr><td>${item.timestamp}</td><td><b>${item.employeeName}</b></td><td>${item.leaveType}</td><td>${item.start}<br>${item.end}</td><td>${item.reason}</td><td>${imgHtml}</td><td>${item.status === '待審核' ? `<button class="btn btn-success" onclick="auditLeave('${item.rowId}','已核准')">核准</button> <button class="btn btn-danger" onclick="auditLeave('${item.rowId}','駁回')">駁回</button>` : `<b>${item.status}</b>`}</td></tr>`;
-          });
-          tbody.innerHTML = html;
-        } else { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">目前無假單。</td></tr>`; }
-      });
-    }
-
-    function loadPunchLogs() {
-      const tbody = document.getElementById("punchLogTableBody"); tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">載入中...</td></tr>`;
-      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllPunchLogs`, "cb_p_" + Math.floor(Math.random()*100000), function(res) {
-        if(res.success && res.logs.length > 0) {
-          globalPunchLogs = res.logs;
-          let html = "";
-          res.logs.forEach(log => {
-            let typeTag = log.type === 'clockIn' ? '<span style="color:#27ae60;font-weight:bold;">[上班]</span>' : '<span style="color:#f39c12;font-weight:bold;">[下班]</span>';
-            html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td><button class="btn btn-primary" style="padding:4px 8px;" onclick="inlineMapLocate('${log.lat}','${log.lng}')"><i class="fa-solid fa-map-location-dot"></i> 定位查看</button></td></tr>`;
-          });
-          tbody.innerHTML = html;
-        } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">今日尚無紀錄。</td></tr>`; }
-      });
     }
   </script>
 </body>
