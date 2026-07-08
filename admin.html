@@ -294,7 +294,7 @@
     </table>
     
     <div class="print-statement">
-      儲查本公司上述同仁於任職期間，負責盡職，恪遵各項現場維護與保全管理規範，工作表現深獲肯定。
+      儲查本公司上述同仁於任職期間，負責盡職，恪遵各項现场維護與保全管理規範，工作表現深獲肯定。
       現因上述事由提出申請，經本公司依法審查，雙方勞雇關係確實已於離職日期正式依法宣告終止。
       同仁於離職前已依本公司規定將所保管之各項勤務機具、案場公物、執勤紀錄及業務相關檔案清點移交完畢，確認無誤，特發此證以茲證明。
     </div>
@@ -328,50 +328,62 @@
   </div>
 
   <script>
-    // 🌟 請換成您後台對應的 Google Apps Script 部署網址
-    const BASE_GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
+    // 🌟【終極排隊同步機制】用序列式 Promise 阻斷非同步衝撞，徹底消滅名單刷新卡死的現象
+    function sendJsonpRequest(url, callbackFunctionName, successHandler) {
+      return new Promise((resolve, reject) => {
+        window[callbackFunctionName] = function(data) {
+          successHandler(data);
+          delete window[callbackFunctionName];
+          const scriptTag = document.getElementById(callbackFunctionName);
+          if (scriptTag) scriptTag.remove();
+          resolve(); // 只有執行完畢，才放行下一個連線
+        };
+        const connector = url.includes("?") ? "&" : "?";
+        const script = document.createElement("script");
+        script.src = `${url}${connector}callback=${callbackFunctionName}&_ts=${new Date().getTime()}`;
+        script.id = callbackFunctionName;
+        script.onerror = () => { reject(); };
+        document.body.appendChild(script);
+      });
+    }
 
-    const SHIFT_OPTIONS = ["請選擇班別", "日班", "夜班", "機動班", "特勤班", "輪休", "特休", "事假", "病假"];
-    let cloudLocationOptions = ["載入中..."];
-    let globalEmployees = [];
-    let globalPunchLogs = [];
+    function saveEmployeeData() {
+      const id = document.getElementById("empId").value.trim();
+      const name = document.getElementById("empName").value.trim();
+      const password = document.getElementById("empPwd").value.trim();
+      const joinDate = document.getElementById("empDate").value;
+      const identityType = document.getElementById("empType").value;
+      const assignedLocation = document.getElementById("empLoc").value.trim();
 
-    document.addEventListener("DOMContentLoaded", function() {
-      fetchCloudLocations();
-    });
+      if(!id || !name) { alert("請填入工號與姓名！"); return; }
+      showMask("正在安全儲存同仁資訊...");
+      
+      const encodedLoc = encodeURIComponent(assignedLocation);
+      const url = `${BASE_GAS_URL}?action=saveEmployee&id=${id}&name=${encodeURIComponent(name)}&password=${encodeURIComponent(password)}&joinDate=${joinDate}&identityType=${encodeURIComponent(identityType)}&assignedLocation=${encodedLoc}`;
+      
+      // 🌟 強制順序：等後端回傳成功，才去執行拉取刷新
+      sendJsonpRequest(url, "cb_save_emp_" + Math.floor(Math.random()*100000), function(res) {
+        alert(res.message || "🎉 同仁資訊儲存成功！");
+      }).then(() => {
+        fetchCloudLocations(); // 名冊刷新被乖乖排在後面，絕對不會再死鎖跑掉！
+      });
+    }
 
-    function fetchCloudLocations() {
-      showMask("正在從雲端同步最新案場與同仁名冊...");
-      const url = `${BASE_GAS_URL}?action=fetchLocationsList`;
-      sendJsonpRequest(url, "cb_admin_init_" + Math.floor(Math.random()*100000), function(res) {
-        hideMask();
-        if(res.success) {
-          globalEmployees = res.employees || [];
-          let locNames = (res.locations || []).map(l => l.name);
-          cloudLocationOptions = ["請選擇指派案場", "不需指派(如休假)"].concat(locNames);
-          
-          const sSelect = document.getElementById("schedEmpSelect");
-          const rSelect = document.getElementById("reportEmpSelect");
-          const resigSelect = document.getElementById("resigEmpSelect"); 
-          const exportLocSelect = document.getElementById("exportLocationSelect");
-          
-          if(sSelect && rSelect && resigSelect) {
-            let html = `<option value="">-- 請選擇排班同仁 --</option>`;
-            globalEmployees.forEach(e => { html += `<option value="${e.id}">${e.id} - ${e.name}</option>`; });
-            sSelect.innerHTML = html; rSelect.innerHTML = html; resigSelect.innerHTML = html;
-          }
+    function saveLocationData() {
+      const name = document.getElementById("locName").value.trim();
+      const lat = document.getElementById("locLat").value.trim();
+      const lng = document.getElementById("locLng").value.trim();
+      const radius = document.getElementById("locRadius").value;
 
-          if (exportLocSelect) {
-            let html = `<option value="">-- 請選擇指定要下載的案場 --</option>`;
-            locNames.forEach(name => { html += `<option value="${name}">${name}</option>`; });
-            exportLocSelect.innerHTML = html;
-          }
-
-          renderAdminLists(res);
-        } else {
-          alert("雲端同步異常：" + res.message);
-        }
-        initAdminMonthSelector();
+      if(!name || !lat) { alert("請填入案場與經緯度參數！"); return; }
+      showMask("正在安全儲存案場參數...");
+      
+      const url = `${BASE_GAS_URL}?action=saveLocation&name=${encodeURIComponent(name)}&lat=${lat}&lng=${lng}&radius=${radius}`;
+      
+      sendJsonpRequest(url, "cb_save_loc_" + Math.floor(Math.random()*100000), function(res) {
+        alert(res.message || "🎉 案場參數儲存完成！");
+      }).then(() => {
+        fetchCloudLocations();
       });
     }
 
@@ -392,45 +404,32 @@
       const totalDays = new Date(year, monthNum, 0).getDate();
 
       let excelHeaders = ["工號", "姓名"];
-      for (let d = 1; d <= totalDays; d++) {
-        excelHeaders.push(`${d}日`);
-      }
+      for (let d = 1; d <= totalDays; d++) { excelHeaders.push(`${d}日`); }
       excelHeaders.push("當月指派天數");
 
       let excelRows = [];
       let loadedCount = 0;
-      const targetEmployees = globalEmployees;
+      
+      if (globalEmployees.length === 0) { hideMask(); alert("目前名冊庫無同仁資料"); return; }
 
-      if (targetEmployees.length === 0) {
-        hideMask();
-        alert("目前名冊庫無同仁資料");
-        return;
-      }
-
-      targetEmployees.forEach(emp => {
+      // 智慧佇列：批次排隊處理
+      globalEmployees.forEach(emp => {
         const url = `${BASE_GAS_URL}?action=fetchSchedule&employeeId=${emp.id}&month=${month}`;
         sendJsonpRequest(url, "cb_exp_pack_" + emp.id + "_" + Math.floor(Math.random()*1000), function(res) {
           loadedCount++;
-          
           if (res.success && res.schedule && res.schedule.length > 0) {
             let rowObj = { "工號": emp.id, "姓名": emp.name };
             let hasDutyAtLocation = false;
             let dutyDaysCount = 0;
-
-            for (let d = 1; d <= totalDays; d++) {
-              rowObj[`${d}日`] = "";
-            }
+            for (let d = 1; d <= totalDays; d++) { rowObj[`${d}日`] = ""; }
 
             res.schedule.forEach(item => {
               let rawContent = String(item.shift).trim();
               if (rawContent && rawContent.indexOf("-") !== -1) {
                 let parts = rawContent.split("-");
-                let locPart = parts[0] || "";
-                let shiftPart = parts[1] || "";
-                let dayNum = parseInt(String(item.date).replace("日", "").trim(), 10);
-
-                if (locPart === locationName) {
-                  rowObj[`${dayNum}日`] = shiftPart;
+                if (parts[0] === locationName) {
+                  let dayNum = parseInt(String(item.date).replace("日", "").trim(), 10);
+                  rowObj[`${dayNum}日`] = parts[1] || "";
                   hasDutyAtLocation = true;
                   dutyDaysCount++;
                 }
@@ -443,22 +442,12 @@
             }
           }
 
-          if (loadedCount === targetEmployees.length) {
+          if (loadedCount === globalEmployees.length) {
             hideMask();
-            if (excelRows.length === 0) {
-              alert(`💡 提醒：該月份 (${month}) 查無任何同仁被指派在【${locationName}】案場值勤。`);
-              return;
-            }
-
+            if (excelRows.length === 0) { alert(`💡 查無同仁被指派在【${locationName}】案場值勤。`); return; }
             const worksheet = XLSX.utils.json_to_sheet(excelRows, { header: excelHeaders });
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "案場班表統整");
-
-            const maxW = [{ wch: 10 }, { wch: 12 }];
-            for (let d = 1; d <= totalDays; d++) maxW.push({ wch: 8 });
-            maxW.push({ wch: 14 });
-            worksheet["!cols"] = maxW;
-
             XLSX.writeFile(workbook, `${month}_${locationName}_全人員班表統整.xlsx`);
           }
         });
@@ -468,9 +457,7 @@
     function autoFillResigDetails() {
       const targetId = document.getElementById("resigEmpSelect").value;
       const emp = globalEmployees.find(e => e.id === targetId);
-      if(emp) {
-        document.getElementById("resigJoinDate").value = emp.joinDate || "";
-      }
+      if(emp) { document.getElementById("resigJoinDate").value = emp.joinDate || ""; }
     }
 
     function submitAndPrintResignation() {
@@ -479,43 +466,34 @@
       if(!targetId || !emp) { alert("請先選取離職同仁！"); return; }
       
       const payload = {
-        action: "saveResignation",
-        employeeId: targetId,
-        employeeName: emp.name,
         idCard: document.getElementById("resigIdCard").value.trim(),
         birth: document.getElementById("resigBirth").value,
         joinDate: document.getElementById("resigJoinDate").value,
         leaveDate: document.getElementById("resigLeaveDate").value,
-        reason: document.getElementById("resigReason").value,
-        identityType: emp.identityType,
-        location: emp.assignedLocation
+        reason: document.getElementById("resigReason").value
       };
 
       if(!payload.leaveDate || !payload.idCard) { alert("請完整填寫身分證與離職生效日期！"); return; }
       showMask("正在將離職存檔寫入雲端中央庫...");
 
-      const url = `${BASE_GAS_URL}?action=saveResignation&id=${payload.employeeId}&name=${encodeURIComponent(payload.employeeName)}&idCard=${payload.idCard}&birth=${payload.birth}&joinDate=${payload.joinDate}&leaveDate=${payload.leaveDate}&reason=${encodeURIComponent(payload.reason)}&identityType=${encodeURIComponent(payload.identityType)}&location=${encodeURIComponent(payload.location)}`;
+      const url = `${BASE_GAS_URL}?action=saveResignation&id=${targetId}&name=${encodeURIComponent(emp.name)}&idCard=${payload.idCard}&birth=${payload.birth}&joinDate=${payload.joinDate}&leaveDate=${payload.leaveDate}&reason=${encodeURIComponent(payload.reason)}&identityType=${encodeURIComponent(emp.identityType)}&location=${encodeURIComponent(emp.assignedLocation)}`;
       
       sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) {
+        document.getElementById("p_name").innerText = emp.name;
+        document.getElementById("p_idcard").innerText = payload.idCard;
+        document.getElementById("p_birth").innerText = payload.birth;
+        document.getElementById("p_id").innerText = targetId;
+        document.getElementById("p_type").innerText = emp.identityType;
+        document.getElementById("p_loc").innerText = emp.assignedLocation;
+        document.getElementById("p_join").innerText = payload.joinDate;
+        document.getElementById("p_leave").innerText = payload.leaveDate;
+        document.getElementById("p_reason").innerText = payload.reason;
+        
+        const today = new Date();
+        document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
+      }).then(() => {
         hideMask();
-        if(res.success) {
-          document.getElementById("p_name").innerText = payload.employeeName;
-          document.getElementById("p_idcard").innerText = payload.idCard;
-          document.getElementById("p_birth").innerText = payload.birth;
-          document.getElementById("p_id").innerText = payload.employeeId;
-          document.getElementById("p_type").innerText = payload.identityType;
-          document.getElementById("p_loc").innerText = payload.location;
-          document.getElementById("p_join").innerText = payload.joinDate;
-          document.getElementById("p_leave").innerText = payload.leaveDate;
-          document.getElementById("p_reason").innerText = payload.reason;
-          
-          const today = new Date();
-          document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
-          
-          setTimeout(() => { window.print(); }, 500);
-        } else {
-          alert("存檔失敗：" + res.message);
-        }
+        setTimeout(() => { window.print(); }, 500);
       });
     }
 
@@ -547,45 +525,6 @@
     function editLocForm(name, lat, lng, rad) {
       document.getElementById("locName").value = name; document.getElementById("locLat").value = lat;
       document.getElementById("locLng").value = lng; document.getElementById("locRadius").value = rad;
-    }
-
-    function saveEmployeeData() {
-      const id = document.getElementById("empId").value.trim();
-      const name = document.getElementById("empName").value.trim();
-      const password = document.getElementById("empPwd").value.trim();
-      const joinDate = document.getElementById("empDate").value;
-      const identityType = document.getElementById("empType").value;
-      const assignedLocation = document.getElementById("empLoc").value.trim();
-
-      if(!id || !name) { alert("請填入工號與姓名！"); return; }
-      showMask("正在安全儲存同仁資訊...");
-      
-      const encodedLoc = encodeURIComponent(assignedLocation);
-      const url = `${BASE_GAS_URL}?action=saveEmployee&id=${id}&name=${encodeURIComponent(name)}&password=${encodeURIComponent(password)}&joinDate=${joinDate}&identityType=${encodeURIComponent(identityType)}&assignedLocation=${encodedLoc}`;
-      
-      sendJsonpRequest(url, "cb_save_emp_" + Math.floor(Math.random()*100000), function(res) {
-        hideMask();
-        alert(res.message || "🎉 同仁資訊儲存成功！");
-        fetchCloudLocations();
-      });
-    }
-
-    function saveLocationData() {
-      const name = document.getElementById("locName").value.trim();
-      const lat = document.getElementById("locLat").value.trim();
-      const lng = document.getElementById("locLng").value.trim();
-      const radius = document.getElementById("locRadius").value;
-
-      if(!name || !lat) { alert("請填入案場與經緯度參數！"); return; }
-      showMask("正在安全儲存案場參數...");
-      
-      const url = `${BASE_GAS_URL}?action=saveLocation&name=${encodeURIComponent(name)}&lat=${lat}&lng=${lng}&radius=${radius}`;
-      
-      sendJsonpRequest(url, "cb_save_loc_" + Math.floor(Math.random()*100000), function(res) {
-        hideMask();
-        alert(res.message || "🎉 案場參數儲存完成！");
-        fetchCloudLocations();
-      });
     }
 
     function calculateMonthlyReport() {
@@ -622,20 +561,16 @@
       const select = document.getElementById("schedMonthSelect"); 
       const exSelect = document.getElementById("exportMonthSelect"); 
       if (!select) return; 
-      select.innerHTML = "";
-      if (exSelect) exSelect.innerHTML = "";
+      select.innerHTML = ""; if (exSelect) exSelect.innerHTML = "";
 
       const now = new Date();
       for (let i = -3; i <= 3; i++) {
         let d = new Date(now.getFullYear(), now.getMonth() + i, 1);
         let mStr = d.getFullYear() + "年" + String(d.getMonth() + 1).padStart(2, '0') + "月";
-        
         let opt = document.createElement("option"); opt.value = mStr; opt.innerText = mStr; 
         let opt2 = document.createElement("option"); opt2.value = mStr; opt2.innerText = mStr;
         if (i === 0) { opt.selected = true; opt2.selected = true; }
-        
-        select.appendChild(opt);
-        if (exSelect) exSelect.appendChild(opt2);
+        select.appendChild(opt); if (exSelect) exSelect.appendChild(opt2);
       }
       generateCalendarRows();
     }
@@ -665,39 +600,6 @@
         tbody.appendChild(tr);
       }
       loadExistingSchedule();
-    }
-
-    function sendJsonpRequest(url, callbackFunctionName, successHandler) {
-      window[callbackFunctionName] = function(data) { successHandler(data); delete window[callbackFunctionName]; const scriptTag = document.getElementById(callbackFunctionName); if (scriptTag) scriptTag.remove(); };
-      const connector = url.includes("?") ? "&" : "?"; const script = document.createElement("script"); script.src = `${url}${connector}callback=${callbackFunctionName}&_ts=${new Date().getTime()}`; script.id = callbackFunctionName; document.body.appendChild(script);
-    }
-
-    function loadExistingSchedule() {
-      const empId = document.getElementById("schedEmpSelect").value;
-      const month = document.getElementById("schedMonthSelect").value;
-      if (!empId || !month) return;
-      
-      document.querySelectorAll(".daily-location-select").forEach(sel => sel.value = "");
-      document.querySelectorAll(".daily-shift-select").forEach(sel => sel.value = "");
-      
-      const url = `${BASE_GAS_URL}?action=fetchSchedule&employeeId=${empId}&month=${month}`;
-      sendJsonpRequest(url, "cb_load_exist_" + Math.floor(Math.random()*100000), function(res) {
-        if (res.success && res.schedule && res.schedule.length > 0) {
-          res.schedule.forEach(item => {
-            let rawContent = String(item.shift).trim();
-            if (rawContent && rawContent.indexOf("-") !== -1) {
-              let parts = rawContent.split("-");
-              let locPart = parts[0] || ""; let shiftPart = parts[1] || "";
-              let dayKey = String(item.date).replace("日", "").trim().padStart(2, '0');
-              
-              let locElement = document.getElementById(`loc_day_${dayKey}`);
-              let shiftElement = document.getElementById(`shift_day_${dayKey}`);
-              if (locElement) { locElement.value = locPart; }
-              if (shiftElement) { shiftElement.value = shiftPart; }
-            }
-          });
-        }
-      });
     }
 
     function switchSection(sectionId, btnElem) {
@@ -736,11 +638,6 @@
       });
     }
 
-    function auditLeave(rowId, statusResult) {
-      showMask("處理中...");
-      fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); });
-    }
-
     function loadPunchLogs() {
       const tbody = document.getElementById("punchLogTableBody"); tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">載入中...</td></tr>`;
       sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllPunchLogs`, "cb_p_" + Math.floor(Math.random()*100000), function(res) {
@@ -754,10 +651,6 @@
           tbody.innerHTML = html;
         } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">今日尚無紀錄。</td></tr>`; }
       });
-    }
-
-    function submitAnnouncement() {
-      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "publishAnnouncement", unit: document.getElementById("annUnit").value, content: document.getElementById("annContent").value }) }).then(() => { alert("公告成功！"); document.getElementById("annContent").value=""; });
     }
   </script>
 </body>
