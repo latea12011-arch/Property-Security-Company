@@ -111,7 +111,6 @@
             <h3>發布 / 覆蓋個別員工班表</h3>
             <div style="display: flex; gap: 15px; flex-direction: column; margin-bottom: 20px; margin-top: 10px;">
               <div style="display: flex; gap: 15px;">
-                <!-- 🌟 修正：更改下拉選單時，自動觸發重新生成並撈取班表 -->
                 <div style="flex: 1;"><label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">選擇同仁 (工號/姓名)：</label><select id="schedEmpSelect" class="form-control" style="margin-bottom:0;" onchange="generateCalendarRows()"></select></div>
                 <div style="flex: 1;"><label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">排班月份：</label><select id="schedMonthSelect" class="form-control" style="margin-bottom:0;" onchange="generateCalendarRows()"></select></div>
               </div>
@@ -541,7 +540,6 @@
       });
     }
 
-    // 🌟 核心升級功能：撈取指定員工、指定月份之班表
     function loadExistingSchedule() {
       const empId = document.getElementById("schedEmpSelect").value;
       const month = document.getElementById("schedMonthSelect").value;
@@ -589,7 +587,7 @@
         .then(res => { 
           hideMask(); 
           alert(res.message); 
-          loadExistingSchedule(); // 🌟 升級：儲存成功後，自動重新拉取最新班表數據渲染
+          loadExistingSchedule(); 
         })
         .catch(() => { 
           hideMask(); 
@@ -651,7 +649,7 @@
       
       area.style.display = "block";
       area.innerHTML = `
-        <strong>📋 ${targetMonth} 考勤簡報 analysis：</strong><br>
+        <strong>📋 ${targetMonth} 考勤簡報分析：</strong><br>
         👤 同仁工號：${empId}<br>
         📅 本月累計出勤天數：<span style="color:#27ae60;font-weight:bold;">${totalDays} 天</span><br>
         ⏱️ 上班打卡總次數：${totalIn} 次 / 下班打卡總次數：${totalOut} 次<br>
@@ -687,7 +685,6 @@
       generateCalendarRows();
     }
 
-    // 🌟 核心優化：每次切換月份或同仁，都會自動帶出既有日曆並向雲端拉取舊資料
     function generateCalendarRows() {
       const monthVal = document.getElementById("schedMonthSelect").value; 
       const tbody = document.getElementById("calendarRowsBody");
@@ -717,7 +714,6 @@
         tbody.appendChild(tr);
       }
       
-      // 生成完日曆框架後，立刻自動撈取雲端上的舊班表資料填入！
       loadExistingSchedule();
     }
 
