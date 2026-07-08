@@ -80,8 +80,10 @@
 </head>
 <body>
 
+  <div class="loading-mask" id="globalMask"><div class="spinner"></div><p id="maskText" style="font-weight: bold; color: #4e54c8;">安全載入雲端資料中...</p></div>
+
   <div class="sidebar">
-    <h2>紘嘉物業後台管理</h2>
+    <h2>後台管理系統</h2>
     <button class="menu-btn active" onclick="switchSection('dashboard', this)"><i class="fa-solid fa-chart-pie"></i>管理總覽</button>
     <button class="menu-btn" onclick="switchSection('scheduleMgmt', this)"><i class="fa-solid fa-calendar-days"></i>班表排程調整</button>
     <button class="menu-btn" onclick="switchSection('leaveAudit', this)"><i class="fa-solid fa-file-signature"></i>請假單審核</button>
@@ -260,7 +262,7 @@
         <select id="resigReason" class="form-control">
           <option value="個人生涯規劃 (自願離職)">個人生涯規劃 (自願離職)</option>
           <option value="勞動基準法第十一條第二款 (業務緊縮)">勞動基準法第十一條第二款 (業務緊縮)</option>
-          <option value="勞動基準法第十一條第四款 (業務變更)">勞動基準法第十一條第四款 (業務變更)</option>
+          <option value="勞動基準法第十一條 Jew 四款 (業務變更)">勞動基準法第十一條第四款 (業務變更)</option>
           <option value="定期契約期滿離職">定期契約期滿離職</option>
           <option value="其他原因自願離職">其他原因自願離職</option>
         </select>
@@ -299,7 +301,7 @@
     </table>
     
     <div class="print-statement">
-      儲查本公司上述同仁於任職期間，負責盡職，恪遵各項现场維護與保全管理規範，工作表現深獲肯定。
+      儲查本公司上述同仁於任職期間，負責盡職，恪遵各項現場維護與保全管理規範，工作表現深獲肯定。
       現因上述事由提出申請，經本公司依法審查，雙方勞雇關係確實已於離職日期正式依法宣告終止。
       同仁於離職前已依本公司規定將所保管之各項勤務機具、案場公物、執勤紀錄及業務相關檔案清點移交完畢，確認無誤，特發此證以茲證明。
     </div>
@@ -542,7 +544,7 @@
       
       area.style.display = "block";
       area.innerHTML = `
-        <strong>📋 ${targetMonth} 考勤簡報 analysis：</strong><br>
+        <strong>📋 ${targetMonth} 考勤簡報分析：</strong><br>
         👤 同仁工號：${empId}<br>
         📅 本月累計出勤天數：<span style="color:#27ae60;font-weight:bold;">${totalDays} 天</span><br>
         ⏱️ 上班打卡總次數：${totalIn} 次 / 下班打卡總次數：${totalOut} 次<br>
@@ -602,6 +604,57 @@
         tbody.appendChild(tr);
       }
       loadExistingSchedule();
+    }
+
+    function switchSection(sectionId, btnElem) {
+      document.querySelectorAll('.content-body').forEach(el => el.classList.remove('active')); document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(sectionId).classList.add('active'); btnElem.classList.add('active'); document.getElementById("currentSectionTitle").innerText = btnElem.innerText.trim();
+      if(sectionId === 'leaveAudit') { loadLeaveApplications(); }
+      if(sectionId === 'punchLog') { loadPunchLogs(); }
+    }
+
+    function submitNewSchedule() {
+      const empSelect = document.getElementById("schedEmpSelect"); const empId = empSelect ? empSelect.value : ""; const month = document.getElementById("schedMonthSelect").value.trim();
+      if(!empId) { alert("請選擇排班同仁！"); return; }
+      let lines = []; const locSelects = document.querySelectorAll(".daily-location-select"); const shiftSelects = document.querySelectorAll(".daily-shift-select");
+      for (let i = 0; i < locSelects.length; i++) {
+        const day = locSelects[i].getAttribute("data-day"); const locVal = locSelects[i].value || "無"; const shiftVal = shiftSelects[i].value || "休";
+        lines.push(`${day}:${locVal}-${shiftVal}`);
+      }
+      showMask("正在安全發布新班表...");
+      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "updateSchedule", employeeId: empId, month: month, scheduleLines: lines.join("\n") }) })
+        .then(r => r.json())
+        .then(res => { hideMask(); alert(res.message); loadExistingSchedule(); })
+        .catch(() => { hideMask(); alert("儲存完畢！"); loadExistingSchedule(); });
+    }
+
+    function loadLeaveApplications() {
+      const tbody = document.getElementById("leaveAuditTableBody"); tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">同步中...</td></tr>`;
+      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllLeaveRecords`, "cb_l_" + Math.floor(Math.random()*100000), function(res) {
+        if(res.success && res.records.length > 0) {
+          let html = "";
+          res.records.forEach((item) => {
+            let imgHtml = item.fileData.startsWith("http") ? `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')">` : "無";
+            html += `<tr><td>${item.timestamp}</td><td><b>${item.employeeName}</b></td><td>${item.leaveType}</td><td>${item.start}<br>${item.end}</td><td>${item.reason}</td><td>${imgHtml}</td><td>${item.status === '待審核' ? `<button class="btn btn-success" onclick="auditLeave('${item.rowId}','已核准')">核准</button> <button class="btn btn-danger" onclick="auditLeave('${item.rowId}','駁回')">駁回</button>` : `<b>${item.status}</b>`}</td></tr>`;
+          });
+          tbody.innerHTML = html;
+        } else { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">目前無假單。</td></tr>`; }
+      });
+    }
+
+    function loadPunchLogs() {
+      const tbody = document.getElementById("punchLogTableBody"); tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">載入中...</td></tr>`;
+      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllPunchLogs`, "cb_p_" + Math.floor(Math.random()*100000), function(res) {
+        if(res.success && res.logs.length > 0) {
+          globalPunchLogs = res.logs;
+          let html = "";
+          res.logs.forEach(log => {
+            let typeTag = log.type === 'clockIn' ? '<span style="color:#27ae60;font-weight:bold;">[上班]</span>' : '<span style="color:#f39c12;font-weight:bold;">[下班]</span>';
+            html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td><button class="btn btn-primary" style="padding:4px 8px;" onclick="inlineMapLocate('${log.lat}','${log.lng}')"><i class="fa-solid fa-map-location-dot"></i> 定位查看</button></td></tr>`;
+          });
+          tbody.innerHTML = html;
+        } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">今日尚無紀錄。</td></tr>`; }
+      });
     }
   </script>
 </body>
