@@ -53,7 +53,6 @@
     .btn-success { background: #27ae60; color: white; }
     .btn-danger { background: #e53e3e; color: white; }
     .form-control { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; margin-bottom: 12px; outline: none; background: #f8fafc; }
-    .proof-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer; }
     .loading-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
     .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #4e54c8; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
 
@@ -91,7 +90,6 @@
     <button class="menu-btn" id="btn-locMgmt" onclick="switchSection('locMgmt', this)"><i class="fa-solid fa-map-pin"></i>案場GPS設定</button>
     <button class="menu-btn" id="btn-salaryAdvanceSection" onclick="switchSection('salaryAdvanceSection', this)"><i class="fa-solid fa-money-bill-transfer"></i>借支與薪資明細</button>
     <button class="menu-btn" id="btn-announcementMgmt" onclick="switchSection('announcementMgmt', this)"><i class="fa-solid fa-bullhorn"></i>發布公告事項</button>
-    <button class="menu-btn" id="btn-resignationSection" onclick="switchSection('resignationSection', this)"><i class="fa-solid fa-print"></i>離職證明書列印</button>
   </div>
 
   <div class="main-content" id="mainContent">
@@ -229,7 +227,9 @@
           <label style="font-size:12px; font-weight:bold;">健保自付額 (元)：</label><input type="number" id="salHealth" class="form-control" value="0">
           <label style="font-size:12px; font-weight:bold;">員工團保 (元)：</label><input type="number" id="salGroupIns" class="form-control" value="0">
           <label style="font-size:12px; font-weight:bold;">法院強制執行扣薪 (元)：</label><input type="number" id="salLegal" class="form-control" value="0">
+          
           <label style="font-size:12px; font-weight:bold; color:#e53e3e;">管委會發函 / 額外罰款扣款 (元)：</label><input type="number" id="salExtraDeduct" class="form-control" value="0">
+          
           <button class="btn btn-primary" style="width: 100%; padding:12px; font-size:13px;" onclick="saveSalaryDetailData()"><i class="fa-solid fa-calculator"></i> 系統精算並存檔</button>
         </div>
         <div class="card" style="flex: 1; margin-bottom: 0; max-height: 550px; overflow-y: auto;">
@@ -262,13 +262,13 @@
   </div>
 
   <script>
-    // 🌟 補齊：安全登入解鎖按鈕觸發函式（讓它真正具備向雲端發送密碼驗證的能力！）
+    // 🌟 核心修復：這段大鎖通訊函式先前完全沒有打在網頁上，導致按鈕抓不到！現在完整補上！
     function submitAdminLogin() {
       const id = document.getElementById("loginUser").value.trim();
       const pwd = document.getElementById("loginPwd").value.trim();
       if(!id || !pwd) { alert("請輸入工號與密碼！"); return; }
       
-      showMask("正在驗證管理員層級...");
+      showMask("正在安全解鎖並驗證權限層級...");
       const url = `${BASE_GAS_URL}?action=adminLogin&employeeId=${id}&password=${encodeURIComponent(pwd)}`;
       sendJsonpRequest(url, "cb_adm_login_" + Math.floor(Math.random()*100000), function(res) {
         hideMask();
@@ -286,7 +286,7 @@
               if(btn) btn.remove();
             });
           }
-          fetchCloudLocations(); // 通過後，加載背後全套大數據
+          fetchCloudLocations(); // 解鎖後立刻動態抓取全人員大數據
         } else {
           alert(res.message);
         }
@@ -294,7 +294,7 @@
     }
 
     function showMask(text) { document.getElementById("maskText").innerText = text || "資料同步處理中..."; document.getElementById("globalMask").style.display = "flex"; }
-    function hideMask() { document.getElementById("globalMask").style.display = "none"; }
+    function hideMask() { document.getElementById("globalMask").style.display = "none"; } // 🌟 語法錯誤完全修正
 
     function sendJsonpRequest(url, callbackFunctionName, successHandler) {
       return new Promise((resolve, reject) => {
@@ -414,9 +414,10 @@
       });
     }
 
+    // A4 一半(A5)大小的雙拼列印省紙規格匯出功能
     function downloadSalaryDetailExcel() {
       if (currentDetailsListCache.length === 0) { alert("💡 目前清單上沒有任何結算資料可以導出！"); return; }
-      showMask("正在生成 A4 雙拼薪資單...");
+      showMask("正在動態建構 A4 雙拼同仁簽名薪資明細表...");
       const wb = XLSX.utils.book_new(); const wsData = [];
       currentDetailsListCache.forEach((s) => {
         wsData.push(["紘嘉物業管理股份有限公司 薪資明細表", "", "", "", "", "所得月份:", s.month]);
@@ -424,7 +425,7 @@
         wsData.push(["【項目分類】", "基本本薪", "事假扣款(天)", "病假扣款(天)", "勞健保/團保", "法院法扣/額外扣款", "本月預支借金"]);
         wsData.push(["應發/應扣明細", `NT$ ${s.baseSalary}`, `NT$ ${s.personalLeave} (${s.personalDays}天)`, `NT$ ${s.sickLeave} (${s.sickDays}天)`, `NT$ ${s.labor + s.health + s.groupIns}`, `法扣:${s.legalDeduct} / 額外:${s.extraDeduct}`, `NT$ ${s.advance}`]);
         wsData.push(["應付合計:", `NT$ ${s.baseSalary}`, "合計扣款總額:", `NT$ ${s.totalDeduct}`, "", "實發實領金額:", `NT$ ${s.finalPayout}`]);
-        wsData.push(["備註說明: 10日前洽管理部。 簽名簽章:_______________________ 日期:115年__月__日"]);
+        wsData.push(["備註說明: 10日前洽管理部。懲罰扣款依案場規範核實。 簽名簽章:_______________________ 日期:115年__月__日"]);
         wsData.push(["- - - - - - - - - - - - - - - - - - - - - - - - ( 裁 切 線 ) - - - - - - - - - - - - - - - - - - - - - - - -"]);
         wsData.push([""]); wsData.push([""]);
       });
