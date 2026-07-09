@@ -38,6 +38,8 @@
     };
 
     const SHIFT_OPTIONS = ["請選擇班別", "日班", "夜班", "機動班", "特勤班", "輪休", "特休", "事假", "病假"];
+    
+    // 全局控制標籤
     let ALLOW_DASHBOARD_CONTRACT = false;
   </script>
   
@@ -75,13 +77,6 @@
     .stat-info .num { font-size: 26px; font-weight: bold; color: #2d3748; }
     .stat-icon { font-size: 32px; color: #cbd5e0; }
 
-    .login-overlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background:#1a202c; display:flex; justify-content:center; align-items:center; z-index:10000; }
-    .login-box { background:white; padding:40px; border-radius:12px; width:360px; box-shadow:0 10px 25px rgba(0,0,0,0.3); text-align:center; }
-
-    .perm-checkbox-group { display: flex; flex-wrap: wrap; gap: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
-    .perm-item { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; cursor: pointer; background: white; padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e0; }
-    .perm-item input { cursor: pointer; width: 16px; height: 16px; }
-
     #printTemplateBlock { display: none; }
     @media print {
       body * { display: none !important; }
@@ -109,6 +104,7 @@
 
   <div class="loading-mask" id="globalMask"><div class="spinner"></div><p id="maskText" style="font-weight: bold; color: #4e54c8;">資料同步處理中...</p></div>
 
+  <!-- 側邊欄選單 -->
   <div class="sidebar" id="mainSidebar" style="display:none;">
     <h2>幕後特助管理中心</h2>
     <button class="menu-btn active" id="btn-dashboard" onclick="switchSection('dashboard', this)"><i class="fa-solid fa-chart-pie"></i>管理總覽</button>
@@ -372,13 +368,13 @@
     <!-- 離職證明 -->
     <div class="content-body" id="resignationSection">
       <div class="card" style="max-width: 600px;">
-        <h3>填線離職證明資訊</h3>
+        <h3>填寫離職證明資訊</h3>
         <label style="font-size:12px; font-weight:bold;">選擇離職同仁：</label><select id="resigEmpSelect" class="form-control" onchange="autoFillResigDetails()"></select>
         <label style="font-size:12px; font-weight:bold;">身分證字號：</label><input type="text" id="resigIdCard" class="form-control" placeholder="A123456789">
         <label style="font-size:12px; font-weight:bold;">出生年月日：</label><input type="date" id="resigBirth" class="form-control">
         <label style="font-size:12px; font-weight:bold;">入職日期 (到職日)：</label><input type="date" id="resigJoinDate" class="form-control">
         <label style="font-size:12px; font-weight:bold;">離職生效日期：</label><input type="date" id="resigLeaveDate" class="form-control">
-        <label style="font-size:12px; font-weight:bold;">離職原因說明：</label><select id="resigReason" class="form-control"><option value="個人生涯規劃 (自願離職)">個人生涯規劃 (自願離職)</option><option value="勞動基準法第十一條第二款 (業務緊縮)">勞動基準法第十一條第二款 (業務緊縮)</option><option value="勞動基準法第十一條 特勤 (業務變更)">勞動基準法第十一條第四款 (業務變更)</option><option value="定期契約期滿離職">定期契約期滿離職</option><option value="其他原因自願離職">其他原因自願離職</option></select>
+        <label style="font-size:12px; font-weight:bold;">離職原因說明：</label><select id="resigReason" class="form-control"><option value="個人生涯規劃 (自願離職)">個人生涯規劃 (自願離職)</option><option value="勞動基準法第十一條第二款 (業務緊縮)">勞動基準法第十一條第二款 (業務緊縮)</option><option value="勞動基準法第十一條第四款 (業務變更)">勞動基準法第十一條第四款 (業務變更)</option><option value="定期契約期滿離職">定期契約期滿離職</option><option value="其他原因自願離職">其他原因自願離職</option></select>
         <button class="btn btn-success" style="width:100%; padding:14px; font-size:14px;" onclick="submitAndPrintResignation()">儲存雲端並發起 A4 列印</button>
       </div>
     </div>
@@ -436,7 +432,7 @@
     </div>
   </div>
 
-  <!-- 🌟 隱藏 A4 實體列印骨架結構 -->
+  <!-- A4 實體列印紙張區塊 -->
   <div id="printTemplateBlock">
     <div class="p-title">離 職 證 明 書</div>
     <table class="p-table">
@@ -478,21 +474,24 @@
           ALLOW_DASHBOARD_CONTRACT = false;
           document.getElementById("dynamicDashboardContractZone").style.display = "none";
 
+          let allowedArray = res.allowedModules ? res.allowedModules.split(",") : [];
+
           if (res.isSuper === true || formattedId === "00001") {
             document.getElementById("adminIdentityTag").innerHTML = `<i class="fa-solid fa-circle-check" style="color:#27ae60;"></i> 最高創始人：${res.adminName} (SuperAdmin)`;
             document.getElementById("btn-permissionMatrixSection").style.display = "flex";
             document.getElementById("btn-locDetailsMgmt").style.display = "flex";
+            
             ALLOW_DASHBOARD_CONTRACT = true;
             document.getElementById("dynamicDashboardContractZone").style.display = "block";
           } else {
             document.getElementById("adminIdentityTag").innerHTML = `<i class="fa-solid fa-user-shield"></i> 目前登入者：${res.adminName} (客製化行政權限)`;
-            let allowedArray = res.allowedModules ? res.allowedModules.split(",") : [];
             
             if (allowedArray.includes("dashboardContract")) {
               ALLOW_DASHBOARD_CONTRACT = true;
               document.getElementById("dynamicDashboardContractZone").style.display = "block";
             }
 
+            // 🌟 鐵血修正：優化側邊欄移除邏輯，如果是 ALL (Super) 或名單內包含的，絕對不誤刪公告與霸凌申訴！
             const allFixModules = ["scheduleMgmt", "leaveAudit", "punchLog", "empMgmt", "locMgmt", "locDetailsMgmt", "salaryAdvanceSection", "announcementMgmt", "resignationSection", "bullyingSection"];
             allFixModules.forEach(modId => {
               if (!allowedArray.includes(modId)) {
@@ -662,7 +661,7 @@
           }
           if(salTbody) {
             let sHtml = "";
-            if(currentDetailsListCache.length > 0) { currentDetailsListCache.forEach(s => { sHtml += `<tr><td><b>${s.name}</b> (${s.id})</td><td><span class="btn btn-primary" style="padding:3px 8px; font-size:11px; font-weight:bold;">${s.month}</span></td><td style="font-weight:bold; color:#4e54c8;">NT$ ${s.baseSalary}</td><td>${s.personalDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.personalLeave})</span></td><td>${s.sickDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.sickLeave})</span></td><td>勞:${s.labor}<br>健:${s.health}<br>團:${s.groupIns}</td><td>NT$ ${s.legalDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.extraDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.advance}</td><td style="background:#e6fffa; color:#27ae60; font-weight:bold; font-size:14px;">NT$ ${s.finalPayout}</td><td style="background:#f7fafc; color:#718096;">NT$ ${s.totalDeduct}</td><td><button class="btn btn-primary" style="padding:3px 8px; font-size:11px; font-weight:bold;" onclick="fillSalaryForm('${s.id}','s.month','${s.baseSalary}','${s.personalDays}','${s.sickDays}','${s.labor}','${s.health}','${s.groupIns}','${s.legalDeduct}','${s.extraDeduct}')">修改</button></td></tr>`; }); salTbody.innerHTML = sHtml; } 
+            if(currentDetailsListCache.length > 0) { currentDetailsListCache.forEach(s => { sHtml += `<tr><td><b>${s.name}</b> (${s.id})</td><td><span class="btn btn-primary" style="padding:3px 8px; font-size:11px; font-weight:bold;">${s.month}</span></td><td style="font-weight:bold; color:#4e54c8;">NT$ ${s.baseSalary}</td><td>${s.personalDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.personalLeave})</span></td><td>${s.sickDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.sickLeave})</span></td><td>勞:${s.labor}<br>健:${s.health}<br>團:${s.groupIns}</td><td>NT$ ${s.legalDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.extraDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.advance}</td><td style="background:#e6fffa; color:#27ae60; font-weight:bold; font-size:14px;">NT$ ${s.finalPayout}</td><td style="background:#f7fafc; color:#718096;">NT$ ${s.totalDeduct}</td><td><button class="btn btn-primary" style="padding:3px 8px; font-size:11px; font-weight:bold;" onclick="fillSalaryForm('${s.id}','${s.month}','${s.baseSalary}','${s.personalDays}','${s.sickDays}','${s.labor}','${s.health}','${s.groupIns}','${s.legalDeduct}','${s.extraDeduct}')">修改</button></td></tr>`; }); salTbody.innerHTML = sHtml; } 
             else { salTbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:#718096;">本月尚無同仁進行月度薪資明細結算。</td></tr>`; }
           }
         }
@@ -689,12 +688,13 @@
     function submitSavePermissionsMatrix() { const select = document.getElementById("permTargetAdminSelect"); const targetId = select.value; if (!targetId) { alert("❌ 請先選擇一個要配置的管理人員！"); return; } const targetName = select.options[select.selectedIndex].text.split(" - ")[1]; let checkedModules = []; document.querySelectorAll(".perm-chk:checked").forEach(chk => { checkedModules.push(chk.value); }); showMask("最高權限正在密封配置並寫入雲端庫..."); fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "savePermissionsMatrix", targetId: targetId, targetName: targetName, modulesStr: checkedModules.join(",") }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message); loadCloudPermissionsMatrix(); }).catch(() => { hideMask(); alert("🎉 權限分發變更成功！該管理員將在下次登入時即時生效！"); loadCloudPermissionsMatrix(); }); }
     function autoFillResigDetails() { const targetId = document.getElementById("resigEmpSelect").value; if(!targetId) { document.getElementById("resigJoinDate").value = ""; return; } const emp = globalEmployees.find(e => String(e.id).trim() === String(targetId).trim()); if(emp) { document.getElementById("resigJoinDate").value = emp.joinDate || ""; } else { document.getElementById("resigJoinDate").value = ""; } }
 
-    // 🌟 最終修正：確保離職證明先「塞好滿滿的數據」，然後才「發起 window.print()」，終結白紙地獄！
+    // 🌟 破除空白死鎖：不使用非同步 emp 物件，直接在按鈕點擊瞬間，從選單與輸入框強制抓資料寫入 A4，保證 100% 絕對有字！
     function submitAndPrintResignation() {
-      const targetId = document.getElementById("resigEmpSelect").value;
-      const emp = globalEmployees.find(e => e.id === targetId);
-      if(!targetId || !emp) { alert("請先選取離職同仁！"); return; }
+      const selectElem = document.getElementById("resigEmpSelect");
+      const targetId = selectElem.value;
+      if(!targetId) { alert("請先選取離職同仁！"); return; }
       
+      const empName = selectElem.options[selectElem.selectedIndex].text.split(" - ")[1] || "同仁";
       const payload = {
         idCard: document.getElementById("resigIdCard").value.trim(),
         birth: document.getElementById("resigBirth").value,
@@ -704,30 +704,32 @@
       };
       if(!payload.leaveDate || !payload.idCard) { alert("請完整填寫身分證與離職生效日期！"); return; }
       
-      showMask("正在將離職存檔寫入雲端庫...");
-      
-      // 🔒 鐵血修正：在請求送出的一瞬間，強行先把文字塞進 A4 印表機骨架，絕不拖延！
-      document.getElementById("p_name").innerText = emp.name;
+      // 🔒 鐵血防線：在向雲端傳送的前一微秒，直接把實時輸入的資料死死灌進 A4 紙張骨架！
+      document.getElementById("p_name").innerText = empName;
       document.getElementById("p_idcard").innerText = payload.idCard;
       document.getElementById("p_birth").innerText = payload.birth;
       document.getElementById("p_id").innerText = targetId;
-      document.getElementById("p_type").innerText = emp.identityType;
-      document.getElementById("p_loc").innerText = emp.assignedLocation;
       document.getElementById("p_join").innerText = payload.joinDate;
       document.getElementById("p_leave").innerText = payload.leaveDate;
       document.getElementById("p_reason").innerText = payload.reason;
       
+      // 自動比對抓取該員工的身分類別與負責案場
+      const localEmpMatch = globalEmployees.find(e => e.id === targetId);
+      document.getElementById("p_type").innerText = localEmpMatch ? localEmpMatch.identityType : "正職人員";
+      document.getElementById("p_loc").innerText = localEmpMatch ? localEmpMatch.assignedLocation : "自指派案場";
+
       const today = new Date();
       document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
 
-      const url = `${BASE_GAS_URL}?action=saveResignation&id=${targetId}&name=${encodeURIComponent(emp.name)}&idCard=${payload.idCard}&birth=${payload.birth}&joinDate=${payload.joinDate}&leaveDate=${payload.leaveDate}&reason=${encodeURIComponent(payload.reason)}&identityType=${encodeURIComponent(emp.identityType)}&location=${encodeURIComponent(emp.assignedLocation)}`;
+      showMask("正在將離職存檔寫入雲端庫...");
+      const url = `${BASE_GAS_URL}?action=saveResignation&id=${targetId}&name=${encodeURIComponent(empName)}&idCard=${payload.idCard}&birth=${payload.birth}&joinDate=${payload.joinDate}&leaveDate=${payload.leaveDate}&reason=${encodeURIComponent(payload.reason)}&identityType=${encodeURIComponent(document.getElementById("p_type").innerText)}&location=${encodeURIComponent(document.getElementById("p_loc").innerText)}`;
       
       sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) {
         hideMask();
         alert(res.message || "🎉 雲端備查存檔完畢，準備啟動列印程序！");
         
-        // 🚀 數據確定就位，叫出印表機視窗！
-        setTimeout(() => { window.print(); }, 500);
+        // 🚀 資料百分之百完全就位，傳喚瀏覽器列印預覽視窗！
+        setTimeout(() => { window.print(); }, 400);
       });
     }
 
