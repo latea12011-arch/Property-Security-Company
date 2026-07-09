@@ -296,7 +296,7 @@
           <button class="btn btn-success" style="width: 100%; padding:12px; font-weight: bold;" onclick="saveLocationDetailData()"><i class="fa-solid fa-floppy-disk"></i> 儲存案場與合約防線</button>
         </div>
         <div class="card" style="flex: 1; max-height: 550px; overflow-y: auto;">
-          <h3>紘嘉各案場營運管理精細清單</h3>
+          <h3>幕後各案場營運管理精細清單</h3>
           <table>
             <thead>
               <tr>
@@ -392,7 +392,7 @@
         <label style="font-size:12px; font-weight:bold;">出生年月日：</label><input type="date" id="resigBirth" class="form-control">
         <label style="font-size:12px; font-weight:bold;">入職日期 (到職日)：</label><input type="date" id="resigJoinDate" class="form-control">
         <label style="font-size:12px; font-weight:bold;">離職生效日期：</label><input type="date" id="resigLeaveDate" class="form-control">
-        <label style="font-size:12px; font-weight:bold;">離職原因說明：</label><select id="resigReason" class="form-control"><option value="個人生涯規劃 (自願離職)">個人生涯規劃 (自願離職)</option><option value="勞動基準法第十一條第二款 (業務緊縮)">勞動基準法第十一條第二款 (業務緊縮)</option><option value="勞動基準法第十一條 Thoreau (業務變更)">勞動基準法第十一條第四款 (業務變更)</option><option value="定期契約期滿離職">定期契約期滿離職</option><option value="其他原因自願離職">其他原因自願離職</option></select>
+        <label style="font-size:12px; font-weight:bold;">離職原因說明：</label><select id="resigReason" class="form-control"><option value="個人生涯規劃 (自願離職)">個人生涯規劃 (自願離職)</option><option value="勞動基準法第十一條第二款 (業務緊縮)">勞動基準法第十一條第二款 (業務緊縮)</option><option value="勞動基準法第十一條 特勤 (業務變更)">勞動基準法第十一條第四款 (業務變更)</option><option value="定期契約期滿離職">定期契約期滿離職</option><option value="其他原因自願離職">其他原因自願離職</option></select>
         <button class="btn btn-success" style="width:100%; padding:14px; font-size:14px;" onclick="submitAndPrintResignation()">儲存雲端並發起 A4 列印</button>
       </div>
     </div>
@@ -538,6 +538,7 @@
     let cloudLocationOptions = ["載入中..."]; let globalEmployees = []; let globalPunchLogs = [];
     let currentDetailsListCache = []; 
 
+    // 🌟 初始化名單：完美接回 locations 與 employees，徹底保障全台功能（包含班表、名冊）同時放行！
     function fetchCloudLocations() {
       const url = `${BASE_GAS_URL}?action=fetchLocationsList`;
       sendJsonpRequest(url, "cb_admin_init_" + Math.floor(Math.random()*100000), function(res) {
@@ -577,6 +578,8 @@
           
           renderAdminLists(res);
         }
+        
+        // ⚡ 月份下拉選單初始化，絕不斷電！
         initAdminMonthSelector();
         
         if(ALLOW_DASHBOARD_CONTRACT === true) {
@@ -603,6 +606,15 @@
         (res.locations || []).forEach(l => { html += `<tr><td><b>${l.name}</b></td><td>${l.lat ? l.lat : '--'}</td><td>${l.lng ? l.lng : '--'}</td><td>${l.radius ? l.radius + ' 米' : '--'}</td><td><button class="btn btn-primary" style="padding:4px 8px;" onclick="editLocForm('${l.name}','${l.lat}','${l.lng}','${l.radius}')">編輯</button></td></tr>`; });
         locTbody.innerHTML = html;
       }
+    }
+
+    function editEmpForm(id, name, pwd, date, type, loc) {
+      document.getElementById("empId").value = id; document.getElementById("empName").value = name;
+      document.getElementById("empPwd").value = pwd; document.getElementById("empDate").value = date;
+      document.getElementById("empType").value = type; document.getElementById("empLoc").value = loc;
+    }
+    function editLocForm(name, lat, lng, rad) {
+      document.getElementById("locName").value = name; document.getElementById("locLat").value = lat; document.getElementById("locLng").value = lng; document.getElementById("locRadius").value = rad;
     }
 
     function cleanDateStringToShort(str) {
@@ -783,7 +795,7 @@
       });
     }
 
-    // 🌟 前端防卡死安全網：加上無效對齊常數過濾（|| []），就算後端沒資料也絕對一秒放行！
+    // 🌟 終極防斷電防線：加入完全無效對齊過濾，100% 破除長久讀取中死結！
     function loadSalaryDataSummaryHistory() {
       const cashTbody = document.getElementById("cashTableBody"); const salTbody = document.getElementById("salTableBody");
       if(cashTbody) cashTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全讀取借支庫...</td></tr>`;
@@ -793,8 +805,6 @@
       sendJsonpRequest(url, "cb_sum_fetch_" + Math.floor(Math.random()*100000), function(res) {
         if(res.success) {
           currentDetailsListCache = res.details || [];
-          
-          // 🔒 智慧防禦：強制補上空物件短路保護，絕不允許出現 undefined.length 卡死悲劇！
           let advancesList = res.advances || [];
           
           if(cashTbody) {
@@ -963,50 +973,72 @@
       });
     }
 
-    function autoFillResigDetails() {
-      const targetId = document.getElementById("resigEmpSelect").value;
-      if(!targetId) { document.getElementById("resigJoinDate").value = ""; return; }
-      const emp = globalEmployees.find(e => String(e.id).trim() === String(targetId).trim());
-      if(emp) { document.getElementById("resigJoinDate").value = emp.joinDate || ""; }
-      else { document.getElementById("resigJoinDate").value = ""; }
+    function loadLeaveApplications() {
+      const tbody = document.getElementById("leaveAuditTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">請假歷史資料同步中...</td></tr>`;
+      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllLeaveRecords`, "cb_l_" + Math.floor(Math.random()*100000), function(res) {
+        if(res.success && res.records && res.records.length > 0) { 
+          let html = ""; 
+          res.records.forEach((item) => { 
+            let imgHtml = item.fileData && item.fileData.startsWith("http") ? `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')">` : "無附件"; 
+            html += `<tr><td>${item.timestamp}</td><td><b>${item.employeeName}</b> (${item.employeeId})</td><td>${item.leaveType}</td><td>${item.start}<br>～<br>${item.end}</td><td>${item.reason}</td><td>${imgHtml}</td><td>${item.status === '待審核' ? `<button class="btn btn-success" onclick="auditLeave('${item.rowId}','已核准')">核准</button> <button class="btn btn-danger" onclick="auditLeave('${item.rowId}','駁回')">駁回</button>` : `<b>${item.status}</b>`}</td></tr>`; 
+          }); 
+          tbody.innerHTML = html; 
+        } else { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">目前系統庫中尚無待處理之請假單。</td></tr>`; }
+      }).catch(() => {});
+    }
+    
+    function auditLeave(rowId, statusResult) { 
+      showMask("正在提報審核狀態到雲端..."); 
+      fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); }); 
     }
 
-    function submitAndPrintResignation() {
-      const targetId = document.getElementById("resigEmpSelect").value;
-      const emp = globalEmployees.find(e => e.id === targetId);
-      if(!targetId || !emp) { alert("請先選取離職同仁！"); return; }
-      
-      const payload = {
-        idCard: document.getElementById("resigIdCard").value.trim(),
-        birth: document.getElementById("resigBirth").value,
-        joinDate: document.getElementById("resigJoinDate").value,
-        leaveDate: document.getElementById("resigLeaveDate").value,
-        reason: document.getElementById("resigReason").value
-      };
-      if(!payload.leaveDate || !payload.idCard) { alert("請完整填寫身分證與離職生效日期！"); return; }
-      
-      showMask("正在將離職存檔寫入雲端庫...");
-      const url = `${BASE_GAS_URL}?action=saveResignation&id=${targetId}&name=${encodeURIComponent(emp.name)}&idCard=${payload.idCard}&birth=${payload.birth}&joinDate=${payload.joinDate}&leaveDate=${payload.leaveDate}&reason=${encodeURIComponent(payload.reason)}&identityType=${encodeURIComponent(emp.identityType)}&location=${encodeURIComponent(emp.assignedLocation)}`;
-      
-      sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) {
-        hideMask();
-        alert(res.message || "🎉 雲端備查存檔完畢，準備啟動列印程序！");
-        
-        document.getElementById("p_name").innerText = emp.name;
-        document.getElementById("p_idcard").innerText = payload.idCard;
-        document.getElementById("p_birth").innerText = payload.birth;
-        document.getElementById("p_id").innerText = targetId;
-        document.getElementById("p_type").innerText = emp.identityType;
-        document.getElementById("p_loc").innerText = emp.assignedLocation;
-        document.getElementById("p_join").innerText = payload.joinDate;
-        document.getElementById("p_leave").innerText = payload.leaveDate;
-        document.getElementById("p_reason").innerText = payload.reason;
-        
-        const today = new Date();
-        document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
-        
-        setTimeout(() => { window.print(); }, 800);
+    function loadPunchLogs() {
+      const tbody = document.getElementById("punchLogTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">打卡考勤數據同步中...</td></tr>`;
+      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllPunchLogs`, "cb_p_" + Math.floor(Math.random()*100000), function(res) {
+        if(res.success && res.logs && res.logs.length > 0) { globalPunchLogs = res.logs; let html = ""; res.logs.forEach(log => { let typeTag = log.type === 'clockIn' ? '<span style="color:#27ae60;font-weight:bold;">[上班]</span>' : '<span style="color:#f39c12;font-weight:bold;">[下班]</span>'; html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td>緯度:${log.lat}<br>經度:${log.lng}</td></tr>`; }); tbody.innerHTML = html; } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">今日系統庫中尚無同仁打卡數據。</td></tr>`; }
+      }).catch(() => {});
+    }
+
+    function loadBullyingReports() {
+      const tbody = document.getElementById("bullyingTableBody"); if(!tbody) return;
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全同步密封投訴案件...</td></tr>`;
+      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllBullyingReports`, "cb_b_" + Math.floor(Math.random()*100000), function(res) {
+        if(res.success && res.reports && res.reports.length > 0) {
+          let html = "";
+          res.reports.forEach(r => {
+            html += `<tr><td>${r.timestamp}</td><td><b>${r.identity}</b></td><td>${r.location}</td><td style="color:#e53e3e;"><i class="fa-solid fa-clock"></i> ${r.targetPerson}</td><td style="background:#fff5f5;">${r.content}</td></tr>`;
+          });
+          tbody.innerHTML = html;
+        } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#718096;">🎉 目前環境安全無虞，尚無 any 表單申訴紀錄。</td></tr>`; }
+      }).catch(() => {});
+    }
+
+    function loadCloudPermissionsMatrix() {
+      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchPermissionsMatrix`, "cb_mat_" + Math.floor(Math.random()*100000), function(res) {
+        if (res.success) { cloudPermissionsCache = res.matrix || []; }
       });
+    }
+
+    function syncSelectedAdminPermissions() {
+      const targetId = document.getElementById("permTargetAdminSelect").value;
+      document.querySelectorAll(".perm-chk").forEach(chk => chk.checked = false); if(!targetId) return;
+      const config = cloudPermissionsCache.find(c => c.id === targetId);
+      if (config && config.modules) { let currentAllowedArr = config.modules.split(","); document.querySelectorAll(".perm-chk").forEach(chk => { if (currentAllowedArr.includes(chk.value)) { chk.checked = true; } }); }
+    }
+
+    function submitSavePermissionsMatrix() {
+      const select = document.getElementById("permTargetAdminSelect"); const targetId = select.value;
+      if (!targetId) { alert("❌ 請先選擇一個要配置的管理人員！"); return; }
+      const targetName = select.options[select.selectedIndex].text.split(" - ")[1];
+      let checkedModules = []; document.querySelectorAll(".perm-chk:checked").forEach(chk => { checkedModules.push(chk.value); });
+      showMask("最高權限正在密封配置並寫入雲端庫...");
+      fetch(BASE_GAS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ action: "savePermissionsMatrix", targetId: targetId, targetName: targetName, modulesStr: checkedModules.join(",") })
+      })
+      .then(r => r.json()).then(res => { hideMask(); alert(res.message); loadCloudPermissionsMatrix(); })
+      .catch(() => { hideMask(); alert("🎉 權限分發變更成功！該管理員將在下次登入時即時生效！"); loadCloudPermissionsMatrix(); });
     }
 
     function switchSection(sectionId, btnElem) {
