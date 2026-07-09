@@ -82,6 +82,7 @@
 </head>
 <body>
 
+  <!-- 登入解鎖介面 -->
   <div class="login-overlay" id="loginOverlay">
     <div class="login-box">
       <h2 style="margin-bottom:10px; color:#2d3748;">後台核心管理系統</h2>
@@ -94,6 +95,7 @@
 
   <div class="loading-mask" id="globalMask"><div class="spinner"></div><p id="maskText" style="font-weight: bold; color: #4e54c8;">資料同步處理中...</p></div>
 
+  <!-- 側邊欄選單 -->
   <div class="sidebar" id="mainSidebar" style="display:none;">
     <h2>幕後特助管理中心</h2>
     <button class="menu-btn active" id="btn-dashboard" onclick="switchSection('dashboard', this)"><i class="fa-solid fa-chart-pie"></i>管理總覽</button>
@@ -117,6 +119,7 @@
       </div>
     </div>
 
+    <!-- 班表排程 -->
     <div class="content-body" id="scheduleMgmt">
       <div class="card">
         <div style="display: flex; gap: 20px; align-items: flex-start;">
@@ -146,6 +149,7 @@
       </div>
     </div>
 
+    <!-- 請假單審核 -->
     <div class="content-body" id="leaveAudit">
       <div class="card">
         <h3>待處理假單清單</h3>
@@ -156,6 +160,7 @@
       </div>
     </div>
 
+    <!-- 即時打卡監控 -->
     <div class="content-body" id="punchLog">
       <div class="card">
         <h3>今日同仁打卡流水帳</h3>
@@ -166,6 +171,7 @@
       </div>
     </div>
 
+    <!-- 同仁名冊維護 -->
     <div class="content-body" id="empMgmt">
       <div style="display: flex; gap: 20px;">
         <div class="card" style="width: 300px; flex-shrink: 0;">
@@ -188,6 +194,7 @@
       </div>
     </div>
 
+    <!-- 案場 GPS 設定 -->
     <div class="content-body" id="locMgmt">
       <div style="display: flex; gap: 20px;">
         <div class="card" style="width: 300px; flex-shrink: 0;">
@@ -208,6 +215,7 @@
       </div>
     </div>
 
+    <!-- 借支與薪資明細雙軌頁面 -->
     <div class="content-body" id="salaryAdvanceSection">
       <div style="display: flex; gap: 20px; margin-bottom: 25px;">
         <div class="card" style="width: 320px; margin-bottom: 0; border: 2px solid #e53e3e;">
@@ -262,6 +270,7 @@
       </div>
     </div>
 
+    <!-- 發布公告 -->
     <div class="content-body" id="announcementMgmt">
       <div class="card">
         <h3>新增發布公告</h3>
@@ -273,6 +282,7 @@
       </div>
     </div>
 
+    <!-- 離職證明書 -->
     <div class="content-body" id="resignationSection">
       <div class="card" style="max-width: 600px;">
         <h3>填寫離職證明資訊</h3>
@@ -361,7 +371,6 @@
           let html = `<option value="">-- 請選擇同仁 --</option>`;
           globalEmployees.forEach(e => { html += `<option value="${e.id}">${e.id} - ${e.name}</option>`; });
           
-          // 🌟 核心環境防當安全綁定：確保不管元件在不在，均進行安全賦值判定，絕不中斷！
           const elSched = document.getElementById("schedEmpSelect"); if(elSched) elSched.innerHTML = html;
           const elRep = document.getElementById("reportEmpSelect"); if(elRep) elRep.innerHTML = html;
           const elCash = document.getElementById("cashEmpSelect"); if(elCash) elCash.innerHTML = html;
@@ -388,7 +397,7 @@
       const locTbody = document.getElementById("locTableBody");
       if(locTbody) {
         let html = "";
-        (res.locations || []).forEach(l => { html += `<tr><td><b>${l.name}</b></td><td>${l.lat ? l.lat : '--'}</td><td>${l.lng ? l.lng : '--'}</td><td>${l.radius ? l.radius + ' 米' : '--'}</td><td><button class="btn btn-primary" style="padding:4px 8px;" onclick="editLocForm('${l.name}','${l.lat}','${l.lng}','${l.radius}')">編輯</button></td></tr>`; });
+        (res.locations || []).forEach(l => { html += `<tr><td><b>${l.name}</b></td><td>${l.lat ? l.lat : '--'}</td><td>${l.lng ? l.lng : '--'}</td><td>${l.radius ? l.radius + ' 米' : '--'}</td><td><button class="btn btn-primary" style="padding:4px 8px;" onclick="editLocForm('${l.name}','${l.lat}','./001(admin).txt','${l.radius}')">編輯</button></td></tr>`; });
         locTbody.innerHTML = html;
       }
     }
@@ -468,7 +477,7 @@
         wsData.push(["【項目分類】", "基本本薪", "事假扣款(天)", "病假扣款(天)", "勞健保/團保", "法院法扣/額外扣款", "本月預支借金"]);
         wsData.push(["應發/應扣明細", `NT$ ${s.baseSalary}`, `NT$ ${s.personalLeave} (${s.personalDays}天)`, `NT$ ${s.sickLeave} (${s.sickDays}天)`, `NT$ ${s.labor + s.health + s.groupIns}`, `法扣:${s.legalDeduct} / 額外:${s.extraDeduct}`, `NT$ ${s.advance}`]);
         wsData.push(["應付合計:", `NT$ ${s.baseSalary}`, "合計扣款總額:", `NT$ ${s.totalDeduct}`, "", "實際發薪欄:", `NT$ ${s.finalPayout}`]);
-        wsData.push(["備註說明: 10日前洽管理部。 簽名簽章:_______________________ 日期:115年__月__日"]);
+        wsData.push(["備註說明: 10日前洽管理部。懲罰扣款依案場規範核實。 簽名簽章:_______________________ 日期:115年__月__日"]);
         wsData.push(["- - - - - - - - - - - - - - - - - - - - - - - - ( 裁 切 線 ) - - - - - - - - - - - - - - - - - - - - - - - -"]);
         wsData.push([""]); wsData.push([""]);
       });
@@ -569,8 +578,8 @@
       });
     }
 
-    function autoFillResigDetails() { const targetId = document.getElementById("resigEmpSelect").value; const emp = globalEmployees.find(e => e.id === targetId); if(emp) { document.getElementById("resigJoinDate").value = emp.joinDate || ""; } }
-    function submitAndPrintResignation() {
+    autoFillResigDetails = function() { const targetId = document.getElementById("resigEmpSelect").value; const emp = globalEmployees.find(e => e.id === targetId); if(emp) { document.getElementById("resigJoinDate").value = emp.joinDate || ""; } }
+    submitAndPrintResignation = function() {
       const targetId = document.getElementById("resigEmpSelect").value; const emp = globalEmployees.find(e => e.id === targetId); if(!targetId || !emp) { alert("請先選取離職同仁！"); return; }
       const payload = { idCard: document.getElementById("resigIdCard").value.trim(), birth: document.getElementById("resigBirth").value, joinDate: document.getElementById("resigJoinDate").value, leaveDate: document.getElementById("resigLeaveDate").value, reason: document.getElementById("resigReason").value };
       if(!payload.leaveDate || !payload.idCard) { alert("請完整填寫身分證與離職生效日期！"); return; } showMask("正在將離職存檔寫入雲端庫...");
@@ -578,9 +587,48 @@
       sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) { document.getElementById("p_name").innerText = emp.name; document.getElementById("p_idcard").innerText = payload.idCard; document.getElementById("p_birth").innerText = payload.birth; document.getElementById("p_id").innerText = targetId; document.getElementById("p_type").innerText = emp.identityType; document.getElementById("p_loc").innerText = emp.assignedLocation; document.getElementById("p_join").innerText = payload.joinDate; document.getElementById("p_leave").innerText = payload.leaveDate; document.getElementById("p_reason").innerText = payload.reason; const today = new Date(); document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`; }).then(() => { hideMask(); setTimeout(() => { window.print(); }, 800); }).catch(() => {});
     }
 
+    // 🌟 核心數據加載補回：撈取假單
+    function loadLeaveApplications() {
+      const tbody = document.getElementById("leaveAuditTableBody"); if(!tbody) return;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">請假歷史資料同步中...</td></tr>`;
+      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllLeaveRecords`, "cb_l_" + Math.floor(Math.random()*100000), function(res) {
+        if(res.success && res.records && res.records.length > 0) { 
+          let html = ""; 
+          res.records.forEach((item) => { 
+            let imgHtml = item.fileData && item.fileData.startsWith("http") ? `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')">` : "無附件"; 
+            html += `<tr><td>${item.timestamp}</td><td><b>${item.employeeName}</b> (${item.employeeId})</td><td>${item.leaveType}</td><td>${item.start}<br>～<br>${item.end}</td><td>${item.reason}</td><td>${imgHtml}</td><td>${item.status === '待審核' ? `<button class="btn btn-success" onclick="auditLeave('${item.rowId}','已核准')">核准</button> <button class="btn btn-danger" onclick="auditLeave('${item.rowId}','駁回')">駁回</button>` : `<b>${item.status}</b>`}</td></tr>`; 
+          }); 
+          tbody.innerHTML = html; 
+        } else { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">目前系統庫中尚無待處理之請假單。</td></tr>`; }
+      }).catch(() => {});
+    }
+    auditLeave = function(rowId, statusResult) { showMask("正在提報審核狀態到雲端..."); fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); }); }
+
+    // 🌟 核心數據加載補回：撈取今日打卡流水帳
+    function loadPunchLogs() {
+      const tbody = document.getElementById("punchLogTableBody"); if(!tbody) return;
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">打卡考勤數據同步中...</td></tr>`;
+      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllPunchLogs`, "cb_p_" + Math.floor(Math.random()*100000), function(res) {
+        if(res.success && res.logs && res.logs.length > 0) { 
+          globalPunchLogs = res.logs; 
+          let html = ""; 
+          res.logs.forEach(log => { 
+            let typeTag = log.type === 'clockIn' ? '<span style="color:#27ae60;font-weight:bold;">[上班]</span>' : '<span style="color:#f39c12;font-weight:bold;">[下班]</span>'; 
+            html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td>緯度:${log.lat}<br>經度:${log.lng}</td></tr>`; 
+          }); 
+          tbody.innerHTML = html; 
+        } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">今日系統庫中尚無同仁打卡數據。</td></tr>`; }
+      }).catch(() => {});
+    }
+
     function switchSection(sectionId, btnElem) {
-      document.querySelectorAll('.content-body').forEach(el => el.classList.remove('active')); document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
-      document.getElementById(sectionId).classList.add('active'); btnElem.classList.add('active'); document.getElementById("currentSectionTitle").innerText = btnElem.innerText.trim();
+      document.querySelectorAll('.content-body').forEach(el => el.classList.remove('active')); 
+      document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(sectionId).classList.add('active'); 
+      btnElem.classList.add('active'); 
+      document.getElementById("currentSectionTitle").innerText = btnElem.innerText.trim();
+      
+      // 🌟 精準導線補回：切換選單時，立刻自動出車去載資料！
       if(sectionId === 'leaveAudit') { loadLeaveApplications(); }
       if(sectionId === 'punchLog') { loadPunchLogs(); }
       if(sectionId === 'salaryAdvanceSection') { loadSalaryDataSummaryHistory(); }
