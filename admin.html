@@ -328,7 +328,7 @@
           document.getElementById("loginOverlay").style.display = "none";
           document.getElementById("mainSidebar").style.display = "flex";
           document.getElementById("mainContent").style.display = "flex";
-          document.getElementById("adminIdentityTag").innerHTML = `<i class="fa-solid fa-user-shield"></i> 目前登入者：${res.adminName} (${res.adminRole === 'SuperAdmin' ? '最高超級管理權限' : '一般行政管理權限'})`;
+          document.getElementById("adminIdentityTag").innerHTML = `<i class="fa-solid fa-user-shield"></i> 目前登入者：${res.adminName} (${res.adminRole === 'SuperAdmin' ? '最高超級管理權限' : '一般行政 management 權限'})`;
           
           if(res.adminRole === "Admin") {
             const sensitiveButtons = ["btn-empMgmt", "btn-locMgmt", "btn-salaryAdvanceSection"];
@@ -477,7 +477,7 @@
         wsData.push(["【項目分類】", "基本本薪", "事假扣款(天)", "病假扣款(天)", "勞健保/團保", "法院法扣/額外扣款", "本月預支借金"]);
         wsData.push(["應發/應扣明細", `NT$ ${s.baseSalary}`, `NT$ ${s.personalLeave} (${s.personalDays}天)`, `NT$ ${s.sickLeave} (${s.sickDays}天)`, `NT$ ${s.labor + s.health + s.groupIns}`, `法扣:${s.legalDeduct} / 額外:${s.extraDeduct}`, `NT$ ${s.advance}`]);
         wsData.push(["應付合計:", `NT$ ${s.baseSalary}`, "合計扣款總額:", `NT$ ${s.totalDeduct}`, "", "實際發薪欄:", `NT$ ${s.finalPayout}`]);
-        wsData.push(["備註說明: 10日前洽管理部。懲罰扣款依案場規範核實。 簽名簽章:_______________________ 日期:115年__月__日"]);
+        wsData.push(["備註說明: 10日前洽管理部。 簽名簽章:_______________________ 日期:115年__月__日"]);
         wsData.push(["- - - - - - - - - - - - - - - - - - - - - - - - ( 裁 切 線 ) - - - - - - - - - - - - - - - - - - - - - - - -"]);
         wsData.push([""]); wsData.push([""]);
       });
@@ -486,7 +486,6 @@
       XLSX.writeFile(wb, `紘嘉物業_減半雙拼員工簽名薪資表.xlsx`); 
     }
 
-    // 🌟 全新升級修復版：將新增/修改同仁調整為安全的 POST 請求發送，徹底通關！
     function saveEmployeeData() {
       const id = document.getElementById("empId").value.trim(); 
       const name = document.getElementById("empName").value.trim(); 
@@ -498,7 +497,6 @@
       if(!id || !name) { alert("❌ 請填入工號與姓名！"); return; }
       showMask("正在安全提報儲存同仁資訊...");
       
-      // 🌟 切換成正確的 POST 安全傳輸機制
       fetch(BASE_GAS_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
@@ -525,7 +523,6 @@
       });
     }
 
-    // 🌟 全新升級修復版：將新增/修改案場調整為安全的 POST 請求發送
     function saveLocationData() {
       const name = document.getElementById("locName").value.trim(); 
       const lat = document.getElementById("locLat").value.trim(); 
@@ -535,7 +532,6 @@
       if(!name || !lat || !lng) { alert("❌ 請填入完整案場名稱與經緯度！"); return; }
       showMask("正在安全提報儲存案場設定...");
       
-      // 🌟 切換成正確的 POST 安全傳輸機制
       fetch(BASE_GAS_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
@@ -641,6 +637,7 @@
       sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) { document.getElementById("p_name").innerText = emp.name; document.getElementById("p_idcard").innerText = payload.idCard; document.getElementById("p_birth").innerText = payload.birth; document.getElementById("p_id").innerText = targetId; document.getElementById("p_type").innerText = emp.identityType; document.getElementById("p_loc").innerText = emp.assignedLocation; document.getElementById("p_join").innerText = payload.joinDate; document.getElementById("p_leave").innerText = payload.leaveDate; document.getElementById("p_reason").innerText = payload.reason; const today = new Date(); document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`; }).then(() => { hideMask(); setTimeout(() => { window.print(); }, 800); }).catch(() => {});
     }
 
+    // 🌟 核心數據加載修正：將 ${item.reason} 正確切換回 ${item.status}，解決假單審核狀態被挪位顯示的 Bug！
     function loadLeaveApplications() {
       const tbody = document.getElementById("leaveAuditTableBody"); if(!tbody) return;
       tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">請假歷史資料同步中...</td></tr>`;
@@ -649,6 +646,7 @@
           let html = ""; 
           res.records.forEach((item) => { 
             let imgHtml = item.fileData && item.fileData.startsWith("http") ? `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')">` : "無附件"; 
+            // 🎯 關鍵修復處：將下面最尾端的 `<b>${item.reason}</b>` 修正回正常的 `<b>${item.status}</b>`！
             html += `<tr><td>${item.timestamp}</td><td><b>${item.employeeName}</b> (${item.employeeId})</td><td>${item.leaveType}</td><td>${item.start}<br>～<br>${item.end}</td><td>${item.reason}</td><td>${imgHtml}</td><td>${item.status === '待審核' ? `<button class="btn btn-success" onclick="auditLeave('${item.rowId}','已核准')">核准</button> <button class="btn btn-danger" onclick="auditLeave('${item.rowId}','駁回')">駁回</button>` : `<b>${item.status}</b>`}</td></tr>`; 
           }); 
           tbody.innerHTML = html; 
