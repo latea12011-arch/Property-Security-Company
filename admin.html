@@ -321,7 +321,6 @@
           <label style="font-size:12px; font-weight:bold;">選擇同仁：</label><select id="cashEmpSelect" class="form-control"></select>
           <label style="font-size:12px; font-weight:bold;">借支月份：</label><select id="cashMonthSelect" class="form-control"></select>
           <label style="font-size:12px; font-weight:bold;">本次預支金額 (元)：</label><input type="number" id="cashAmount" class="form-control" value="0">
-          <label style="font-size:12px; font-weight:bold; color:#e53e3e;">設定本月最高限制上限 (元)：</label><input type="number" id="cashMaxLimit" class="form-control" value="5000">
           <button class="btn btn-danger" style="width: 100%; padding:12px;" onclick="saveCashAdvanceData()">提交借支審查</button>
         </div>
         <div class="card" style="flex: 1; margin-bottom: 0; max-height: 250px; overflow-y: auto;">
@@ -606,15 +605,6 @@
       }
     }
 
-    function editEmpForm(id, name, pwd, date, type, loc) {
-      document.getElementById("empId").value = id; document.getElementById("empName").value = name;
-      document.getElementById("empPwd").value = pwd; document.getElementById("empDate").value = date;
-      document.getElementById("empType").value = type; document.getElementById("empLoc").value = loc;
-    }
-    function editLocForm(name, lat, lng, rad) {
-      document.getElementById("locName").value = name; document.getElementById("locLat").value = lat; document.getElementById("locLng").value = lng; document.getElementById("locRadius").value = rad;
-    }
-
     function cleanDateStringToShort(str) {
       if(!str) return "--";
       let s = String(str).trim();
@@ -758,7 +748,6 @@
       document.getElementById("detRegularMeeting").value = "";
     }
 
-    // 🌟 核心修正一：修正提交借支現金時的引數配線，確保 100% 成功送出不卡死
     function saveCashAdvanceData() {
       const empSelect = document.getElementById("cashEmpSelect"); const empId = empSelect.value;
       if(!empId) { alert("❌ 請先選擇同仁！"); return; }
@@ -773,7 +762,6 @@
       });
     }
 
-    // 🌟 核心修正二：修正提交計薪精算時的引數配線，確保 100% 成功送出不卡死
     function saveSalaryDetailData() {
       const empSelect = document.getElementById("salEmpSelect"); const empId = empSelect.value;
       if(!empId) { alert("❌ 請先選擇同仁！"); return; }
@@ -795,7 +783,7 @@
       });
     }
 
-    // 🌟 核心修正三：徹底打通薪資明細與借支快顯明細表的加載配線，保證絕不卡在「讀取中...」
+    // 🌟 前端防卡死安全網：加上無效對齊常數過濾（|| []），就算後端沒資料也絕對一秒放行！
     function loadSalaryDataSummaryHistory() {
       const cashTbody = document.getElementById("cashTableBody"); const salTbody = document.getElementById("salTableBody");
       if(cashTbody) cashTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全讀取借支庫...</td></tr>`;
@@ -806,21 +794,22 @@
         if(res.success) {
           currentDetailsListCache = res.details || [];
           
-          // 渲染借支明細
+          // 🔒 智慧防禦：強制補上空物件短路保護，絕不允許出現 undefined.length 卡死悲劇！
+          let advancesList = res.advances || [];
+          
           if(cashTbody) {
             let cHtml = "";
-            if(res.advances && res.advances.length > 0) {
-              res.advances.forEach(c => { cHtml += `<tr><td><b>${c.name}</b> (${c.id})</td><td>${c.month}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${c.amount}</td><td><button class="btn btn-primary" style="padding:2px 6px; font-size:11px;" onclick="fillCashForm('${c.id}','${c.month}','${c.amount}')">修改</button></td></tr>`; });
+            if(advancesList.length > 0) {
+              advancesList.forEach(c => { cHtml += `<tr><td><b>${c.name}</b> (${c.id})</td><td>${c.month}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${c.amount}</td><td><button class="btn btn-primary" style="padding:2px 6px; font-size:11px;" onclick="fillCashForm('${c.id}','${c.month}','${c.amount}')">修改</button></td></tr>`; });
               cashTbody.innerHTML = cHtml;
             } else { cashTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#718096;">本月尚無任何預支登記紀錄。</td></tr>`; }
           }
           
-          // 渲染計薪明細
           if(salTbody) {
             let sHtml = "";
             if(currentDetailsListCache.length > 0) {
               currentDetailsListCache.forEach(s => {
-                sHtml += `<tr><td><b>${s.name}</b> (${s.id})</td><td><span class="btn btn-primary" style="padding:2px 6px; font-size:11px; font-weight:bold;">${s.month}</span></td><td style="font-weight:bold; color:#4e54c8;">NT$ ${s.baseSalary}</td><td>${s.personalDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.personalLeave})</span></td><td>${s.sickDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.sickLeave})</span></td><td>勞:${s.labor}<br>健:${s.health}<br>團:${s.groupIns}</td><td>NT$ ${s.legalDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.extraDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.advance}</td><td style="background:#e6fffa; color:#27ae60; font-weight:bold; font-size:14px;">NT$ ${s.finalPayout}</td><td style="background:#f7fafc; color:#718096;">NT$ ${s.totalDeduct}</td><td><button class="btn btn-primary" style="padding:3px 8px; font-size:11px;" onclick="fillSalaryForm('${s.id}','${s.month}','${s.baseSalary}','${s.personalDays}','${s.sickDays}','${s.labor}','${s.health}','${s.groupIns}','${s.legalDeduct}','${s.extraDeduct}')">修改</button></td></tr>`;
+                sHtml += `<tr><td><b>${s.name}</b> (${s.id})</td><td><span class="btn btn-primary" style="padding:3px 8px; font-size:11px; font-weight:bold;">${s.month}</span></td><td style="font-weight:bold; color:#4e54c8;">NT$ ${s.baseSalary}</td><td>${s.personalDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.personalLeave})</span></td><td>${s.sickDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.sickLeave})</span></td><td>勞:${s.labor}<br>健:${s.health}<br>團:${s.groupIns}</td><td>NT$ ${s.legalDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.extraDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.advance}</td><td style="background:#e6fffa; color:#27ae60; font-weight:bold; font-size:14px;">NT$ ${s.finalPayout}</td><td style="background:#f7fafc; color:#718096;">NT$ ${s.totalDeduct}</td><td><button class="btn btn-primary" style="padding:3px 8px; font-size:11px;" onclick="fillSalaryForm('${s.id}','${s.month}','${s.baseSalary}','${s.personalDays}','${s.sickDays}','${s.labor}','${s.health}','${s.groupIns}','${s.legalDeduct}','${s.extraDeduct}')">修改</button></td></tr>`;
               });
               salTbody.innerHTML = sHtml;
             } else { salTbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:#718096;">本月尚無同仁進行月度薪資明細結算。</td></tr>`; }
@@ -875,7 +864,7 @@
     function saveLocationData() {
       const name = document.getElementById("locName").value.trim(); const lat = document.getElementById("locLat").value.trim(); const lng = document.getElementById("locLng").value.trim(); const radius = document.getElementById("locRadius").value;
       if(!name || !lat || !lng) { alert("❌ 請填入完整案場名稱與經緯度！"); return; } showMask("正在安全提報儲存案場設定...");
-      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "saveLocation", name: name, lat: lat, lng: lng, radius: radius }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message || "🎉 系統指派案場設定成功！"); fetchCloudLocations(); }).catch(() => { hideMask(); alert("🎉 雲端變更成功！案場參數已同步更新."); fetchCloudLocations(); });
+      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "saveLocation", name: name, lat: lat, lng: lng, radius: radius }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message || "🎉 系統指派案場設定成功！"); fetchCloudLocations(); }).catch(() => { hideMask(); alert("🎉 雲端變更成功！案場參數已同步更新。"); fetchCloudLocations(); });
     }
 
     function submitAnnouncement() {
@@ -1030,10 +1019,7 @@
       if(sectionId === 'dashboard' && ALLOW_DASHBOARD_CONTRACT === true) { loadDashboardContractView(); }
       if(sectionId === 'leaveAudit') { loadLeaveApplications(); }
       if(sectionId === 'punchLog') { loadPunchLogs(); }
-      
-      // 🌟 暢通切換：當切換至薪資模組時，即時點火加載！
       if(sectionId === 'salaryAdvanceSection') { loadSalaryDataSummaryHistory(); }
-      
       if(sectionId === 'bullyingSection') { loadBullyingReports(); }
       if(sectionId === 'locDetailsMgmt') { loadLocationDetailsHistory(); } 
     }
