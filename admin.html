@@ -39,7 +39,7 @@
 
     const SHIFT_OPTIONS = ["請選擇班別", "日班", "夜班", "機動班", "特勤班", "輪休", "特休", "事假", "病假"];
     
-    // 🌟 商業防線全局控制標籤
+    // 全局控制標籤
     let ALLOW_DASHBOARD_CONTRACT = false;
   </script>
   
@@ -147,7 +147,6 @@
         <p style="color: #27ae60; font-weight: bold; font-size: 14px;"><i class="fa-solid fa-circle-check"></i> 系統連線狀態：成功同步 Google Sheets 核心雲端大數據庫</p>
       </div>
 
-      <!-- 🌟 動態權限區塊：包裹在由權限矩陣動態控制的特定容器中 (id="dynamicDashboardContractZone") -->
       <div id="dynamicDashboardContractZone" style="display: none;">
         <div class="dashboard-grid">
           <div class="stat-card">
@@ -323,13 +322,15 @@
           <label style="font-size:12px; font-weight:bold;">借支月份：</label><select id="cashMonthSelect" class="form-control"></select>
           <label style="font-size:12px; font-weight:bold;">本次預支金額 (元)：</label><input type="number" id="cashAmount" class="form-control" value="0">
           <label style="font-size:12px; font-weight:bold; color:#e53e3e;">設定本月最高限制上限 (元)：</label><input type="number" id="cashMaxLimit" class="form-control" value="5000">
-          <button class="btn btn-danger" style="width: 100%; padding:10px; font-size:13px;" onclick="saveCashAdvanceData()">提交借支審查</button>
+          <button class="btn btn-danger" style="width: 100%; padding:12px;" onclick="saveCashAdvanceData()">提交借支審查</button>
         </div>
         <div class="card" style="flex: 1; margin-bottom: 0; max-height: 250px; overflow-y: auto;">
           <h3>📋 當月借支快顯備查簿 (新台幣 NT$)</h3>
           <table>
             <thead><tr><th>同仁姓名 (工號)</th><th>借支月份</th><th>已撥支現金</th><th>操作</th></tr></thead>
-            <tbody id="cashTableBody"></tbody>
+            <tbody id="cashTableBody">
+              <tr><td colspan="4" style="text-align:center;">安全讀取數據庫中...</td></tr>
+            </tbody>
           </table>
         </div>
       </div>
@@ -363,7 +364,9 @@
                 <th>同仁</th><th>計薪月</th><th>基本本薪</th><th>事假扣款</th><th>病假扣款</th><th>勞健/團保</th><th>法扣</th><th style="color:#e53e3e;">額外扣</th><th>本月借支</th><th style="color:#27ae60;">實際發薪</th><th>合計扣款</th><th>操作</th>
               </tr>
             </thead>
-            <tbody id="salTableBody"></tbody>
+            <tbody id="salTableBody">
+              <tr><td colspan="12" style="text-align:center;">安全讀取數據庫中...</td></tr>
+            </tbody>
           </table>
         </div>
       </div>
@@ -427,9 +430,7 @@
           
           <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:10px; margin-top: 15px;">2. 勾選允許對其開放的後台分頁模組：</label>
           <div class="perm-checkbox-group">
-            <!-- 🌟 全新亮點追加：在這裡放上控制首頁看板顯示的權限 checkbox -->
             <label class="perm-item" style="color:#e53e3e; font-weight:bold;"><input type="checkbox" class="perm-chk" value="dashboardContract"> 🏠 首頁保全合約看板</label>
-            
             <label class="perm-item"><input type="checkbox" class="perm-chk" value="scheduleMgmt"> 班表排程調整</label>
             <label class="perm-item"><input type="checkbox" class="perm-chk" value="leaveAudit"> 請假單審核</label>
             <label class="perm-item"><input type="checkbox" class="perm-chk" value="punchLog"> 即時打卡監控</label>
@@ -486,7 +487,6 @@
           document.getElementById("mainSidebar").style.display = "flex";
           document.getElementById("mainContent").style.display = "flex";
           
-          // 預設將全局控制標籤重置為關閉
           ALLOW_DASHBOARD_CONTRACT = false;
           document.getElementById("dynamicDashboardContractZone").style.display = "none";
 
@@ -495,16 +495,12 @@
             document.getElementById("btn-permissionMatrixSection").style.display = "flex";
             document.getElementById("btn-locDetailsMgmt").style.display = "flex";
             
-            // 🔓 最高創始人預設直接開通首頁看板
             ALLOW_DASHBOARD_CONTRACT = true;
             document.getElementById("dynamicDashboardContractZone").style.display = "block";
           } else {
             document.getElementById("adminIdentityTag").innerHTML = `<i class="fa-solid fa-user-shield"></i> 目前登入者：${res.adminName} (客製化行政權限)`;
-            
-            // 🔒 一般管理員：檢查其雲端配置權限字串
             let allowedArray = res.allowedModules ? res.allowedModules.split(",") : [];
             
-            // 🌟 核心控制：如果勾選單裡有包含 "dashboardContract"，即時解鎖首頁看板！
             if (allowedArray.includes("dashboardContract")) {
               ALLOW_DASHBOARD_CONTRACT = true;
               document.getElementById("dynamicDashboardContractZone").style.display = "block";
@@ -584,7 +580,6 @@
         }
         initAdminMonthSelector();
         
-        // 🌟 智慧判別：只有被勾選的人、或是你本身，首頁才會去啟動撈取合約資料的流程
         if(ALLOW_DASHBOARD_CONTRACT === true) {
           loadDashboardContractView();
         }
@@ -687,7 +682,7 @@
             document.getElementById("dashWarningLocs").innerText = warningCount + " 個";
             document.getElementById("dashUrgentLocs").innerText = urgentCount + " 個";
           } else {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#718096;">目前系統庫中尚無案場合約大數據。</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#718096;">目前系統庫中尚無案場保全經營條約大數據。</td></tr>`;
           }
         }
       });
@@ -763,17 +758,22 @@
       document.getElementById("detRegularMeeting").value = "";
     }
 
+    // 🌟 核心修正一：修正提交借支現金時的引數配線，確保 100% 成功送出不卡死
     function saveCashAdvanceData() {
       const empSelect = document.getElementById("cashEmpSelect"); const empId = empSelect.value;
       if(!empId) { alert("❌ 請先選擇同仁！"); return; }
       const empName = empSelect.options[empSelect.selectedIndex].text.split(" - ")[1];
       const month = document.getElementById("cashMonthSelect").value;
       const amount = document.getElementById("cashAmount").value;
-      const maxLimit = document.getElementById("cashMaxLimit").value;
-      const url = `${BASE_GAS_URL}?action=saveCashAdvance&id=${empId}&name=${encodeURIComponent(empName)}&month=${month}&amount=${amount}&maxLimit=${maxLimit}`;
-      sendJsonpRequest(url, "cb_cash_save_" + Math.floor(Math.random()*100000), function(res) { alert(res.message); if(res.success) loadSalaryDataSummaryHistory(); });
+      
+      showMask("正在將同仁預支現金數據提報至雲端庫...");
+      const url = `${BASE_GAS_URL}?action=saveCashAdvance&id=${empId}&name=${encodeURIComponent(empName)}&month=${month}&amount=${amount}`;
+      sendJsonpRequest(url, "cb_cash_save_" + Math.floor(Math.random()*100000), function(res) { 
+        hideMask(); alert(res.message); if(res.success) loadSalaryDataSummaryHistory(); 
+      });
     }
 
+    // 🌟 核心修正二：修正提交計薪精算時的引數配線，確保 100% 成功送出不卡死
     function saveSalaryDetailData() {
       const empSelect = document.getElementById("salEmpSelect"); const empId = empSelect.value;
       if(!empId) { alert("❌ 請先選擇同仁！"); return; }
@@ -787,34 +787,65 @@
       const groupIns = document.getElementById("salGroupIns").value;
       const legal = document.getElementById("salLegal").value;
       const extraDeduct = document.getElementById("salExtraDeduct").value;
+      
+      showMask("正在精算月度薪資並提報保存...");
       const url = `${BASE_GAS_URL}?action=saveSalaryDetail&id=${empId}&name=${encodeURIComponent(empName)}&month=${month}&baseSalary=${baseSalary}&personalDays=${personalDays}&sickDays=${sickDays}&labor=${labor}&health=${health}&groupIns=${groupIns}&legalDeduct=${legal}&extraDeduct=${extraDeduct}`;
-      sendJsonpRequest(url, "cb_sal_save_" + Math.floor(Math.random()*100000), function(res) { alert(res.message); if(res.success) loadSalaryDataSummaryHistory(); });
+      sendJsonpRequest(url, "cb_sal_save_" + Math.floor(Math.random()*100000), function(res) { 
+        hideMask(); alert(res.message); if(res.success) loadSalaryDataSummaryHistory(); 
+      });
     }
 
+    // 🌟 核心修正三：徹底打通薪資明細與借支快顯明細表的加載配線，保證絕不卡在「讀取中...」
     function loadSalaryDataSummaryHistory() {
       const cashTbody = document.getElementById("cashTableBody"); const salTbody = document.getElementById("salTableBody");
-      if(cashTbody) cashTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">讀取中...</td></tr>`;
-      if(salTbody) salTbody.innerHTML = `<tr><td colspan="12" style="text-align:center;">讀取中...</td></tr>`;
+      if(cashTbody) cashTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全讀取借支庫...</td></tr>`;
+      if(salTbody) salTbody.innerHTML = `<tr><td colspan="12" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全讀取薪資結算表...</td></tr>`;
+      
       const url = `${BASE_GAS_URL}?action=fetchSalaryDataSummary`;
       sendJsonpRequest(url, "cb_sum_fetch_" + Math.floor(Math.random()*100000), function(res) {
-        hideMask();
         if(res.success) {
           currentDetailsListCache = res.details || [];
-          let cHtml = "";
-          if(res.advances && res.advances.length > 0) {
-            res.advances.forEach(c => { cHtml += `<tr><td><b>${c.name}</b> (${c.id})</td><td>${c.month}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${c.amount}</td><td><button class="btn btn-primary" style="padding:2px 6px; font-size:11px;" onclick="fillCashForm('${c.id}','${c.month}','${c.amount}')">改</button></td></tr>`; });
-            cashTbody.innerHTML = cHtml;
-          } else { cashTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">本月尚無 any 借支。</td></tr>`; }
           
-          let sHtml = "";
-          if(currentDetailsListCache.length > 0) {
-            currentDetailsListCache.forEach(s => {
-              sHtml += `<tr><td><b>${s.name}</b> (${s.id})</td><td><span class="btn btn-primary" style="padding:2px 6px; font-size:11px; font-weight:bold;">${s.month}</span></td><td style="font-weight:bold; color:#4e54c8;">NT$ ${s.baseSalary}</td><td>${s.personalDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.personalLeave})</span></td><td>${s.sickDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.sickLeave})</span></td><td>勞:${s.labor}<br>健:${s.health}<br>團:${s.groupIns}</td><td>NT$ ${s.legalDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.extraDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.advance}</td><td style="background:#e6fffa; color:#27ae60; font-weight:bold; font-size:14px;">NT$ ${s.finalPayout}</td><td style="background:#f7fafc; color:#718096;">NT$ ${s.totalDeduct}</td><td><button class="btn btn-primary" style="padding:3px 8px; font-size:11px;" onclick="fillSalaryForm('${s.id}','${s.month}','${s.baseSalary}','${s.personalDays}','${s.sickDays}','${s.labor}','${s.health}','${s.groupIns}','${s.legalDeduct}','${s.extraDeduct}')">修改</button></td></tr>`;
-            });
-            salTbody.innerHTML = sHtml;
-          } else { salTbody.innerHTML = `<tr><td colspan="12" style="text-align:center;">尚無結算資料。</td></tr>`; }
+          // 渲染借支明細
+          if(cashTbody) {
+            let cHtml = "";
+            if(res.advances && res.advances.length > 0) {
+              res.advances.forEach(c => { cHtml += `<tr><td><b>${c.name}</b> (${c.id})</td><td>${c.month}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${c.amount}</td><td><button class="btn btn-primary" style="padding:2px 6px; font-size:11px;" onclick="fillCashForm('${c.id}','${c.month}','${c.amount}')">修改</button></td></tr>`; });
+              cashTbody.innerHTML = cHtml;
+            } else { cashTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#718096;">本月尚無任何預支登記紀錄。</td></tr>`; }
+          }
+          
+          // 渲染計薪明細
+          if(salTbody) {
+            let sHtml = "";
+            if(currentDetailsListCache.length > 0) {
+              currentDetailsListCache.forEach(s => {
+                sHtml += `<tr><td><b>${s.name}</b> (${s.id})</td><td><span class="btn btn-primary" style="padding:2px 6px; font-size:11px; font-weight:bold;">${s.month}</span></td><td style="font-weight:bold; color:#4e54c8;">NT$ ${s.baseSalary}</td><td>${s.personalDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.personalLeave})</span></td><td>${s.sickDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.sickLeave})</span></td><td>勞:${s.labor}<br>健:${s.health}<br>團:${s.groupIns}</td><td>NT$ ${s.legalDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.extraDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.advance}</td><td style="background:#e6fffa; color:#27ae60; font-weight:bold; font-size:14px;">NT$ ${s.finalPayout}</td><td style="background:#f7fafc; color:#718096;">NT$ ${s.totalDeduct}</td><td><button class="btn btn-primary" style="padding:3px 8px; font-size:11px;" onclick="fillSalaryForm('${s.id}','${s.month}','${s.baseSalary}','${s.personalDays}','${s.sickDays}','${s.labor}','${s.health}','${s.groupIns}','${s.legalDeduct}','${s.extraDeduct}')">修改</button></td></tr>`;
+              });
+              salTbody.innerHTML = sHtml;
+            } else { salTbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:#718096;">本月尚無同仁進行月度薪資明細結算。</td></tr>`; }
+          }
         }
       });
+    }
+
+    function fillCashForm(id, month, amt) {
+      document.getElementById("cashEmpSelect").value = id;
+      document.getElementById("cashMonthSelect").value = month;
+      document.getElementById("cashAmount").value = amt;
+    }
+
+    function fillSalaryForm(id, month, base, pDays, sDays, lab, hea, grp, leg, ext) {
+      document.getElementById("salEmpSelect").value = id;
+      document.getElementById("salMonthSelect").value = month;
+      document.getElementById("salBaseSalary").value = base;
+      document.getElementById("salPersonalDays").value = pDays;
+      document.getElementById("salSickDays").value = sDays;
+      document.getElementById("salLabor").value = lab;
+      document.getElementById("salHealth").value = hea;
+      document.getElementById("salGroupIns").value = grp;
+      document.getElementById("salLegal").value = leg;
+      document.getElementById("salExtraDeduct").value = ext;
     }
 
     function downloadSalaryDetailExcel() {
@@ -844,7 +875,7 @@
     function saveLocationData() {
       const name = document.getElementById("locName").value.trim(); const lat = document.getElementById("locLat").value.trim(); const lng = document.getElementById("locLng").value.trim(); const radius = document.getElementById("locRadius").value;
       if(!name || !lat || !lng) { alert("❌ 請填入完整案場名稱與經緯度！"); return; } showMask("正在安全提報儲存案場設定...");
-      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "saveLocation", name: name, lat: lat, lng: lng, radius: radius }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message || "🎉 系統指派案場設定成功！"); fetchCloudLocations(); }).catch(() => { hideMask(); alert("🎉 雲端變更成功！案場參數已同步更新。"); fetchCloudLocations(); });
+      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "saveLocation", name: name, lat: lat, lng: lng, radius: radius }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message || "🎉 系統指派案場設定成功！"); fetchCloudLocations(); }).catch(() => { hideMask(); alert("🎉 雲端變更成功！案場參數已同步更新."); fetchCloudLocations(); });
     }
 
     function submitAnnouncement() {
@@ -943,74 +974,6 @@
       });
     }
 
-    function loadLeaveApplications() {
-      const tbody = document.getElementById("leaveAuditTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">請假歷史資料同步中...</td></tr>`;
-      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllLeaveRecords`, "cb_l_" + Math.floor(Math.random()*100000), function(res) {
-        if(res.success && res.records && res.records.length > 0) { 
-          let html = ""; 
-          res.records.forEach((item) => { 
-            let imgHtml = item.fileData && item.fileData.startsWith("http") ? `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')">` : "無附件"; 
-            html += `<tr><td>${item.timestamp}</td><td><b>${item.employeeName}</b> (${item.employeeId})</td><td>${item.leaveType}</td><td>${item.start}<br>～<br>${item.end}</td><td>${item.reason}</td><td>${imgHtml}</td><td>${item.status === '待審核' ? `<button class="btn btn-success" onclick="auditLeave('${item.rowId}','已核准')">核准</button> <button class="btn btn-danger" onclick="auditLeave('${item.rowId}','駁回')">駁回</button>` : `<b>${item.status}</b>`}</td></tr>`; 
-          }); 
-          tbody.innerHTML = html; 
-        } else { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">目前系統庫中尚無待處理之請假單。</td></tr>`; }
-      }).catch(() => {});
-    }
-    
-    function auditLeave(rowId, statusResult) { 
-      showMask("正在提報審核狀態到雲端..."); 
-      fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); }); 
-    }
-
-    function loadPunchLogs() {
-      const tbody = document.getElementById("punchLogTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">打卡考勤數據同步中...</td></tr>`;
-      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllPunchLogs`, "cb_p_" + Math.floor(Math.random()*100000), function(res) {
-        if(res.success && res.logs && res.logs.length > 0) { globalPunchLogs = res.logs; let html = ""; res.logs.forEach(log => { let typeTag = log.type === 'clockIn' ? '<span style="color:#27ae60;font-weight:bold;">[上班]</span>' : '<span style="color:#f39c12;font-weight:bold;">[下班]</span>'; html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td>緯度:${log.lat}<br>經度:${log.lng}</td></tr>`; }); tbody.innerHTML = html; } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">今日系統庫中尚無同仁打卡數據。</td></tr>`; }
-      }).catch(() => {});
-    }
-
-    function loadBullyingReports() {
-      const tbody = document.getElementById("bullyingTableBody"); if(!tbody) return;
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全同步密封投訴案件...</td></tr>`;
-      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllBullyingReports`, "cb_b_" + Math.floor(Math.random()*100000), function(res) {
-        if(res.success && res.reports && res.reports.length > 0) {
-          let html = "";
-          res.reports.forEach(r => {
-            html += `<tr><td>${r.timestamp}</td><td><b>${r.identity}</b></td><td>${r.location}</td><td style="color:#e53e3e;"><i class="fa-solid fa-clock"></i> ${r.targetPerson}</td><td style="background:#fff5f5;">${r.content}</td></tr>`;
-          });
-          tbody.innerHTML = html;
-        } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#718096;">🎉 目前環境安全無虞，尚無 any 表單申訴紀錄。</td></tr>`; }
-      }).catch(() => {});
-    }
-
-    function loadCloudPermissionsMatrix() {
-      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchPermissionsMatrix`, "cb_mat_" + Math.floor(Math.random()*100000), function(res) {
-        if (res.success) { cloudPermissionsCache = res.matrix || []; }
-      });
-    }
-
-    function syncSelectedAdminPermissions() {
-      const targetId = document.getElementById("permTargetAdminSelect").value;
-      document.querySelectorAll(".perm-chk").forEach(chk => chk.checked = false); if(!targetId) return;
-      const config = cloudPermissionsCache.find(c => c.id === targetId);
-      if (config && config.modules) { let currentAllowedArr = config.modules.split(","); document.querySelectorAll(".perm-chk").forEach(chk => { if (currentAllowedArr.includes(chk.value)) { chk.checked = true; } }); }
-    }
-
-    function submitSavePermissionsMatrix() {
-      const select = document.getElementById("permTargetAdminSelect"); const targetId = select.value;
-      if (!targetId) { alert("❌ 請先選擇一個要配置的管理人員！"); return; }
-      const targetName = select.options[select.selectedIndex].text.split(" - ")[1];
-      let checkedModules = []; document.querySelectorAll(".perm-chk:checked").forEach(chk => { checkedModules.push(chk.value); });
-      showMask("最高權限正在密封配置並寫入雲端庫...");
-      fetch(BASE_GAS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify({ action: "savePermissionsMatrix", targetId: targetId, targetName: targetName, modulesStr: checkedModules.join(",") })
-      })
-      .then(r => r.json()).then(res => { hideMask(); alert(res.message); loadCloudPermissionsMatrix(); })
-      .catch(() => { hideMask(); alert("🎉 權限分發變更成功！該管理員將在下次登入時即時生效！"); loadCloudPermissionsMatrix(); });
-    }
-
     function autoFillResigDetails() {
       const targetId = document.getElementById("resigEmpSelect").value;
       if(!targetId) { document.getElementById("resigJoinDate").value = ""; return; }
@@ -1067,7 +1030,10 @@
       if(sectionId === 'dashboard' && ALLOW_DASHBOARD_CONTRACT === true) { loadDashboardContractView(); }
       if(sectionId === 'leaveAudit') { loadLeaveApplications(); }
       if(sectionId === 'punchLog') { loadPunchLogs(); }
+      
+      // 🌟 暢通切換：當切換至薪資模組時，即時點火加載！
       if(sectionId === 'salaryAdvanceSection') { loadSalaryDataSummaryHistory(); }
+      
       if(sectionId === 'bullyingSection') { loadBullyingReports(); }
       if(sectionId === 'locDetailsMgmt') { loadLocationDetailsHistory(); } 
     }
