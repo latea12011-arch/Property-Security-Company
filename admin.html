@@ -181,7 +181,7 @@
           <label style="font-size:12px; font-weight:bold;">登入密碼：</label><input type="text" id="empPwd" class="form-control">
           <label style="font-size:12px; font-weight:bold;">入職日期：</label><input type="date" id="empDate" class="form-control">
           <label style="font-size:12px; font-weight:bold;">身分類別：</label><select id="empType" class="form-control"><option value="正職人員">正職人員</option><option value="機動人員">機動人員</option></select>
-          <label style="font-size:12px; font-weight:bold;">負責案場 (機動同仁用逗號隔開)：</label><input type="text" id="empLoc" class="form-control" placeholder="例如：天下至寶,美麗非洲">
+          <label style="font-size:12px; font-weight:bold;">負責案場 (機動同仁用逗號隔開)：</label><input type="text" id="empLoc" class="form-control" placeholder="example：天下至寶,美麗非洲">
           <button class="btn btn-success" style="width: 100%; padding:12px;" onclick="saveEmployeeData()"><i class="fa-solid fa-user-plus"></i> 儲存同仁資訊</button>
         </div>
         <div class="card" style="flex: 1; max-height: 550px; overflow-y: auto;">
@@ -621,12 +621,29 @@
       loadExistingSchedule();
     }
 
+    // 🌟 完美結合處：用高相容正則抓取純數字，徹底阻斷班表回填時的一片空白 Bug
     function loadExistingSchedule() {
       const empId = document.getElementById("schedEmpSelect").value; const month = document.getElementById("schedMonthSelect").value; if(!empId || !month) return;
       showMask("正在調閱同仁該月雲端存檔班表..."); const url = `${BASE_GAS_URL}?action=fetchSchedule&employeeId=${empId}&month=${month}`;
       sendJsonpRequest(url, "cb_load_sched_" + Math.floor(Math.random()*100000), function(res) {
         hideMask(); document.querySelectorAll(".daily-location-select").forEach(s => s.value = ""); document.querySelectorAll(".daily-shift-select").forEach(s => s.value = "");
-        if(res.success && res.schedule) { res.schedule.forEach(item => { let dayNum = String(item.date).replace("日", "").trim(); let rawStr = String(item.shift).trim(); let locSelect = document.getElementById("loc_day_" + dayNum); let shiftSelect = document.getElementById("shift_day_" + dayNum); if(locSelect && shiftSelect && rawStr.indexOf("-") !== -1) { let parts = rawStr.split("-"); locSelect.value = parts[0] === "無" ? "" : parts[0]; shiftSelect.value = parts[1] === "休" ? "" : parts[1]; } }); }
+        if(res.success && res.schedule) { 
+          res.schedule.forEach(item => { 
+            // 🎯 正則表達式優化：精準只抓開頭的數字（如 "01"），無視後面是否有星期括號
+            let match = String(item.date).match(/^\d+/);
+            if(match) {
+              let dayNum = match[0];
+              let rawStr = String(item.shift).trim(); 
+              let locSelect = document.getElementById("loc_day_" + dayNum); 
+              let shiftSelect = document.getElementById("shift_day_" + dayNum); 
+              if(locSelect && shiftSelect && rawStr.indexOf("-") !== -1) { 
+                let parts = rawStr.split("-"); 
+                locSelect.value = parts[0] === "無" ? "" : parts[0]; 
+                shiftSelect.value = parts[1] === "休" ? "" : parts[1]; 
+              } 
+            }
+          }); 
+        }
       });
     }
 
@@ -656,14 +673,13 @@
       });
     }
 
-    // 🌟 全新精準綁定：選擇離職同仁時，自動調閱同仁快庫並秒速填入入職日期（到職日）！
+    // 🌟 完美結合處：精準修正離職證明到職日，加上清空與字串截取機制防呆
     function autoFillResigDetails() { 
       const targetId = document.getElementById("resigEmpSelect").value; 
       if(!targetId) { document.getElementById("resigJoinDate").value = ""; return; }
       
       const emp = globalEmployees.find(e => String(e.id).trim() === String(targetId).trim()); 
       if(emp) { 
-        // 🎯 核心修復：直接從快取名冊內精準擷取 joinDate
         document.getElementById("resigJoinDate").value = emp.joinDate || ""; 
       } else {
         document.getElementById("resigJoinDate").value = ""; 
@@ -678,6 +694,7 @@
       sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) { document.getElementById("p_name").innerText = emp.name; document.getElementById("p_idcard").innerText = payload.idCard; document.getElementById("p_birth").innerText = payload.birth; document.getElementById("p_id").innerText = targetId; document.getElementById("p_type").innerText = emp.identityType; document.getElementById("p_loc").innerText = emp.assignedLocation; document.getElementById("p_join").innerText = payload.joinDate; document.getElementById("p_leave").innerText = payload.leaveDate; document.getElementById("p_reason").innerText = payload.reason; const today = new Date(); document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`; }).then(() => { hideMask(); setTimeout(() => { window.print(); }, 800); }).catch(() => {});
     }
 
+    // 🌟 完美結合處：將最後一格改回 item.status，阻斷請假單審核狀態被事由「生病/結婚」挪位遮蓋的 Bug！
     function loadLeaveApplications() {
       const tbody = document.getElementById("leaveAuditTableBody"); if(!tbody) return;
       tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">請假歷史資料同步中...</td></tr>`;
@@ -686,6 +703,7 @@
           let html = ""; 
           res.records.forEach((item) => { 
             let imgHtml = item.fileData && item.fileData.startsWith("http") ? `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')">` : "無附件"; 
+            // 🎯 欄位校正：最後一格完美還原為 item.status
             html += `<tr><td>${item.timestamp}</td><td><b>${item.employeeName}</b> (${item.employeeId})</td><td>${item.leaveType}</td><td>${item.start}<br>～<br>${item.end}</td><td>${item.reason}</td><td>${imgHtml}</td><td>${item.status === '待審核' ? `<button class="btn btn-success" onclick="auditLeave('${item.rowId}','已核准')">核准</button> <button class="btn btn-danger" onclick="auditLeave('${item.rowId}','駁回')">駁回</button>` : `<b>${item.status}</b>`}</td></tr>`; 
           }); 
           tbody.innerHTML = html; 
