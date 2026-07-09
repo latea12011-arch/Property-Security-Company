@@ -34,26 +34,12 @@
     // 🔒【權限清單對照表】（工號請固定維持補滿5碼文字）：
     const ADMIN_PERMISSIONS_LIST = {
       "00001": "SuperAdmin",  // 曾耀毅：最高超級管理（全功能開啟）
-      "00002": "Admin",       // 範例：行政助理（可審假單、公告，不能看薪資、名冊）
-      "00003": "Supervisor"   // 範例：現場督導（只能排班、看打卡流水帳，其餘全鎖！）
+      "00002": "Admin",       // 行政助理
+      "00003": "Supervisor"   // 現場督導
     };
 
-    // ⏰【班別與時間客製化選單】在這裡隨時修改、新增你們案場的對應時間：
-    const SHIFT_OPTIONS = [
-      "請選擇班別", 
-      "日班 (07-19)", 
-      "日班 (06-18)", 
-      "日班 (08-20)", 
-      "夜班 (19-07)", 
-      "夜班 (18-06)", 
-      "夜班 (20-08)", 
-      "機動班", 
-      "特勤班", 
-      "輪休", 
-      "特休", 
-      "事假", 
-      "病假"
-    ];
+    // ⏰ 班別下拉選單恢復為純粹班別
+    const SHIFT_OPTIONS = ["請選擇班別", "日班", "夜班", "機動班", "特勤班", "輪休", "特休", "事假", "病假"];
   </script>
   
   <style>
@@ -150,7 +136,8 @@
             </div>
             <div style="border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
               <table style="margin-top: 0; width: 100%;">
-                <thead><tr><th>日期 / 星期</th><th>指派案場</th><th>指派班別</th></tr></thead>
+                <!-- 🌟 升級表格欄位：多塞一個「自訂時間」標頭 -->
+                <thead><tr><th style="width: 25%;">日期 / 星期</th><th style="width: 30%;">指派案場</th><th style="width: 25%;">指派班別</th><th style="width: 20%;">值勤時段 (自訂)</th></tr></thead>
                 <tbody id="calendarRowsBody"></tbody>
               </table>
             </div>
@@ -518,7 +505,7 @@
           if(res.advances && res.advances.length > 0) {
             res.advances.forEach(c => { cHtml += `<tr><td><b>${c.name}</b> (${c.id})</td><td>${c.month}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${c.amount}</td><td><button class="btn btn-primary" style="padding:2px 6px; font-size:11px;" onclick="fillCashForm('${c.id}','${c.month}','${c.amount}')">改</button></td></tr>`; });
             cashTbody.innerHTML = cHtml;
-          } else { cashTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">本月尚無任何借支。</td></tr>`; }
+          } else { cashTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">本月尚無 any 借支。</td></tr>`; }
           
           let sHtml = "";
           if(currentDetailsListCache.length > 0) {
@@ -565,7 +552,7 @@
 
     function submitAnnouncement() {
       const unit = document.getElementById("annUnit").value.trim(); const content = document.getElementById("annContent").value.trim(); if(!content) { alert("❌ 請輸入公告具體內容！"); return; } showMask("正在安全推播發布最新公告...");
-      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "publishAnnouncement", unit: unit || "管理部", content: content }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message || "🎉 最新公告已成功發布！"); document.getElementById("annContent").value = ""; }).catch(() => { hideMask(); alert("🎉 最新公告已成功同步推播至雲端系統！"); document.getElementById("annContent").value = ""; });
+      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "publishAnnouncement", unit: unit, content: content }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message || "🎉 最新公告已成功發布！"); document.getElementById("annContent").value = ""; }).catch(() => { hideMask(); alert("🎉 最新公告已成功同步推播至雲端系統！"); document.getElementById("annContent").value = ""; });
     }
 
     function initAdminMonthSelector() {
@@ -585,35 +572,57 @@
       const matches = monthVal.match(/(\d+)年(\d+)月/); if (!matches) return; const year = parseInt(matches[1]); const month = parseInt(matches[2]); const totalDays = new Date(year, month, 0).getDate(); const weekDayNames = ["日", "一", "二", "三", "四", "五", "六"];
       for (let day = 1; day <= totalDays; day++) {
         const dateObj = new Date(year, month - 1, day); const dayOfWeek = weekDayNames[dateObj.getDay()]; const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6; const dayLabelColor = isWeekend ? "color: #e53e3e; font-weight: bold; background: #fff5f5;" : "color: #4a5568;"; const dayString = `${String(day).padStart(2, '0')} 日 (週${dayOfWeek})`;
+        
         let locSelectHtml = `<select class="form-control daily-location-select" id="loc_day_${String(day).padStart(2, '0')}" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px;">`; cloudLocationOptions.forEach(loc => { let isPlaceholder = (loc === '請選擇指派案場' || loc === '載入中...'); locSelectHtml += `<option value="${isPlaceholder ? '' : loc}">${loc}</option>`; }); locSelectHtml += `</select>`;
+        let shiftSelectHtml = `<select class="form-control daily-shift-select" id="shift_day_${String(day).padStart(2, '0')}" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px;">`; SHIFT_OPTIONS.forEach(opt => { shiftSelectHtml += `<option value="${opt === '請選擇班別' ? '' : opt}">${opt}</option>`; }); shiftSelectHtml += `</select>`;
         
-        // 🌟 核心調整：改由讀取最上方全彈性定義的 SHIFT_OPTIONS 時間陣列來動態畫出選單
-        let shiftSelectHtml = `<select class="form-control daily-shift-select" id="shift_day_${String(day).padStart(2, '0')}" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px;">`; 
-        SHIFT_OPTIONS.forEach(opt => { shiftSelectHtml += `<option value="${opt === '請選擇班別' ? '' : opt}">${opt}</option>`; }); 
-        shiftSelectHtml += `</select>`;
+        // 🌟 核心畫面上拉出：獨立的客製化打字「時間輸入框」
+        let timeInputHtml = `<input type="text" class="form-control daily-time-input" id="time_day_${String(day).padStart(2, '0')}" data-day="${String(day).padStart(2, '0')}" placeholder="例: 07-19" style="margin-bottom:0; padding:6px 10px; text-align:center;">`;
         
-        const tr = document.createElement("tr"); tr.innerHTML = `<td style="padding: 10px 15px; vertical-align: middle; ${dayLabelColor}">${dayString}</td><td style="padding: 6px 15px; ${isWeekend ? 'background: #fff5f5;' : ''}">${locSelectHtml}</td><td style="padding: 6px 15px; ${isWeekend ? 'background: #fff5f5;' : ''}">${shiftSelectHtml}</td>`; tbody.appendChild(tr);
+        const tr = document.createElement("tr"); 
+        tr.innerHTML = `<td style="padding: 10px 15px; vertical-align: middle; ${dayLabelColor}">${dayString}</td><td style="padding: 6px 15px; ${isWeekend ? 'background: #fff5f5;' : ''}">${locSelectHtml}</td><td style="padding: 6px 15px; ${isWeekend ? 'background: #fff5f5;' : ''}">${shiftSelectHtml}</td><td style="padding: 6px 15px; ${isWeekend ? 'background: #fff5f5;' : ''}">${timeInputHtml}</td>`; 
+        tbody.appendChild(tr);
       }
       loadExistingSchedule();
     }
 
+    // 🌟 核心升級：精準回填拆分機制，自動把資料庫的「日班(07-19)」拆回下拉選單與打字框！
     function loadExistingSchedule() {
       const empId = document.getElementById("schedEmpSelect").value; const month = document.getElementById("schedMonthSelect").value; if(!empId || !month) return;
       showMask("正在調閱同仁該月雲端存檔班表..."); const url = `${BASE_GAS_URL}?action=fetchSchedule&employeeId=${empId}&month=${month}`;
       sendJsonpRequest(url, "cb_load_sched_" + Math.floor(Math.random()*100000), function(res) {
-        hideMask(); document.querySelectorAll(".daily-location-select").forEach(s => s.value = ""); document.querySelectorAll(".daily-shift-select").forEach(s => s.value = "");
+        hideMask(); 
+        document.querySelectorAll(".daily-location-select").forEach(s => s.value = ""); 
+        document.querySelectorAll(".daily-shift-select").forEach(s => s.value = "");
+        document.querySelectorAll(".daily-time-input").forEach(s => s.value = ""); // 先完全清空打字框
+        
         if(res.success && res.schedule) { 
           res.schedule.forEach(item => { 
             let match = String(item.date).match(/^\d+/);
             if(match) {
-              let dayNum = String(match[0]).padStart(2, '0'); let rawStr = String(item.shift).trim(); let locSelect = document.getElementById("loc_day_" + dayNum); let shiftSelect = document.getElementById("shift_day_" + dayNum); 
+              let dayNum = String(match[0]).padStart(2, '0'); 
+              let rawStr = String(item.shift).trim(); 
+              let locSelect = document.getElementById("loc_day_" + dayNum); 
+              let shiftSelect = document.getElementById("shift_day_" + dayNum); 
+              let timeInput = document.getElementById("time_day_" + dayNum);
+              
               if(locSelect && shiftSelect && rawStr.indexOf("-") !== -1) { 
                 let parts = rawStr.split("-"); 
                 locSelect.value = parts[0] === "無" ? "" : parts[0]; 
                 
-                // 🌟 回填高相容優化：如果舊班別在下拉清單裡找得到，就直接精準回填選取
-                let dbShiftVal = parts[1] === "休" ? "" : parts[1];
-                shiftSelect.value = dbShiftVal;
+                let dbShiftFull = parts[1] === "休" ? "" : parts[1];
+                
+                // 用正則表達式拆解，看看班別後面有沒有帶括號時間，例如 "日班(07-19)"
+                let timeMatch = dbShiftFull.match(/\(([^)]+)\)/);
+                if (timeMatch && timeInput) {
+                  // 有帶時間：把括號裡面的字 (如 07-19) 塞進打字框裡！
+                  timeInput.value = timeMatch[1];
+                  // 把選單還原成純粹的 "日班"
+                  shiftSelect.value = dbShiftFull.replace(/\([^)]+\)/, "").trim();
+                } else {
+                  // 沒帶時間：正常還原選單
+                  shiftSelect.value = dbShiftFull;
+                }
               } 
             }
           }); 
@@ -621,11 +630,40 @@
       });
     }
 
+    // 🌟 核心升級：發布儲存時，自動把班別與自打字的時間打包
     function submitNewSchedule() {
       const empId = document.getElementById("schedEmpSelect").value; const month = document.getElementById("schedMonthSelect").value.trim(); if(!empId) { alert("請選擇排班同仁！"); return; }
-      let lines = []; const locSelects = document.querySelectorAll(".daily-location-select"); const shiftSelects = document.querySelectorAll(".daily-shift-select");
-      for (let i = 0; i < locSelects.length; i++) { const day = locSelects[i].getAttribute("data-day"); const locVal = locSelects[i].value || "無"; const shiftVal = shiftSelects[i].value || "休"; lines.push(`${day}:${locVal}-${shiftVal}`); }
-      showMask("幕後發布新班表..."); fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "updateSchedule", employeeId: empId, month: month, scheduleLines: lines.join("\n") }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message); loadExistingSchedule(); }).catch(() => { hideMask(); alert("儲存完畢！"); loadExistingSchedule(); });
+      let lines = []; 
+      const locSelects = document.querySelectorAll(".daily-location-select"); 
+      const shiftSelects = document.querySelectorAll(".daily-shift-select");
+      
+      for (let i = 0; i < locSelects.length; i++) { 
+        const day = locSelects[i].getAttribute("data-day"); 
+        const locVal = locSelects[i].value || "無"; 
+        const shiftVal = shiftSelects[i].value || "休"; 
+        
+        // 抓取打字框裡你自己填的時間
+        const timeInput = document.getElementById("time_day_" + day);
+        let timeVal = timeInput ? timeInput.value.trim() : "";
+        
+        // 如果你有打字，就自動用小括號包起來，例如 "日班(07-19)"
+        let finalShiftStr = shiftVal;
+        if (timeVal && shiftVal !== "休" && shiftVal !== "") {
+          finalShiftStr = `${shiftVal}(${timeVal})`;
+        }
+        
+        lines.push(`${day}:${locVal}-${finalShiftStr}`); 
+      }
+      
+      showMask("幕後發布新班表..."); 
+      fetch(BASE_GAS_URL, { 
+        method: "POST", 
+        headers: { "Content-Type": "text/plain" }, 
+        body: JSON.stringify({ action: "updateSchedule", employeeId: empId, month: month, scheduleLines: lines.join("\n") }) 
+      })
+      .then(r => r.json())
+      .then(res => { alert(res.message); loadExistingSchedule(); })
+      .catch(() => { alert("儲存完畢！"); loadExistingSchedule(); });
     }
 
     function downloadLocationMonthlySchedule() {
@@ -655,7 +693,6 @@
         if(res.success && res.records && res.records.length > 0) { let html = ""; res.records.forEach((item) => { let imgHtml = item.fileData && item.fileData.startsWith("http") ? `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')">` : "無附件"; html += `<tr><td>${item.timestamp}</td><td><b>${item.employeeName}</b> (${item.employeeId})</td><td>${item.leaveType}</td><td>${item.start}<br>～<br>${item.end}</td><td>${item.reason}</td><td>${imgHtml}</td><td>${item.status === '待審核' ? `<button class="btn btn-success" onclick="auditLeave('${item.rowId}','已核准')">核准</button> <button class="btn btn-danger" onclick="auditLeave('${item.rowId}','駁回')">駁回</button>` : `<b>${item.status}</b>`}</td></tr>`; }); tbody.innerHTML = html; } else { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">目前系統庫中尚無待處理之請假單。</td></tr>`; }
       }).catch(() => {});
     }
-    auditLeave = function(rowId, statusResult) { showMask("正在提報審核狀態到雲端..."); fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); }); }
 
     function loadPunchLogs() {
       const tbody = document.getElementById("punchLogTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">打卡考勤數據同步中...</td></tr>`;
