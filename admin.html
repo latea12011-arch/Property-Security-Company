@@ -39,7 +39,7 @@
     };
 
     // 純粹班別選項
-    const SHIFT_OPTIONS = ["請選擇班別", "日班", "夜班", "機動日班", "機動夜班", "特勤班", "輪休", "特休", "事假", "病假"];
+    const SHIFT_OPTIONS = ["請選擇班別", "日班", "夜班", "機動班", "特勤班", "輪休", "特休", "事假", "病假"];
   </script>
   
   <style>
@@ -297,19 +297,19 @@
       </div>
     </div>
 
-    <!-- 反霸凌申訴監控 -->
+    <!-- 🌟 職場霸凌申訴監控面板 -->
     <div class="content-body" id="bullyingSection">
       <div class="card">
         <h3><i class="fa-solid fa-gavel" style="color: #e53e3e;"></i> 職場安全保護 - 申訴事件即時監控中心</h3>
-        <p style="font-size: 13px; color: #718096; margin-bottom: 15px;">本介面監控對接 Google 表單【表單回應 1】獨立申訴分頁，供管理階層實時追蹤調查。</p>
+        <p style="font-size: 13px; color: #718096; margin-bottom: 15px;">本介面密封對接 Google 表單回應分頁，由您實時動態追蹤調查。</p>
         <table>
           <thead>
             <tr>
               <th style="width: 14%;">申訴時間</th>
-              <th style="width: 15%;">申訴同仁 (工號)</th>
-              <th style="width: 15%;">執勤案場</th>
-              <th style="width: 15%; color: #e53e3e;">被投訴對象</th>
-              <th>具體霸凌事由與過程詳細說明</th>
+              <th style="width: 25%;">申訴同仁 / 聯絡方式</th>
+              <th style="width: 20%;">遭遇不法侵害類型</th>
+              <th style="width: 15%; color: #e53e3e;">事件發生主要時間</th>
+              <th>具體事實經過敘述</th>
             </tr>
           </thead>
           <tbody id="bullyingTableBody"></tbody>
@@ -317,11 +317,11 @@
       </div>
     </div>
 
-    <!-- 權限配置中心 -->
+    <!-- 系統選單權限分發 -->
     <div class="content-body" id="permissionMatrixSection">
       <div class="card" style="border: 2px solid #e53e3e;">
         <h3><i class="fa-solid fa-user-lock" style="color: #e53e3e;"></i> 各級行政/督導選單權限分發中心</h3>
-        <p style="font-size: 13px; color: #718096; margin-bottom: 20px;">由您（最高超級管理者）現場實時動態勾選，控制各管理員登入後能開啟哪些分頁按鈕：</p>
+        <p style="font-size: 13px; color: #718096; margin-bottom: 20px;">由您現場實時動態勾選，控制各管理員登入後能開啟哪些分頁按鈕：</p>
         
         <div style="background: #f7fafc; padding: 20px; border-radius: 10px; border: 1px solid #cbd5e0; max-width: 650px;">
           <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">1. 選擇要配置的管理人員：</label>
@@ -347,6 +347,8 @@
   </div>
 
   <script>
+    let cloudPermissionsCache = [];
+
     function submitAdminLogin() {
       let rawId = document.getElementById("loginUser").value.trim();
       if(!rawId) { alert("請輸入工號！"); return; }
@@ -579,7 +581,6 @@
       loadExistingSchedule();
     }
 
-    // 🌟 回填解密核心：精準過濾掉所有隱形快取
     function loadExistingSchedule() {
       const empId = document.getElementById("schedEmpSelect").value; const month = document.getElementById("schedMonthSelect").value; if(!empId || !month) return;
       showMask("正在調閱同仁該月雲端存檔班表..."); const url = `${BASE_GAS_URL}?action=fetchSchedule&employeeId=${empId}&month=${month}`;
@@ -593,16 +594,9 @@
           res.schedule.forEach(item => { 
             let match = String(item.date).match(/^\d+/);
             if(match) {
-              let dayNum = String(match[0]).padStart(2, '0'); 
-              let rawStr = String(item.shift).trim(); 
-              let locSelect = document.getElementById("loc_day_" + dayNum); 
-              let shiftSelect = document.getElementById("shift_day_" + dayNum); 
-              let timeInput = document.getElementById("time_day_" + dayNum);
-              
+              let dayNum = String(match[0]).padStart(2, '0'); let rawStr = String(item.shift).trim(); let locSelect = document.getElementById("loc_day_" + dayNum); let shiftSelect = document.getElementById("shift_day_" + dayNum); let timeInput = document.getElementById("time_day_" + dayNum);
               if(locSelect && shiftSelect && rawStr.indexOf("-") !== -1) { 
-                let parts = rawStr.split("-"); 
-                locSelect.value = parts[0] === "無" ? "" : parts[0]; 
-                
+                let parts = rawStr.split("-"); locSelect.value = parts[0] === "無" ? "" : parts[0]; 
                 let dbShiftFull = parts[1] === "休" ? "" : parts[1];
                 let timeMatch = dbShiftFull.match(/\(([^)]+)\)/);
                 if (timeMatch && timeInput) {
@@ -620,33 +614,15 @@
 
     function submitNewSchedule() {
       const empId = document.getElementById("schedEmpSelect").value; const month = document.getElementById("schedMonthSelect").value.trim(); if(!empId) { alert("請選擇排班同仁！"); return; }
-      let lines = []; 
-      const locSelects = document.querySelectorAll(".daily-location-select"); 
-      const shiftSelects = document.querySelectorAll(".daily-shift-select");
-      
+      let lines = []; const locSelects = document.querySelectorAll(".daily-location-select"); const shiftSelects = document.querySelectorAll(".daily-shift-select");
       for (let i = 0; i < locSelects.length; i++) { 
-        const day = locSelects[i].getAttribute("data-day"); 
-        const locVal = locSelects[i].value || "無"; 
-        const shiftVal = shiftSelects[i].value || "休"; 
-        const timeInput = document.getElementById("time_day_" + day);
-        let timeVal = timeInput ? timeInput.value.trim() : "";
-        
-        let finalShiftStr = shiftVal;
-        if (timeVal && shiftVal !== "休" && shiftVal !== "") {
-          finalShiftStr = `${shiftVal}(${timeVal})`;
-        }
+        const day = locSelects[i].getAttribute("data-day"); const locVal = locSelects[i].value || "無"; const shiftVal = shiftSelects[i].value || "休"; const timeInput = document.getElementById("time_day_" + day); let timeVal = timeInput ? timeInput.value.trim() : "";
+        let finalShiftStr = shiftVal; if (timeVal && shiftVal !== "休" && shiftVal !== "") { finalShiftStr = `${shiftVal}(${timeVal})`; }
         lines.push(`${day}:${locVal}-${finalShiftStr}`); 
       }
-      
       showMask("幕後發布新班表..."); 
-      fetch(BASE_GAS_URL, { 
-        method: "POST", 
-        headers: { "Content-Type": "text/plain" }, 
-        body: JSON.stringify({ action: "updateSchedule", employeeId: empId, month: month, scheduleLines: lines.join("\n") }) 
-      })
-      .then(r => r.json())
-      .then(res => { alert(res.message); loadExistingSchedule(); })
-      .catch(() => { alert("儲存完畢！"); loadExistingSchedule(); });
+      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "updateSchedule", employeeId: empId, month: month, scheduleLines: lines.join("\n") }) })
+      .then(r => r.json()).then(res => { alert(res.message); loadExistingSchedule(); }).catch(() => { alert("儲存完畢！"); loadExistingSchedule(); });
     }
 
     function downloadLocationMonthlySchedule() {
@@ -685,10 +661,24 @@
       }).catch(() => {});
     }
 
+    // 🌟 前端：全新反霸凌資料對齊渲染機制
     function loadBullyingReports() {
-      const tbody = document.getElementById("bullyingTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">正在安全同步表單回應一數據中...</td></tr>`;
+      const tbody = document.getElementById("bullyingTableBody"); if(!tbody) return;
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全同步密封投訴案件...</td></tr>`;
       sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllBullyingReports`, "cb_b_" + Math.floor(Math.random()*100000), function(res) {
-        if(res.success && res.reports && res.reports.length > 0) { let html = ""; res.reports.forEach(r => { html += `<tr><td>${r.timestamp}</td><td><b>${r.name}</b> (${r.id})</td><td><span class="btn btn-primary" style="padding:2px 6px; font-size:11px;">${r.location}</span></td><td style="color:#e53e3e; font-weight:bold;"><i class="fa-solid fa-user-ninja"></i> ${r.targetPerson}</td><td style="background:#fff5f5; text-align:justify; padding:12px; font-size:13px; line-height:1.5; border-left:3px solid #e53e3e;">${r.content}</td></tr>`; }); tbody.innerHTML = html; } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#718096;">🎉 目前環境安全無虞，尚無 any 表單申訴紀錄。</td></tr>`; }
+        if(res.success && res.reports && res.reports.length > 0) {
+          let html = "";
+          res.reports.forEach(r => {
+            html += `<tr>
+              <td>${r.timestamp}</td>
+              <td><b>${r.identity}</b></td>
+              <td><span class="btn btn-primary" style="padding:2px 6px; font-size:11px;">${r.location}</span></td>
+              <td style="color:#e53e3e; font-weight:bold;"><i class="fa-solid fa-clock"></i> ${r.targetPerson}</td>
+              <td style="background:#fff5f5; text-align:justify; padding:12px; font-size:13px; line-height:1.5; border-left:3px solid #e53e3e;">${r.content}</td>
+            </tr>`;
+          });
+          tbody.innerHTML = html;
+        } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#718096;">🎉 目前環境安全無虞，尚無 any 表單申訴紀錄。</td></tr>`; }
       }).catch(() => {});
     }
 
@@ -716,8 +706,7 @@
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({ action: "savePermissionsMatrix", targetId: targetId, targetName: targetName, modulesStr: checkedModules.join(",") })
       })
-      .then(r => r.json())
-      .then(res => { hideMask(); alert(res.message); loadCloudPermissionsMatrix(); })
+      .then(r => r.json()).then(res => { hideMask(); alert(res.message); loadCloudPermissionsMatrix(); })
       .catch(() => { hideMask(); alert("🎉 權限分發變更成功！該管理員將在下次登入時即時生效！"); loadCloudPermissionsMatrix(); });
     }
 
