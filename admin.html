@@ -27,15 +27,16 @@
   
   <script>
     // =========================================================================
-    // 🌟【請在這裡修改網址與權限名單】
+    // 🌟【耀毅自主特調控制中心】請在此決定所有人的後台開啟權限
     // =========================================================================
     const BASE_GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
 
-    // 🔒【親手指定權限名單】在這裡設定哪一個工號具備什麼權限（工號請固定維持5碼文字）：
+    // 🔒【權限清單對照表】（工號請固定維持補滿5碼文字）：
     const ADMIN_PERMISSIONS_LIST = {
-      "00001": "SuperAdmin",  // 曾耀毅：最高超級管理權限 (可看薪資、名冊、申訴等所有功能)
-      "00003": "Admin"        // 曾小胖：一般行政管理權限 (會自動隱藏敏感管帳功能)
-      // 如果要增加新管理員，請複製格式往下加，例如： "00004": "Admin"
+      "00001": "SuperAdmin",  // 曾耀毅：最高超級管理（全功能開啟）
+      "00002": "Admin",       // 範例：行政助理（可審假單、公告，不能看薪資、名冊）
+      "00003": "Supervisor"   // 範例：現場督導（🌟 只能排班、看打卡流水帳，其餘全鎖！）
+      // 若有新加入的督導或行政，直接依照格式在下方複製增加工號即可！
     };
   </script>
   
@@ -211,7 +212,7 @@
       </div>
     </div>
 
-    <!-- 借支與薪資明細雙軌頁面 -->
+    <!-- 借支與薪資明細 -->
     <div class="content-body" id="salaryAdvanceSection">
       <div style="display: flex; gap: 20px; margin-bottom: 25px;">
         <div class="card" style="width: 320px; margin-bottom: 0; border: 2px solid #e53e3e;">
@@ -315,7 +316,6 @@
 
   <script>
     function submitAdminLogin() {
-      // 補滿五碼防呆
       let rawId = document.getElementById("loginUser").value.trim();
       if(!rawId) { alert("請輸入工號！"); return; }
       const formattedId = ("00000" + rawId).slice(-5);
@@ -326,10 +326,11 @@
       sendJsonpRequest(url, "cb_adm_login_" + Math.floor(Math.random()*100000), function(res) {
         hideMask();
         if(res.success) {
-          // 🌟 網頁自主決定權限判定核心
-          // 優先從網頁最上方你寫死的名單中檢查權限。如果名單內查無此人，則預設其為一般行政 Admin 阻斷風險。
-          let myDefinedRole = ADMIN_PERMISSIONS_LIST[formattedId] || "Admin";
-          let roleTitleChinese = myDefinedRole === "SuperAdmin" ? "最高超級管理權限" : "一般行政管理權限";
+          // 🌟 網頁自主三級權限控制核心
+          let myDefinedRole = ADMIN_PERMISSIONS_LIST[formattedId] || "Admin"; 
+          let roleTitleChinese = "一般行政管理權限";
+          if (myDefinedRole === "SuperAdmin") roleTitleChinese = "最高超級管理權限";
+          if (myDefinedRole === "Supervisor") roleTitleChinese = "現場督導管理權限";
           
           alert(`🎉 驗證通過！系統已依網頁指定名單核發【${roleTitleChinese}】權限。`);
           document.getElementById("loginOverlay").style.display = "none";
@@ -337,13 +338,16 @@
           document.getElementById("mainContent").style.display = "flex";
           document.getElementById("adminIdentityTag").innerHTML = `<i class="fa-solid fa-user-shield"></i> 目前登入者：${res.adminName} (${roleTitleChinese})`;
           
-          // 如果網頁判定他是一般行政，立刻把敏感管帳功能移除
+          // 🔒 精準修剪選單：依據你的決定，裁剪督導或行政人員的選單元件
           if(myDefinedRole === "Admin") {
             const sensitiveButtons = ["btn-empMgmt", "btn-locMgmt", "btn-salaryAdvanceSection", "btn-bullyingSection"];
-            sensitiveButtons.forEach(btnId => {
-              const btn = document.getElementById(btnId);
-              if(btn) btn.remove();
-            });
+            sensitiveButtons.forEach(btnId => { const btn = document.getElementById(btnId); if(btn) btn.remove(); });
+          }
+          else if(myDefinedRole === "Supervisor") {
+            // 🌟 督導專用大鎖：只保留「管理總覽(btn-dashboard)」、「排班(btn-scheduleMgmt)」、「打卡監控(btn-punchLog)」
+            // 其餘功能（假單審核、名冊、GPS、薪資、公告、離職證明、霸凌申訴）一律全部連根拔除！
+            const supervisorLocks = ["btn-leaveAudit", "btn-empMgmt", "btn-locMgmt", "btn-salaryAdvanceSection", "btn-announcementMgmt", "btn-resignationSection", "btn-bullyingSection"];
+            supervisorLocks.forEach(btnId => { const btn = document.getElementById(btnId); if(btn) btn.remove(); });
           }
           fetchCloudLocations(); 
         } else {
@@ -364,7 +368,7 @@
       });
     }
 
-    const SHIFT_OPTIONS = ["請選擇班別", "日班", "夜班", "機動班", "特勤班", "輪休", "特休", "事假", "病假"];
+    const SHIFT_OPTIONS = ["請選擇班別", "日班", "夜班", "機動日班", "機動夜班", "特勤班", "輪休", "特休", "事假", "病假"];
     let cloudLocationOptions = ["載入中..."]; let globalEmployees = []; let globalPunchLogs = [];
     let currentDetailsListCache = []; 
 
@@ -429,7 +433,6 @@
       sendJsonpRequest(url, "cb_cash_save_" + Math.floor(Math.random()*100000), function(res) { alert(res.message); if(res.success) loadSalaryDataSummaryHistory(); });
     }
 
-    // 🌟 修正傳輸線路：全面改由更相容的線路發送，解鎖儲存大鎖！
     function saveSalaryDetailData() {
       const empSelect = document.getElementById("salEmpSelect"); const empId = empSelect.value;
       if(!empId) { alert("❌ 請先選擇同仁！"); return; }
@@ -676,7 +679,6 @@
       }).catch(() => {});
     }
 
-    // 🌟 讀取 Google 表單反霸凌紀錄
     function loadBullyingReports() {
       const tbody = document.getElementById("bullyingTableBody"); if(!tbody) return;
       tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全同步表單回應一數據中...</td></tr>`;
