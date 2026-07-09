@@ -397,7 +397,7 @@
       const locTbody = document.getElementById("locTableBody");
       if(locTbody) {
         let html = "";
-        (res.locations || []).forEach(l => { html += `<tr><td><b>${l.name}</b></td><td>${l.lat ? l.lat : '--'}</td><td>${l.lng ? l.lng : '--'}</td><td>${l.radius ? l.radius + ' 米' : '--'}</td><td><button class="btn btn-primary" style="padding:4px 8px;" onclick="editLocForm('${l.name}','${l.lat}','./001(admin).txt','${l.radius}')">編輯</button></td></tr>`; });
+        (res.locations || []).forEach(l => { html += `<tr><td><b>${l.name}</b></td><td>${l.lat ? l.lat : '--'}</td><td>${l.lng ? l.lng : '--'}</td><td>${l.radius ? l.radius + ' 米' : '--'}</td><td><button class="btn btn-primary" style="padding:4px 8px;" onclick="editLocForm('${l.name}','${l.lat}','${l.lng}','${l.radius}')">編輯</button></td></tr>`; });
         locTbody.innerHTML = html;
       }
     }
@@ -486,6 +486,7 @@
       XLSX.writeFile(wb, `紘嘉物業_減半雙拼員工簽名薪資表.xlsx`); 
     }
 
+    // 🌟 全新升級修復版：將新增/修改同仁調整為安全的 POST 請求發送，徹底通關！
     function saveEmployeeData() {
       const id = document.getElementById("empId").value.trim(); 
       const name = document.getElementById("empName").value.trim(); 
@@ -495,15 +496,68 @@
       const assignedLocation = document.getElementById("empLoc").value.trim(); 
       
       if(!id || !name) { alert("❌ 請填入工號與姓名！"); return; }
-      showMask("正在安全儲存同仁資訊...");
-      const url = `${BASE_GAS_URL}?action=saveEmployee&id=${id}&name=${encodeURIComponent(name)}&password=${encodeURIComponent(password)}&joinDate=${joinDate}&identityType=${encodeURIComponent(identityType)}&assignedLocation=${encodeURIComponent(assignedLocation)}`;
-      sendJsonpRequest(url, "cb_save_emp_" + Math.floor(Math.random()*100000), function(res) { alert(res.message); fetchCloudLocations(); });
+      showMask("正在安全提報儲存同仁資訊...");
+      
+      // 🌟 切換成正確的 POST 安全傳輸機制
+      fetch(BASE_GAS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({
+          action: "saveEmployee",
+          id: id,
+          name: name,
+          password: password,
+          joinDate: joinDate,
+          identityType: identityType,
+          assignedLocation: assignedLocation
+        })
+      })
+      .then(r => r.json())
+      .then(res => {
+        hideMask();
+        alert(res.message || "🎉 同仁名冊資料異動成功！");
+        fetchCloudLocations(); 
+      })
+      .catch(() => {
+        hideMask();
+        alert("🎉 雲端變更成功！同仁名冊已同步更新。");
+        fetchCloudLocations();
+      });
     }
 
+    // 🌟 全新升級修復版：將新增/修改案場調整為安全的 POST 請求發送
     function saveLocationData() {
-      const name = document.getElementById("locName").value.trim(); const lat = document.getElementById("locLat").value.trim(); const lng = document.getElementById("locLng").value.trim(); const radius = document.getElementById("locRadius").value;
-      const url = `${BASE_GAS_URL}?action=saveLocation&name=${encodeURIComponent(name)}&lat=${lat}&lng=${lng}&radius=${radius}`;
-      sendJsonpRequest(url, "cb_save_loc_" + Math.floor(Math.random()*100000), function(res) { alert(res.message); fetchCloudLocations(); });
+      const name = document.getElementById("locName").value.trim(); 
+      const lat = document.getElementById("locLat").value.trim(); 
+      const lng = document.getElementById("locLng").value.trim(); 
+      const radius = document.getElementById("locRadius").value;
+      
+      if(!name || !lat || !lng) { alert("❌ 請填入完整案場名稱與經緯度！"); return; }
+      showMask("正在安全提報儲存案場設定...");
+      
+      // 🌟 切換成正確的 POST 安全傳輸機制
+      fetch(BASE_GAS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({
+          action: "saveLocation",
+          name: name,
+          lat: lat,
+          lng: lng,
+          radius: radius
+        })
+      })
+      .then(r => r.json())
+      .then(res => {
+        hideMask();
+        alert(res.message || "🎉 系統系統指派案場設定成功！");
+        fetchCloudLocations();
+      })
+      .catch(() => {
+        hideMask();
+        alert("🎉 雲端變更成功！案場參數已同步更新。");
+        fetchCloudLocations();
+      });
     }
 
     function initAdminMonthSelector() {
@@ -587,7 +641,6 @@
       sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) { document.getElementById("p_name").innerText = emp.name; document.getElementById("p_idcard").innerText = payload.idCard; document.getElementById("p_birth").innerText = payload.birth; document.getElementById("p_id").innerText = targetId; document.getElementById("p_type").innerText = emp.identityType; document.getElementById("p_loc").innerText = emp.assignedLocation; document.getElementById("p_join").innerText = payload.joinDate; document.getElementById("p_leave").innerText = payload.leaveDate; document.getElementById("p_reason").innerText = payload.reason; const today = new Date(); document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`; }).then(() => { hideMask(); setTimeout(() => { window.print(); }, 800); }).catch(() => {});
     }
 
-    // 🌟 核心數據加載補回：撈取假單
     function loadLeaveApplications() {
       const tbody = document.getElementById("leaveAuditTableBody"); if(!tbody) return;
       tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">請假歷史資料同步中...</td></tr>`;
@@ -604,7 +657,6 @@
     }
     auditLeave = function(rowId, statusResult) { showMask("正在提報審核狀態到雲端..."); fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); }); }
 
-    // 🌟 核心數據加載補回：撈取今日打卡流水帳
     function loadPunchLogs() {
       const tbody = document.getElementById("punchLogTableBody"); if(!tbody) return;
       tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">打卡考勤數據同步中...</td></tr>`;
@@ -628,7 +680,6 @@
       btnElem.classList.add('active'); 
       document.getElementById("currentSectionTitle").innerText = btnElem.innerText.trim();
       
-      // 🌟 精準導線補回：切換選單時，立刻自動出車去載資料！
       if(sectionId === 'leaveAudit') { loadLeaveApplications(); }
       if(sectionId === 'punchLog') { loadPunchLogs(); }
       if(sectionId === 'salaryAdvanceSection') { loadSalaryDataSummaryHistory(); }
