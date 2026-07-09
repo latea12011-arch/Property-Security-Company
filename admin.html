@@ -86,14 +86,25 @@
 
     #printTemplateBlock { display: none; }
     @media print {
-      body * { display: none !important; }
-      #printTemplateBlock { display: block !important; width: 100%; max-width: 800px; margin: 0 auto; padding: 40px; font-family: 'Times New Roman', 'Noto Sans TC', serif; color: black; background: white; }
-      .p-title { text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 4px; margin-bottom: 40px; border-bottom: 3px double black; padding-bottom: 10px; }
-      .p-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      /* 🌟 修正：精準指名隱藏原本的側邊欄與主要內容，絕不誤傷離職證明書 */
+      .sidebar, .main-content, .loading-mask, .login-overlay { display: none !important; }
+      
+      #printTemplateBlock { 
+        display: block !important; 
+        width: 100%; 
+        max-width: 800px; 
+        margin: 0 auto; 
+        padding: 40px; 
+        font-family: 'Times New Roman', 'Noto Sans TC', serif; 
+        color: black !important; 
+        background: white !important; 
+      }
+      .p-title { text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 4px; margin-bottom: 40px; border-bottom: 3px double black; padding-bottom: 10px; color: black !important; }
+      .p-table { width: 100%; border-collapse: collapse; margin-top: 20px; border: 1px solid black !important; }
       .p-table th, .p-table td { border: 1px solid black !important; padding: 15px !important; text-align: left !important; font-size: 16px !important; color: black !important; background: transparent !important; }
-      .p-table th { width: 25%; font-weight: bold; background-color: #f2f2f2 !important; }
-      .p-stamp-zone { margin-top: 50px; display: flex; justify-content: space-between; padding: 0 20px; }
-      .p-stamp-box { font-size: 16px; line-height: 2; }
+      .p-table th { width: 25%; font-weight: bold; background-color: #f2f2f2 !important; color: black !important; }
+      .p-stamp-zone { margin-top: 50px; display: flex; justify-content: space-between; padding: 0 20px; color: black !important; }
+      .p-stamp-box { font-size: 16px; line-height: 2; color: black !important; }
     }
   </style>
 </head>
