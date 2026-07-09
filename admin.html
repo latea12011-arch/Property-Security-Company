@@ -31,14 +31,14 @@
     // =========================================================================
     const BASE_GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
 
-    // 🔒【權限清單對照表】（工號請固定維持補滿5碼文字）：
+    // 🔒【權限清單對照表】
     const ADMIN_PERMISSIONS_LIST = {
-      "00001": "SuperAdmin",  // 曾耀毅：最高超級管理（全功能開啟）
-      "00002": "Admin",       // 行政助理
-      "00003": "Supervisor"   // 現場督導
+      "00001": "SuperAdmin",  
+      "00002": "Admin",       
+      "00003": "Supervisor"   
     };
 
-    // ⏰ 班別下拉選單恢復為純粹班別
+    // 純粹班別選項
     const SHIFT_OPTIONS = ["請選擇班別", "日班", "夜班", "機動班", "特勤班", "輪休", "特休", "事假", "病假"];
   </script>
   
@@ -83,7 +83,6 @@
 </head>
 <body>
 
-  <!-- 登入驗證 -->
   <div class="login-overlay" id="loginOverlay">
     <div class="login-box">
       <h2 style="margin-bottom:10px; color:#2d3748;">後台核心管理系統</h2>
@@ -96,7 +95,6 @@
 
   <div class="loading-mask" id="globalMask"><div class="spinner"></div><p id="maskText" style="font-weight: bold; color: #4e54c8;">資料同步處理中...</p></div>
 
-  <!-- 側邊欄選單 -->
   <div class="sidebar" id="mainSidebar" style="display:none;">
     <h2>幕後特助管理中心</h2>
     <button class="menu-btn active" id="btn-dashboard" onclick="switchSection('dashboard', this)"><i class="fa-solid fa-chart-pie"></i>管理總覽</button>
@@ -136,8 +134,7 @@
             </div>
             <div style="border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
               <table style="margin-top: 0; width: 100%;">
-                <!-- 🌟 升級表格欄位：多塞一個「自訂時間」標頭 -->
-                <thead><tr><th style="width: 25%;">日期 / 星期</th><th style="width: 30%;">指派案場</th><th style="width: 25%;">指派班別</th><th style="width: 20%;">值勤時段 (自訂)</th></tr></thead>
+                <thead><tr><th style="width: 25%;">日期 / 星期</th><th style="width: 30%;">指派案場</th><th style="width: 25%;">指派班別</th><th style="width: 20%;">值勤時段 (可自打字)</th></tr></thead>
                 <tbody id="calendarRowsBody"></tbody>
               </table>
             </div>
@@ -286,7 +283,7 @@
       </div>
     </div>
 
-    <!-- 離職證明書 -->
+    <!-- 離職證明 -->
     <div class="content-body" id="resignationSection">
       <div class="card" style="max-width: 600px;">
         <h3>填寫離職證明資訊</h3>
@@ -300,7 +297,7 @@
       </div>
     </div>
 
-    <!-- 職場霸凌申訴監控 -->
+    <!-- 反霸凌申訴監控 -->
     <div class="content-body" id="bullyingSection">
       <div class="card">
         <h3><i class="fa-solid fa-gavel" style="color: #e53e3e;"></i> 職場安全保護 - 申訴事件即時監控中心</h3>
@@ -320,7 +317,7 @@
       </div>
     </div>
 
-    <!-- 系統選單權限分發 -->
+    <!-- 權限配置中心 -->
     <div class="content-body" id="permissionMatrixSection">
       <div class="card" style="border: 2px solid #e53e3e;">
         <h3><i class="fa-solid fa-user-lock" style="color: #e53e3e;"></i> 各級行政/督導選單權限分發中心</h3>
@@ -350,8 +347,6 @@
   </div>
 
   <script>
-    let cloudPermissionsCache = [];
-
     function submitAdminLogin() {
       let rawId = document.getElementById("loginUser").value.trim();
       if(!rawId) { alert("請輸入工號！"); return; }
@@ -575,8 +570,6 @@
         
         let locSelectHtml = `<select class="form-control daily-location-select" id="loc_day_${String(day).padStart(2, '0')}" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px;">`; cloudLocationOptions.forEach(loc => { let isPlaceholder = (loc === '請選擇指派案場' || loc === '載入中...'); locSelectHtml += `<option value="${isPlaceholder ? '' : loc}">${loc}</option>`; }); locSelectHtml += `</select>`;
         let shiftSelectHtml = `<select class="form-control daily-shift-select" id="shift_day_${String(day).padStart(2, '0')}" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px;">`; SHIFT_OPTIONS.forEach(opt => { shiftSelectHtml += `<option value="${opt === '請選擇班別' ? '' : opt}">${opt}</option>`; }); shiftSelectHtml += `</select>`;
-        
-        // 🌟 核心畫面上拉出：獨立的客製化打字「時間輸入框」
         let timeInputHtml = `<input type="text" class="form-control daily-time-input" id="time_day_${String(day).padStart(2, '0')}" data-day="${String(day).padStart(2, '0')}" placeholder="例: 07-19" style="margin-bottom:0; padding:6px 10px; text-align:center;">`;
         
         const tr = document.createElement("tr"); 
@@ -586,7 +579,7 @@
       loadExistingSchedule();
     }
 
-    // 🌟 核心升級：精準回填拆分機制，自動把資料庫的「日班(07-19)」拆回下拉選單與打字框！
+    // 🌟 回填解密核心：精準過濾掉所有隱形快取
     function loadExistingSchedule() {
       const empId = document.getElementById("schedEmpSelect").value; const month = document.getElementById("schedMonthSelect").value; if(!empId || !month) return;
       showMask("正在調閱同仁該月雲端存檔班表..."); const url = `${BASE_GAS_URL}?action=fetchSchedule&employeeId=${empId}&month=${month}`;
@@ -594,7 +587,7 @@
         hideMask(); 
         document.querySelectorAll(".daily-location-select").forEach(s => s.value = ""); 
         document.querySelectorAll(".daily-shift-select").forEach(s => s.value = "");
-        document.querySelectorAll(".daily-time-input").forEach(s => s.value = ""); // 先完全清空打字框
+        document.querySelectorAll(".daily-time-input").forEach(s => s.value = ""); 
         
         if(res.success && res.schedule) { 
           res.schedule.forEach(item => { 
@@ -611,16 +604,11 @@
                 locSelect.value = parts[0] === "無" ? "" : parts[0]; 
                 
                 let dbShiftFull = parts[1] === "休" ? "" : parts[1];
-                
-                // 用正則表達式拆解，看看班別後面有沒有帶括號時間，例如 "日班(07-19)"
                 let timeMatch = dbShiftFull.match(/\(([^)]+)\)/);
                 if (timeMatch && timeInput) {
-                  // 有帶時間：把括號裡面的字 (如 07-19) 塞進打字框裡！
                   timeInput.value = timeMatch[1];
-                  // 把選單還原成純粹的 "日班"
                   shiftSelect.value = dbShiftFull.replace(/\([^)]+\)/, "").trim();
                 } else {
-                  // 沒帶時間：正常還原選單
                   shiftSelect.value = dbShiftFull;
                 }
               } 
@@ -630,7 +618,6 @@
       });
     }
 
-    // 🌟 核心升級：發布儲存時，自動把班別與自打字的時間打包
     function submitNewSchedule() {
       const empId = document.getElementById("schedEmpSelect").value; const month = document.getElementById("schedMonthSelect").value.trim(); if(!empId) { alert("請選擇排班同仁！"); return; }
       let lines = []; 
@@ -641,17 +628,13 @@
         const day = locSelects[i].getAttribute("data-day"); 
         const locVal = locSelects[i].value || "無"; 
         const shiftVal = shiftSelects[i].value || "休"; 
-        
-        // 抓取打字框裡你自己填的時間
         const timeInput = document.getElementById("time_day_" + day);
         let timeVal = timeInput ? timeInput.value.trim() : "";
         
-        // 如果你有打字，就自動用小括號包起來，例如 "日班(07-19)"
         let finalShiftStr = shiftVal;
         if (timeVal && shiftVal !== "休" && shiftVal !== "") {
           finalShiftStr = `${shiftVal}(${timeVal})`;
         }
-        
         lines.push(`${day}:${locVal}-${finalShiftStr}`); 
       }
       
@@ -693,6 +676,7 @@
         if(res.success && res.records && res.records.length > 0) { let html = ""; res.records.forEach((item) => { let imgHtml = item.fileData && item.fileData.startsWith("http") ? `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')">` : "無附件"; html += `<tr><td>${item.timestamp}</td><td><b>${item.employeeName}</b> (${item.employeeId})</td><td>${item.leaveType}</td><td>${item.start}<br>～<br>${item.end}</td><td>${item.reason}</td><td>${imgHtml}</td><td>${item.status === '待審核' ? `<button class="btn btn-success" onclick="auditLeave('${item.rowId}','已核准')">核准</button> <button class="btn btn-danger" onclick="auditLeave('${item.rowId}','駁回')">駁回</button>` : `<b>${item.status}</b>`}</td></tr>`; }); tbody.innerHTML = html; } else { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">目前系統庫中尚無待處理之請假單。</td></tr>`; }
       }).catch(() => {});
     }
+    auditLeave = function(rowId, statusResult) { showMask("正在提報審核狀態到雲端..."); fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); }); }
 
     function loadPunchLogs() {
       const tbody = document.getElementById("punchLogTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">打卡考勤數據同步中...</td></tr>`;
@@ -704,7 +688,7 @@
     function loadBullyingReports() {
       const tbody = document.getElementById("bullyingTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">正在安全同步表單回應一數據中...</td></tr>`;
       sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllBullyingReports`, "cb_b_" + Math.floor(Math.random()*100000), function(res) {
-        if(res.success && res.reports && res.reports.length > 0) { let html = ""; res.reports.forEach(r => { html += `<tr><td>${r.timestamp}</td><td><b>${r.name}</b> (${r.id})</td><td><span class="btn btn-primary" style="padding:2px 6px; font-size:11px;">${r.location}</span></td><td style="color:#e53e3e; font-weight:bold;"><i class="fa-solid fa-user-ninja"></i> ${r.targetPerson}</td><td style="background:#fff5f5; text-align:justify; padding:12px; font-size:13px; line-height:1.5; border-left:3px solid #e53e3e;">${r.content}</td></tr>`; }); tbody.innerHTML = html; } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#718096;">🎉 目前環境安全無虞，尚無任何表單申訴紀錄。</td></tr>`; }
+        if(res.success && res.reports && res.reports.length > 0) { let html = ""; res.reports.forEach(r => { html += `<tr><td>${r.timestamp}</td><td><b>${r.name}</b> (${r.id})</td><td><span class="btn btn-primary" style="padding:2px 6px; font-size:11px;">${r.location}</span></td><td style="color:#e53e3e; font-weight:bold;"><i class="fa-solid fa-user-ninja"></i> ${r.targetPerson}</td><td style="background:#fff5f5; text-align:justify; padding:12px; font-size:13px; line-height:1.5; border-left:3px solid #e53e3e;">${r.content}</td></tr>`; }); tbody.innerHTML = html; } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#718096;">🎉 目前環境安全無虞，尚無 any 表單申訴紀錄。</td></tr>`; }
       }).catch(() => {});
     }
 
