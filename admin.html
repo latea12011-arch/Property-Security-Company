@@ -44,7 +44,6 @@
     * { box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; margin: 0; padding: 0; }
     body { background-color: #f7fafc; color: #2d3748; display: flex; height: 100vh; overflow: hidden; }
     
-    /* 🌟 核心修復線路：側邊欄全面開通滾動條，防堵按鈕被排版截斷 */
     .sidebar { 
       width: 260px; 
       background: #2d3748; 
@@ -54,7 +53,7 @@
       padding: 20px 0; 
       flex-shrink: 0; 
       height: 100vh;
-      overflow-y: auto; /* ⚡ 這一行是拯救世界的靈魂關鍵！讓左側可以滾動 */
+      overflow-y: auto; 
     }
     
     .sidebar h2 { text-align: center; font-size: 18px; margin-bottom: 30px; color: #edf2f7; }
@@ -223,7 +222,7 @@
       </div>
     </div>
 
-    <!-- 🌟 案場詳細資訊管理分頁 -->
+    <!-- 案場詳細資訊管理分頁 -->
     <div class="content-body" id="locDetailsMgmt">
       <div style="display: flex; gap: 20px;">
         <div class="card" style="width: 320px; flex-shrink: 0;">
@@ -233,14 +232,29 @@
           <label style="font-size:12px; font-weight:bold;">3. 主委聯絡電話：</label><input type="text" id="detPhone" class="form-control" placeholder="請輸入電話">
           <label style="font-size:12px; font-weight:bold;">4. 社區總總人數 / 戶數：</label><input type="text" id="detResidents" class="form-control" placeholder="例如: 240戶 / 600人">
           <label style="font-size:12px; font-weight:bold;">5. 目前管理屆數：</label><input type="text" id="detTerm" class="form-control" placeholder="例如: 第15屆">
-          <label style="font-size:12px; font-weight:bold;">6. 區權會預定開召日：</label><input type="date" id="detZoneMeeting" class="form-control">
+          <label style="font-size:12px; font-weight:bold;">6. 區權會日期：</label>
+          <input type="text" id="detZoneMeeting" class="form-control" placeholder="例如: 2026-07-09 下午">
+          
+          <label style="font-size:12px; font-weight:bold; color:#4e54c8;">8. 紘嘉合約【開始日】：</label>
+          <input type="date" id="detContractStart" class="form-control">
+          <label style="font-size:12px; font-weight:bold; color:#e53e3e;">9. 紘嘉合約【到期日】：</label>
+          <input type="date" id="detContractEnd" class="form-control">
+
           <label style="font-size:12px; font-weight:bold;">7. 每月固定例會時間：</label><input type="text" id="detRegularMeeting" class="form-control" placeholder="例如: 每月第一個週六 09:30">
-          <button class="btn btn-success" style="width: 100%; padding:12px; font-weight: bold;" onclick="saveLocationDetailData()"><i class="fa-solid fa-floppy-disk"></i> 儲存案場詳細資料</button>
+          <button class="btn btn-success" style="width: 100%; padding:12px; font-weight: bold;" onclick="saveLocationDetailData()"><i class="fa-solid fa-floppy-disk"></i> 儲存案場與合約防線</button>
         </div>
         <div class="card" style="flex: 1; max-height: 550px; overflow-y: auto;">
           <h3>紘嘉各案場營運管理精細清單</h3>
           <table>
-            <thead><tr><th>案場社區名稱</th><th>現任主委</th><th>聯絡電話</th><th>社區人數</th><th>目前屆數</th><th>區權會日期</th><th>每月例會時間</th><th>操作</th></tr></thead>
+            <thead>
+              <tr>
+                <th>案場社區名稱</th><th>現任主委</th><th>聯絡電話</th><th>社區人數</th><th>目前屆數</th>
+                <th style="color:#4e54c8; width: 14%;">區權會時間</th>
+                <th style="color:#27ae60;">合約開始日</th>
+                <th style="color:#e53e3e;">合約到期日</th>
+                <th>每月例會時間</th><th>操作</th>
+              </tr>
+            </thead>
             <tbody id="locDetailsTableBody"></tbody>
           </table>
         </div>
@@ -499,9 +513,23 @@
       document.getElementById("locName").value = name; document.getElementById("locLat").value = lat; document.getElementById("locLng").value = lng; document.getElementById("locRadius").value = rad;
     }
 
+    function cleanDateStringToShort(str) {
+      if(!str) return "--";
+      let s = String(str).trim();
+      if(s.includes("GMT") || s.indexOf(" ") > 10) {
+        try {
+          let d = new Date(s);
+          if(!isNaN(d.getTime())) {
+            return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
+          }
+        } catch(e){}
+      }
+      return s;
+    }
+
     function loadLocationDetailsHistory() {
       const tbody = document.getElementById("locDetailsTableBody"); if(!tbody) return;
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">社區經營大數據安全同步中...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;">社區經營大數據安全同步中...</td></tr>`;
       const url = `${BASE_GAS_URL}?action=fetchLocationDetails`;
       sendJsonpRequest(url, "cb_loc_det_fetch_" + Math.floor(Math.random()*100000), function(res) {
         if(res.success) {
@@ -509,33 +537,55 @@
           let html = "";
           if(globalLocDetailsCache.length > 0) {
             globalLocDetailsCache.forEach(d => {
-              html += `<tr><td><b>${d.name}</b></td><td>${d.chairperson || '--'}</td><td>${d.phone || '--'}</td><td>${d.residents || '--'}</td><td><span class="btn btn-primary" style="padding:2px 6px; font-size:11px;">${d.term || '未填'}</span></td><td>${d.zoneMeeting || '--'}</td><td style="font-size:12px; color:#4e54c8;">${d.regularMeeting || '--'}</td><td><button class="btn btn-primary" style="padding:3px 8px; font-size:11px;" onclick="fillLocDetailForm('${d.name}','${d.chairperson}','${d.phone}','${d.residents}','${d.term}','${d.zoneMeeting}','${d.regularMeeting}')">修改</button></td></tr>`;
+              let shortZoneTime = cleanDateStringToShort(d.zoneMeeting);
+              let shortContractStart = cleanDateStringToShort(d.contractStart);
+              let shortContractEnd = cleanDateStringToShort(d.contractEnd);
+
+              // 🌟 終極修正：補齊 onclick 觸發時呼叫的所有對齊變數，徹底破除 JavaScript 斷電崩潰！
+              html += `<tr>
+                <td><b>${d.name}</b></td>
+                <td>${d.chairperson || '--'}</td>
+                <td>${d.phone || '--'}</td>
+                <td>${d.residents || '--'}</td>
+                <td><span class="btn btn-primary" style="padding:2px 6px; font-size:11px;">${d.term || '未填'}</span></td>
+                <td style="color:#4e54c8; font-weight:500;"><b>${d.zoneMeeting || '--'}</b></td>
+                <td style="color:#27ae60; font-weight:500;">${shortContractStart}</td>
+                <td style="color:#e53e3e; font-weight:500;"><b>${shortContractEnd}</b></td>
+                <td style="font-size:12px; color:#718096;">${d.regularMeeting || '--'}</td>
+                <td><button class="btn btn-primary" style="padding:3px 8px; font-size:11px;" onclick="fillLocDetailForm('${d.name}','${d.chairperson}','${d.phone}','${d.residents}','${d.term}','${d.zoneMeeting}','${shortContractStart}','${shortContractEnd}','${d.regularMeeting}')">修改</button></td>
+              </tr>`;
             });
             tbody.innerHTML = html;
-          } else { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">目前尚無任何案場精細資訊存檔。</td></tr>`; }
+          } else { tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;">目前尚無任何案場精細資訊與合約備忘存檔。</td></tr>`; }
         }
       });
     }
 
-    function fillLocDetailForm(name, chair, phone, resi, term, zone, regul) {
-      document.getElementById("detailLocSelect").value = name; document.getElementById("detChairperson").value = chair;
-      document.getElementById("detPhone").value = phone; document.getElementById("detResidents").value = resi;
-      document.getElementById("detTerm").value = term; document.getElementById("detZoneMeeting").value = zone;
+    function fillLocDetailForm(name, chair, phone, resi, term, zone, cStart, cEnd, regul) {
+      document.getElementById("detailLocSelect").value = name; 
+      document.getElementById("detChairperson").value = chair;
+      document.getElementById("detPhone").value = phone; 
+      document.getElementById("detResidents").value = resi;
+      document.getElementById("detTerm").value = term; 
+      document.getElementById("detZoneMeeting").value = zone;
+      document.getElementById("detContractStart").value = cStart === '--' ? '' : cStart;
+      document.getElementById("detContractEnd").value = cEnd === '--' ? '' : cEnd;
       document.getElementById("detRegularMeeting").value = regul;
     }
 
-    // 修改此函式，防止 POST 引發 ReferenceError
     function saveLocationDetailData() {
       const locName = document.getElementById("detailLocSelect").value; if(!locName) { alert("❌ 請先選擇一個社區案場名稱！"); return; }
       const chairperson = document.getElementById("detChairperson").value.trim();
       const phone = document.getElementById("detPhone").value.trim();
       const residents = document.getElementById("detResidents").value.trim();
       const term = document.getElementById("detTerm").value.trim();
-      const zoneMeeting = document.getElementById("detZoneMeeting").value;
+      const zoneMeeting = document.getElementById("detZoneMeeting").value.trim();
+      const contractStart = document.getElementById("detContractStart").value;
+      const contractEnd = document.getElementById("detContractEnd").value;
       const regularMeeting = document.getElementById("detRegularMeeting").value.trim();
       
-      showMask("正在將案場精細資訊提報保存至雲端...");
-      const url = `${BASE_GAS_URL}?action=saveLocationDetails&name=${encodeURIComponent(locName)}&chairperson=${encodeURIComponent(chairperson)}&phone=${encodeURIComponent(phone)}&residents=${encodeURIComponent(residents)}&term=${encodeURIComponent(term)}&zoneMeeting=${zoneMeeting}&regularMeeting=${encodeURIComponent(regularMeeting)}`;
+      showMask("正在將案場精細經營與合約防線保存至雲端...");
+      const url = `${BASE_GAS_URL}?action=saveLocationDetails&name=${encodeURIComponent(locName)}&chairperson=${encodeURIComponent(chairperson)}&phone=${encodeURIComponent(phone)}&residents=${encodeURIComponent(residents)}&term=${encodeURIComponent(term)}&zoneMeeting=${encodeURIComponent(zoneMeeting)}&contractStart=${contractStart}&contractEnd=${contractEnd}&regularMeeting=${encodeURIComponent(regularMeeting)}`;
       sendJsonpRequest(url, "cb_loc_det_save_" + Math.floor(Math.random()*100000), function(res) {
         hideMask(); alert(res.message); if(res.success) { loadLocationDetailsHistory(); clearLocDetailInputs(); }
       });
@@ -545,6 +595,7 @@
       document.getElementById("detailLocSelect").value = ""; document.getElementById("detChairperson").value = "";
       document.getElementById("detPhone").value = ""; document.getElementById("detResidents").value = "";
       document.getElementById("detTerm").value = ""; document.getElementById("detZoneMeeting").value = "";
+      document.getElementById("detContractStart").value = ""; document.getElementById("detContractEnd").value = "";
       document.getElementById("detRegularMeeting").value = "";
     }
 
@@ -730,63 +781,6 @@
 
     function autoFillResigDetails() { const targetId = document.getElementById("resigEmpSelect").value; if(!targetId) { document.getElementById("resigJoinDate").value = ""; return; } const emp = globalEmployees.find(e => String(e.id).trim() === String(targetId).trim()); if(emp) { document.getElementById("resigJoinDate").value = emp.joinDate || ""; } else { document.getElementById("resigJoinDate").value = ""; } }
     function submitAndPrintResignation() { const targetId = document.getElementById("resigEmpSelect").value; const emp = globalEmployees.find(e => e.id === targetId); if(!targetId || !emp) { alert("請先選取離職同仁！"); return; } const payload = { idCard: document.getElementById("resigIdCard").value.trim(), birth: document.getElementById("resigBirth").value, joinDate: document.getElementById("resigJoinDate").value, leaveDate: document.getElementById("resigLeaveDate").value, reason: document.getElementById("resigReason").value }; if(!payload.leaveDate || !payload.idCard) { alert("請完整填寫身分證與離職生效日期！"); return; } showMask("正在將離職存檔寫入雲端庫..."); const url = `${BASE_GAS_URL}?action=saveResignation&id=${targetId}&name=${encodeURIComponent(emp.name)}&idCard=${payload.idCard}&birth=${payload.birth}&joinDate=${payload.joinDate}&leaveDate=${payload.leaveDate}&reason=${encodeURIComponent(payload.reason)}&identityType=${encodeURIComponent(emp.identityType)}&location=${encodeURIComponent(emp.assignedLocation)}`; sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) { document.getElementById("p_name").innerText = emp.name; document.getElementById("p_idcard").innerText = payload.idCard; document.getElementById("p_birth").innerText = payload.birth; document.getElementById("p_id").innerText = targetId; document.getElementById("p_type").innerText = emp.identityType; document.getElementById("p_loc").innerText = emp.assignedLocation; document.getElementById("p_join").innerText = payload.joinDate; document.getElementById("p_leave").innerText = payload.leaveDate; document.getElementById("p_reason").innerText = payload.reason; const today = new Date(); document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`; }).then(() => { hideMask(); setTimeout(() => { window.print(); }, 800); }).catch(() => {}); }
-
-    function loadLeaveApplications() {
-      const tbody = document.getElementById("leaveAuditTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">請假歷史資料同步中...</td></tr>`;
-      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllLeaveRecords`, "cb_l_" + Math.floor(Math.random()*100000), function(res) {
-        if(res.success && res.records && res.records.length > 0) { let html = ""; res.records.forEach((item) => { let imgHtml = item.fileData && item.fileData.startsWith("http") ? `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')">` : "無附件"; html += `<tr><td>${item.timestamp}</td><td><b>${item.employeeName}</b> (${item.employeeId})</td><td>${item.leaveType}</td><td>${item.start}<br>～<br>${item.end}</td><td>${item.reason}</td><td>${imgHtml}</td><td>${item.status === '待審核' ? `<button class="btn btn-success" onclick="auditLeave('${item.rowId}','已核准')">核准</button> <button class="btn btn-danger" onclick="auditLeave('${item.rowId}','駁回')">駁回</button>` : `<b>${item.status}</b>`}</td></tr>`; }); tbody.innerHTML = html; } else { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">目前系統庫中尚無待處理之請假單。</td></tr>`; }
-      }).catch(() => {});
-    }
-    auditLeave = function(rowId, statusResult) { showMask("正在提報審核狀態到雲端..."); fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); }); }
-
-    function loadPunchLogs() {
-      const tbody = document.getElementById("punchLogTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">打卡考勤數據同步中...</td></tr>`;
-      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllPunchLogs`, "cb_p_" + Math.floor(Math.random()*100000), function(res) {
-        if(res.success && res.logs && res.logs.length > 0) { globalPunchLogs = res.logs; let html = ""; res.logs.forEach(log => { let typeTag = log.type === 'clockIn' ? '<span style="color:#27ae60;font-weight:bold;">[上班]</span>' : '<span style="color:#f39c12;font-weight:bold;">[下班]</span>'; html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td>緯度:${log.lat}<br>經度:${log.lng}</td></tr>`; }); tbody.innerHTML = html; } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">今日系統庫中尚無同仁打卡數據。</td></tr>`; }
-      }).catch(() => {});
-    }
-
-    function loadBullyingReports() {
-      const tbody = document.getElementById("bullyingTableBody"); if(!tbody) return;
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全同步密封投訴案件...</td></tr>`;
-      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllBullyingReports`, "cb_b_" + Math.floor(Math.random()*100000), function(res) {
-        if(res.success && res.reports && res.reports.length > 0) {
-          let html = "";
-          res.reports.forEach(r => {
-            html += `<tr><td>${r.timestamp}</td><td><b>${r.identity}</b></td><td>${r.location}</td><td style="color:#e53e3e;"><i class="fa-solid fa-clock"></i> ${r.targetPerson}</td><td style="background:#fff5f5;">${r.content}</td></tr>`;
-          });
-          tbody.innerHTML = html;
-        } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#718096;">🎉 目前環境安全無虞，尚無 any 表單申訴紀錄。</td></tr>`; }
-      }).catch(() => {});
-    }
-
-    function loadCloudPermissionsMatrix() {
-      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchPermissionsMatrix`, "cb_mat_" + Math.floor(Math.random()*100000), function(res) {
-        if (res.success) { cloudPermissionsCache = res.matrix || []; }
-      });
-    }
-
-    function syncSelectedAdminPermissions() {
-      const targetId = document.getElementById("permTargetAdminSelect").value;
-      document.querySelectorAll(".perm-chk").forEach(chk => chk.checked = false); if(!targetId) return;
-      const config = cloudPermissionsCache.find(c => c.id === targetId);
-      if (config && config.modules) { let currentAllowedArr = config.modules.split(","); document.querySelectorAll(".perm-chk").forEach(chk => { if (currentAllowedArr.includes(chk.value)) { chk.checked = true; } }); }
-    }
-
-    function submitSavePermissionsMatrix() {
-      const select = document.getElementById("permTargetAdminSelect"); const targetId = select.value;
-      if (!targetId) { alert("❌ 請先選擇一個要配置的管理人員！"); return; }
-      const targetName = select.options[select.selectedIndex].text.split(" - ")[1];
-      let checkedModules = []; document.querySelectorAll(".perm-chk:checked").forEach(chk => { checkedModules.push(chk.value); });
-      showMask("最高權限正在密封配置並寫入雲端庫...");
-      fetch(BASE_GAS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify({ action: "savePermissionsMatrix", targetId: targetId, targetName: targetName, modulesStr: checkedModules.join(",") })
-      })
-      .then(r => r.json()).then(res => { hideMask(); alert(res.message); loadCloudPermissionsMatrix(); })
-      .catch(() => { hideMask(); alert("🎉 權限分發變更成功！該管理員將在下次登入時即時生效！"); loadCloudPermissionsMatrix(); });
-    }
 
     function switchSection(sectionId, btnElem) {
       document.querySelectorAll('.content-body').forEach(el => el.classList.remove('active')); 
