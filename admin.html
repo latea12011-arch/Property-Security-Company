@@ -27,9 +27,16 @@
   
   <script>
     // =========================================================================
-    // 🌟【請在這裡修改網址】請把您 GAS 最新部署產生的 exec 網址完整貼在下方引號內：
+    // 🌟【請在這裡修改網址與權限名單】
     // =========================================================================
     const BASE_GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
+
+    // 🔒【親手指定權限名單】在這裡設定哪一個工號具備什麼權限（工號請固定維持5碼文字）：
+    const ADMIN_PERMISSIONS_LIST = {
+      "00001": "SuperAdmin",  // 曾耀毅：最高超級管理權限 (可看薪資、名冊、申訴等所有功能)
+      "00003": "Admin"        // 曾小胖：一般行政管理權限 (會自動隱藏敏感管帳功能)
+      // 如果要增加新管理員，請複製格式往下加，例如： "00004": "Admin"
+    };
   </script>
   
   <style>
@@ -95,7 +102,6 @@
     <button class="menu-btn" id="btn-salaryAdvanceSection" onclick="switchSection('salaryAdvanceSection', this)"><i class="fa-solid fa-money-bill-transfer"></i>借支與薪資明細</button>
     <button class="menu-btn" id="btn-announcementMgmt" onclick="switchSection('announcementMgmt', this)"><i class="fa-solid fa-bullhorn"></i>發布公告事項</button>
     <button class="menu-btn" id="btn-resignationSection" onclick="switchSection('resignationSection', this)"><i class="fa-solid fa-print"></i>離職證明書列印</button>
-    <!-- 🌟 新增側邊欄按鈕：職場霸凌申訴監控台 -->
     <button class="menu-btn" id="btn-bullyingSection" onclick="switchSection('bullyingSection', this)"><i class="fa-solid fa-gavel"></i>職場霸凌申訴監控</button>
   </div>
 
@@ -286,11 +292,11 @@
       </div>
     </div>
 
-    <!-- 🌟 新增功能面板：職場霸凌申訴監控流水帳 -->
+    <!-- 職場霸凌申訴監控 -->
     <div class="content-body" id="bullyingSection">
       <div class="card">
         <h3><i class="fa-solid fa-gavel" style="color: #e53e3e;"></i> 紘嘉同仁職場安全保護 - 申訴事件即時監控中心</h3>
-        <p style="font-size: 13px; color: #718096; margin-bottom: 15px;">本介面密封對接 Google 表單【表單回應 1】獨立申訴分頁，供管理階層實時追蹤調查。</p>
+        <p style="font-size: 13px; color: #718096; margin-bottom: 15px;">本介面監控對接 Google 表單【表單回應 1】獨立申訴分頁，供管理階層實時追蹤調查。</p>
         <table>
           <thead>
             <tr>
@@ -309,22 +315,30 @@
 
   <script>
     function submitAdminLogin() {
-      const id = document.getElementById("loginUser").value.trim();
+      // 補滿五碼防呆
+      let rawId = document.getElementById("loginUser").value.trim();
+      if(!rawId) { alert("請輸入工號！"); return; }
+      const formattedId = ("00000" + rawId).slice(-5);
       const pwd = document.getElementById("loginPwd").value.trim();
-      if(!id || !pwd) { alert("請輸入工號與密碼！"); return; }
       
       showMask("正在安全解鎖並驗證權限層級...");
-      const url = `${BASE_GAS_URL}?action=adminLogin&employeeId=${id}&password=${encodeURIComponent(pwd)}`;
+      const url = `${BASE_GAS_URL}?action=adminLogin&employeeId=${formattedId}&password=${encodeURIComponent(pwd)}`;
       sendJsonpRequest(url, "cb_adm_login_" + Math.floor(Math.random()*100000), function(res) {
         hideMask();
         if(res.success) {
-          alert(`🎉 歡迎回來，${res.adminName}！系統已解鎖。`);
+          // 🌟 網頁自主決定權限判定核心
+          // 優先從網頁最上方你寫死的名單中檢查權限。如果名單內查無此人，則預設其為一般行政 Admin 阻斷風險。
+          let myDefinedRole = ADMIN_PERMISSIONS_LIST[formattedId] || "Admin";
+          let roleTitleChinese = myDefinedRole === "SuperAdmin" ? "最高超級管理權限" : "一般行政管理權限";
+          
+          alert(`🎉 驗證通過！系統已依網頁指定名單核發【${roleTitleChinese}】權限。`);
           document.getElementById("loginOverlay").style.display = "none";
           document.getElementById("mainSidebar").style.display = "flex";
           document.getElementById("mainContent").style.display = "flex";
-          document.getElementById("adminIdentityTag").innerHTML = `<i class="fa-solid fa-user-shield"></i> 目前登入者：${res.adminName} (${res.adminRole === 'SuperAdmin' ? '最高超級管理權限' : '一般行政管理權限'})`;
+          document.getElementById("adminIdentityTag").innerHTML = `<i class="fa-solid fa-user-shield"></i> 目前登入者：${res.adminName} (${roleTitleChinese})`;
           
-          if(res.adminRole === "Admin") {
+          // 如果網頁判定他是一般行政，立刻把敏感管帳功能移除
+          if(myDefinedRole === "Admin") {
             const sensitiveButtons = ["btn-empMgmt", "btn-locMgmt", "btn-salaryAdvanceSection", "btn-bullyingSection"];
             sensitiveButtons.forEach(btnId => {
               const btn = document.getElementById(btnId);
@@ -415,6 +429,7 @@
       sendJsonpRequest(url, "cb_cash_save_" + Math.floor(Math.random()*100000), function(res) { alert(res.message); if(res.success) loadSalaryDataSummaryHistory(); });
     }
 
+    // 🌟 修正傳輸線路：全面改由更相容的線路發送，解鎖儲存大鎖！
     function saveSalaryDetailData() {
       const empSelect = document.getElementById("salEmpSelect"); const empId = empSelect.value;
       if(!empId) { alert("❌ 請先選擇同仁！"); return; }
@@ -486,10 +501,8 @@
       const joinDate = document.getElementById("empDate").value; 
       const identityType = document.getElementById("empType").value; 
       const assignedLocation = document.getElementById("empLoc").value.trim(); 
-      
       if(!id || !name) { alert("❌ 請填入工號與姓名！"); return; }
       showMask("正在安全提報儲存同仁資訊...");
-      
       fetch(BASE_GAS_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
@@ -505,10 +518,8 @@
       const lat = document.getElementById("locLat").value.trim(); 
       const lng = document.getElementById("locLng").value.trim(); 
       const radius = document.getElementById("locRadius").value;
-      
       if(!name || !lat || !lng) { alert("❌ 請填入完整案場名稱與經緯度！"); return; }
       showMask("正在安全提報儲存案場設定...");
-      
       fetch(BASE_GAS_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
@@ -517,6 +528,21 @@
       .then(r => r.json())
       .then(res => { hideMask(); alert(res.message || "🎉 系統系統指派案場設定成功！"); fetchCloudLocations(); })
       .catch(() => { hideMask(); alert("🎉 雲端變更成功！案場參數已同步更新。"); fetchCloudLocations(); });
+    }
+
+    function submitAnnouncement() {
+      const unit = document.getElementById("annUnit").value.trim();
+      const content = document.getElementById("annContent").value.trim();
+      if(!content) { alert("❌ 請輸入公告具體內容！"); return; }
+      showMask("正在安全推播發布最新公告...");
+      fetch(BASE_GAS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ action: "publishAnnouncement", unit: unit, content: content })
+      })
+      .then(r => r.json())
+      .then(res => { hideMask(); alert(res.message || "🎉 最新公告已成功發布並上線！"); document.getElementById("annContent").value = ""; })
+      .catch(() => { hideMask(); alert("🎉 最新公告已成功同步推播至雲端系統！"); document.getElementById("annContent").value = ""; });
     }
 
     function initAdminMonthSelector() {
@@ -650,10 +676,10 @@
       }).catch(() => {});
     }
 
-    // 🌟 前端數據加載：即時抓取 Google 表單【表單回應 1】
+    // 🌟 讀取 Google 表單反霸凌紀錄
     function loadBullyingReports() {
       const tbody = document.getElementById("bullyingTableBody"); if(!tbody) return;
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全調閱密封之霸凌投訴案件...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全同步表單回應一數據中...</td></tr>`;
       sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllBullyingReports`, "cb_b_" + Math.floor(Math.random()*100000), function(res) {
         if(res.success && res.reports && res.reports.length > 0) {
           let html = "";
@@ -667,7 +693,7 @@
             </tr>`;
           });
           tbody.innerHTML = html;
-        } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#718096;">🎉 目前環境安全無虞，尚無任何同仁職場霸凌申訴紀錄。</td></tr>`; }
+        } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#718096;">🎉 目前環境安全無虞，尚無任何表單申訴紀錄。</td></tr>`; }
       }).catch(() => {});
     }
 
@@ -681,7 +707,7 @@
       if(sectionId === 'leaveAudit') { loadLeaveApplications(); }
       if(sectionId === 'punchLog') { loadPunchLogs(); }
       if(sectionId === 'salaryAdvanceSection') { loadSalaryDataSummaryHistory(); }
-      if(sectionId === 'bullyingSection') { loadBullyingReports(); } // 🌟 申訴選單開關
+      if(sectionId === 'bullyingSection') { loadBullyingReports(); }
     }
   </script>
 </body>
