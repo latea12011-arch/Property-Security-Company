@@ -31,14 +31,12 @@
     // =========================================================================
     const BASE_GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
 
-    // 🔒【權限清單對照表】
     const ADMIN_PERMISSIONS_LIST = {
       "00001": "SuperAdmin",  
       "00002": "Admin",       
       "00003": "Supervisor"   
     };
 
-    // 純粹班別選項
     const SHIFT_OPTIONS = ["請選擇班別", "日班", "夜班", "機動班", "特勤班", "輪休", "特休", "事假", "病假"];
   </script>
   
@@ -57,7 +55,7 @@
     .card h3 { margin-bottom: 15px; color: #4a5568; border-left: 4px solid #4e54c8; padding-left: 10px; }
     table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
     th { background: #edf2f7; color: #4a5568; text-align: left; padding: 12px; border-bottom: 2px solid #cbd5e0; position: sticky; top: 0; z-index: 5; }
-    td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+    td { padding: 12px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
     .btn { padding: 8px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; text-decoration: none; display: inline-block; }
     .btn-primary { background: #4e54c8; color: white; }
     .btn-success { background: #27ae60; color: white; }
@@ -73,12 +71,6 @@
     .perm-checkbox-group { display: flex; flex-wrap: wrap; gap: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
     .perm-item { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; cursor: pointer; background: white; padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e0; }
     .perm-item input { cursor: pointer; width: 16px; height: 16px; }
-
-    #printTemplateArea { display: none; }
-    @media print {
-      body * { display: none !important; }
-      #printTemplateArea, #printTemplateArea * { display: block !important; }
-    }
   </style>
 </head>
 <body>
@@ -96,7 +88,7 @@
   <div class="loading-mask" id="globalMask"><div class="spinner"></div><p id="maskText" style="font-weight: bold; color: #4e54c8;">資料同步處理中...</p></div>
 
   <div class="sidebar" id="mainSidebar" style="display:none;">
-    <h2>紘嘉務業保全管理中心</h2>
+    <h2>幕後特助管理中心</h2>
     <button class="menu-btn active" id="btn-dashboard" onclick="switchSection('dashboard', this)"><i class="fa-solid fa-chart-pie"></i>管理總覽</button>
     <button class="menu-btn" id="btn-scheduleMgmt" onclick="switchSection('scheduleMgmt', this)"><i class="fa-solid fa-calendar-days"></i>班表排程調整</button>
     <button class="menu-btn" id="btn-leaveAudit" onclick="switchSection('leaveAudit', this)"><i class="fa-solid fa-file-signature"></i>請假單審核</button>
@@ -120,7 +112,6 @@
       </div>
     </div>
 
-    <!-- 班表排程 -->
     <div class="content-body" id="scheduleMgmt">
       <div class="card">
         <div style="display: flex; gap: 20px; align-items: flex-start;">
@@ -150,7 +141,6 @@
       </div>
     </div>
 
-    <!-- 請假單審核 -->
     <div class="content-body" id="leaveAudit">
       <div class="card">
         <h3>待處理假單清單</h3>
@@ -161,7 +151,6 @@
       </div>
     </div>
 
-    <!-- 即時打卡監控 -->
     <div class="content-body" id="punchLog">
       <div class="card">
         <h3>今日同仁打卡流水帳</h3>
@@ -172,7 +161,6 @@
       </div>
     </div>
 
-    <!-- 同仁名冊維護 -->
     <div class="content-body" id="empMgmt">
       <div style="display: flex; gap: 20px;">
         <div class="card" style="width: 300px; flex-shrink: 0;">
@@ -195,7 +183,6 @@
       </div>
     </div>
 
-    <!-- 案場 GPS 設定 -->
     <div class="content-body" id="locMgmt">
       <div style="display: flex; gap: 20px;">
         <div class="card" style="width: 300px; flex-shrink: 0;">
@@ -216,7 +203,47 @@
       </div>
     </div>
 
-    <!-- 借支與薪資結算 -->
+    <div class="content-body" id="locDetailsMgmt">
+      <div style="display: flex; gap: 20px;">
+        <div class="card" style="width: 320px; flex-shrink: 0;">
+          <h3>填寫案場詳細管理資訊</h3>
+          <label style="font-size:12px; font-weight:bold;">1. 選擇綁定案場：</label>
+          <select id="detailLocSelect" class="form-control"></select>
+          
+          <label style="font-size:12px; font-weight:bold;">2. 現任主委姓名：</label>
+          <input type="text" id="detChairperson" class="form-control" placeholder="請輸入姓名">
+          
+          <label style="font-size:12px; font-weight:bold;">3. 主委聯絡電話：</label>
+          <input type="text" id="detPhone" class="form-control" placeholder="請輸入電話">
+          
+          <label style="font-size:12px; font-weight:bold;">4. 社區總總人數 / 戶數：</label>
+          <input type="text" id="detResidents" class="form-control" placeholder="例如: 240戶 / 600人">
+          
+          <label style="font-size:12px; font-weight:bold;">5. 目前管理屆數：</label>
+          <input type="text" id="detTerm" class="form-control" placeholder="例如: 第15屆">
+          
+          <label style="font-size:12px; font-weight:bold;">6. 區權會預定開召日：</label>
+          <input type="date" id="detZoneMeeting" class="form-control">
+          
+          <label style="font-size:12px; font-weight:bold;">7. 每月固定例會時間：</label>
+          <input type="text" id="detRegularMeeting" class="form-control" placeholder="例如: 每月第一個週六 09:30">
+          
+          <button class="btn btn-success" style="width: 100%; padding:12px; font-weight: bold;" onclick="saveLocationDetailData()"><i class="fa-solid fa-floppy-disk"></i> 儲存案場詳細資料</button>
+        </div>
+        <div class="card" style="flex: 1; max-height: 550px; overflow-y: auto;">
+          <h3>紘嘉各案場營運管理精細清單</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>案場社區名稱</th><th>現任主委</th><th>聯絡電話</th><th>社區人數</th><th>目前屆數</th><th>區權會日期</th><th>每月例會時間</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="locDetailsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div class="content-body" id="salaryAdvanceSection">
       <div style="display: flex; gap: 20px; margin-bottom: 25px;">
         <div class="card" style="width: 320px; margin-bottom: 0; border: 2px solid #e53e3e;">
@@ -271,7 +298,6 @@
       </div>
     </div>
 
-    <!-- 發布公告 -->
     <div class="content-body" id="announcementMgmt">
       <div class="card">
         <h3>新增發布公告</h3>
@@ -283,7 +309,6 @@
       </div>
     </div>
 
-    <!-- 離職證明 -->
     <div class="content-body" id="resignationSection">
       <div class="card" style="max-width: 600px;">
         <h3>填寫離職證明資訊</h3>
@@ -297,7 +322,6 @@
       </div>
     </div>
 
-    <!-- 🌟 職場霸凌申訴監控面板 -->
     <div class="content-body" id="bullyingSection">
       <div class="card">
         <h3><i class="fa-solid fa-gavel" style="color: #e53e3e;"></i> 職場安全保護 - 申訴事件即時監控中心</h3>
@@ -317,7 +341,6 @@
       </div>
     </div>
 
-    <!-- 系統選單權限分發 -->
     <div class="content-body" id="permissionMatrixSection">
       <div class="card" style="border: 2px solid #e53e3e;">
         <h3><i class="fa-solid fa-user-lock" style="color: #e53e3e;"></i> 各級行政/督導選單權限分發中心</h3>
@@ -334,6 +357,7 @@
             <label class="perm-item"><input type="checkbox" class="perm-chk" value="punchLog"> 即時打卡監控</label>
             <label class="perm-item"><input type="checkbox" class="perm-chk" value="empMgmt"> 同仁名冊維護</label>
             <label class="perm-item"><input type="checkbox" class="perm-chk" value="locMgmt"> 案場GPS設定</label>
+            <label class="perm-item"><input type="checkbox" class="perm-chk" value="locDetailsMgmt"> 案場資訊維護</label>
             <label class="perm-item"><input type="checkbox" class="perm-chk" value="salaryAdvanceSection"> 借支與薪資明細</label>
             <label class="perm-item"><input type="checkbox" class="perm-chk" value="announcementMgmt"> 發布公告事項</label>
             <label class="perm-item"><input type="checkbox" class="perm-chk" value="resignationSection"> 離職證明書列印</label>
@@ -348,6 +372,7 @@
 
   <script>
     let cloudPermissionsCache = [];
+    let globalLocDetailsCache = []; // 全新案場快取器
 
     function submitAdminLogin() {
       let rawId = document.getElementById("loginUser").value.trim();
@@ -365,12 +390,13 @@
           document.getElementById("mainSidebar").style.display = "flex";
           document.getElementById("mainContent").style.display = "flex";
           
+          // 注入新選單至動態側邊欄
           if (res.isSuper === true) {
             document.getElementById("adminIdentityTag").innerHTML = `<i class="fa-solid fa-circle-check" style="color:#27ae60;"></i> 最高創始人：${res.adminName} (SuperAdmin)`;
             document.getElementById("btn-permissionMatrixSection").style.display = "flex";
           } else {
             document.getElementById("adminIdentityTag").innerHTML = `<i class="fa-solid fa-user-shield"></i> 目前登入者：${res.adminName} (客製化行政權限)`;
-            const allFixModules = ["scheduleMgmt", "leaveAudit", "punchLog", "empMgmt", "locMgmt", "salaryAdvanceSection", "announcementMgmt", "resignationSection", "bullyingSection"];
+            const allFixModules = ["scheduleMgmt", "leaveAudit", "punchLog", "empMgmt", "locMgmt", "locDetailsMgmt", "salaryAdvanceSection", "announcementMgmt", "resignationSection", "bullyingSection"];
             let allowedArray = res.allowedModules.split(",");
             allFixModules.forEach(modId => {
               if (!allowedArray.includes(modId)) {
@@ -417,6 +443,11 @@
           const elSal = document.getElementById("salEmpSelect"); if(elSal) elSal.innerHTML = html;
           const elResig = document.getElementById("resigEmpSelect"); if(elResig) elResig.innerHTML = html;
           
+          // 注入案場維護下拉選單
+          let dlHtml = `<option value="">-- 請選擇要維護資料的案場 --</option>`;
+          locNames.forEach(name => { dlHtml += `<option value="${name}">${name}</option>`; });
+          const elDetLoc = document.getElementById("detailLocSelect"); if(elDetLoc) elDetLoc.innerHTML = dlHtml;
+
           const elPermSelect = document.getElementById("permTargetAdminSelect");
           if(elPermSelect) {
             let permHtml = `<option value="">-- 請選擇欲配置權限之同仁 --</option>`;
@@ -431,7 +462,7 @@
           renderAdminLists(res);
         }
         initAdminMonthSelector();
-        if(document.getElementById("btn-permissionMatrixSection").style.display !== "none") {
+        if(document.getElementById("btn-permissionMatrixSection") && document.getElementById("btn-permissionMatrixSection").style.display !== "none") {
           loadCloudPermissionsMatrix();
         }
       });
@@ -459,6 +490,61 @@
     }
     function editLocForm(name, lat, lng, rad) {
       document.getElementById("locName").value = name; document.getElementById("locLat").value = lat; document.getElementById("locLng").value = lng; document.getElementById("locRadius").value = rad;
+    }
+
+    // 🌟 案場精細管理模組前端核心線路：調閱雲端詳細資料
+    function loadLocationDetailsHistory() {
+      const tbody = document.getElementById("locDetailsTableBody"); if(!tbody) return;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">社區經營大數據安全同步中...</td></tr>`;
+      const url = `${BASE_GAS_URL}?action=fetchLocationDetails`;
+      sendJsonpRequest(url, "cb_loc_det_fetch_" + Math.floor(Math.random()*100000), function(res) {
+        if(res.success) {
+          globalLocDetailsCache = res.details || [];
+          let html = "";
+          if(globalLocDetailsCache.length > 0) {
+            globalLocDetailsCache.forEach(d => {
+              html += `<tr>
+                <td><b>${d.name}</b></td><td>${d.chairperson || '--'}</td><td>${d.phone || '--'}</td><td>${d.residents || '--'}</td><td><span class="btn btn-primary" style="padding:2px 6px; font-size:11px;">${d.term || '未填'}</span></td><td>${d.zoneMeeting || '--'}</td><td style="font-size:12px; color:#4e54c8;">${d.regularMeeting || '--'}</td><td><button class="btn btn-primary" style="padding:3px 8px; font-size:11px;" onclick="fillLocDetailForm('${d.name}','${d.chairperson}','${d.phone}','${d.residents}','${d.term}','${d.zoneMeeting}','${d.regularMeeting}')">修改</button></td>
+              </tr>`;
+            });
+            tbody.innerHTML = html;
+          } else { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">目前尚無任何案場精細資訊存檔。</td></tr>`; }
+        }
+      });
+    }
+
+    function fillLocDetailForm(name, chair, phone, resi, term, zone, regul) {
+      document.getElementById("detailLocSelect").value = name;
+      document.getElementById("detChairperson").value = chair;
+      document.getElementById("detPhone").value = phone;
+      document.getElementById("detResidents").value = resi;
+      document.getElementById("detTerm").value = term;
+      document.getElementById("detZoneMeeting").value = zone;
+      document.getElementById("detRegularMeeting").value = regul;
+    }
+
+    // 🌟 案場精細管理模組前端核心線路：傳存雲端詳細資料
+    function saveLocationDetailData() {
+      const locName = document.getElementById("detailLocSelect").value; if(!locName) { alert("❌ 請先選擇一個社區案場名稱！"); return; }
+      const chairperson = document.getElementById("detChairperson").value.trim();
+      const phone = document.getElementById("detPhone").value.trim();
+      const residents = document.getElementById("detResidents").value.trim();
+      const term = document.getElementById("detTerm").value.trim();
+      const zoneMeeting = document.getElementById("detZoneMeeting").value;
+      const regularMeeting = document.getElementById("detRegularMeeting").value.trim();
+      
+      showMask("正在將案場精細資訊提報保存至雲端...");
+      const url = `${BASE_GAS_URL}?action=saveLocationDetails&name=${encodeURIComponent(locName)}&chairperson=${encodeURIComponent(chairperson)}&phone=${encodeURIComponent(phone)}&residents=${encodeURIComponent(residents)}&term=${encodeURIComponent(term)}&zoneMeeting=${zoneMeeting}&regularMeeting=${encodeURIComponent(regularMeeting)}`;
+      sendJsonpRequest(url, "cb_loc_det_save_" + Math.floor(Math.random()*100000), function(res) {
+        hideMask(); alert(res.message); if(res.success) { loadLocationDetailsHistory(); clearLocDetailInputs(); }
+      });
+    }
+
+    function clearLocDetailInputs() {
+      document.getElementById("detailLocSelect").value = ""; document.getElementById("detChairperson").value = "";
+      document.getElementById("detPhone").value = ""; document.getElementById("detResidents").value = "";
+      document.getElementById("detTerm").value = ""; document.getElementById("detZoneMeeting").value = "";
+      document.getElementById("detRegularMeeting").value = "";
     }
 
     function saveCashAdvanceData() {
@@ -531,7 +617,7 @@
         wsData.push(["- - - - - - - - - - - - - - - - - - - - - - - - ( 裁 切 線 ) - - - - - - - - - - - - - - - - - - - - - - - -"]);
         wsData.push([""]); wsData.push([""]);
       });
-      const ws = XLSX.utils.aoa_to_sheet(wsData); const wscols = [{wch: 16}, {wch: 16}, {wch: 22}, {wch: 22}, {wch: 20}, {wch: 24}, {wch: 18}]; ws['!cols'] = wscols;
+      const ws = XLSX.utils.auto_to_sheet(wsData); const wscols = [{wch: 16}, {wch: 16}, {wch: 22}, {wch: 22}, {wch: 20}, {wch: 24}, {wch: 18}]; ws['cols'] = wscols;
       XLSX.utils.book_append_sheet(wb, ws, "A4雙拼減半薪資條"); hideMask(); XLSX.writeFile(wb, `紘嘉物業_減半雙拼員工簽名薪資表.xlsx`); 
     }
 
@@ -661,7 +747,6 @@
       }).catch(() => {});
     }
 
-    // 🌟 前端：全新反霸凌資料對齊渲染機制
     function loadBullyingReports() {
       const tbody = document.getElementById("bullyingTableBody"); if(!tbody) return;
       tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全同步密封投訴案件...</td></tr>`;
@@ -669,13 +754,7 @@
         if(res.success && res.reports && res.reports.length > 0) {
           let html = "";
           res.reports.forEach(r => {
-            html += `<tr>
-              <td>${r.timestamp}</td>
-              <td><b>${r.identity}</b></td>
-              <td><span class="btn btn-primary" style="padding:2px 6px; font-size:11px;">${r.location}</span></td>
-              <td style="color:#e53e3e; font-weight:bold;"><i class="fa-solid fa-clock"></i> ${r.targetPerson}</td>
-              <td style="background:#fff5f5; text-align:justify; padding:12px; font-size:13px; line-height:1.5; border-left:3px solid #e53e3e;">${r.content}</td>
-            </tr>`;
+            html += `<tr><td>${r.timestamp}</td><td><b>${r.identity}</b></td><td>${r.location}</td><td style="color:#e53e3e;"><i class="fa-solid fa-clock"></i> ${r.targetPerson}</td><td style="background:#fff5f5;">${r.content}</td></tr>`;
           });
           tbody.innerHTML = html;
         } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#718096;">🎉 目前環境安全無虞，尚無 any 表單申訴紀錄。</td></tr>`; }
@@ -721,6 +800,7 @@
       if(sectionId === 'punchLog') { loadPunchLogs(); }
       if(sectionId === 'salaryAdvanceSection') { loadSalaryDataSummaryHistory(); }
       if(sectionId === 'bullyingSection') { loadBullyingReports(); }
+      if(sectionId === 'locDetailsMgmt') { loadLocationDetailsHistory(); } // 觸發調閱
     }
   </script>
 </body>
