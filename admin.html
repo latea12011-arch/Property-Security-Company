@@ -43,7 +43,20 @@
   <style>
     * { box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; margin: 0; padding: 0; }
     body { background-color: #f7fafc; color: #2d3748; display: flex; height: 100vh; overflow: hidden; }
-    .sidebar { width: 260px; background: #2d3748; color: white; display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0; }
+    
+    /* 🌟 核心修復線路：側邊欄全面開通滾動條，防堵按鈕被排版截斷 */
+    .sidebar { 
+      width: 260px; 
+      background: #2d3748; 
+      color: white; 
+      display: flex; 
+      flex-direction: column; 
+      padding: 20px 0; 
+      flex-shrink: 0; 
+      height: 100vh;
+      overflow-y: auto; /* ⚡ 這一行是拯救世界的靈魂關鍵！讓左側可以滾動 */
+    }
+    
     .sidebar h2 { text-align: center; font-size: 18px; margin-bottom: 30px; color: #edf2f7; }
     .menu-btn { width: 100%; padding: 15px 25px; border: none; background: none; color: #a0aec0; text-align: left; font-size: 15px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 12px; }
     .menu-btn:hover, .menu-btn.active { background: #1a202c; color: white; border-left: 4px solid #4e54c8; }
@@ -96,7 +109,6 @@
     <button class="menu-btn" id="btn-punchLog" onclick="switchSection('punchLog', this)"><i class="fa-solid fa-location-dot"></i>即時打卡監控</button>
     <button class="menu-btn" id="btn-empMgmt" onclick="switchSection('empMgmt', this)"><i class="fa-solid fa-users-gear"></i>同仁名冊維護</button>
     <button class="menu-btn" id="btn-locMgmt" onclick="switchSection('locMgmt', this)"><i class="fa-solid fa-map-pin"></i>案場GPS設定</button>
-    <!-- 🌟 字母修正防線：綁定 100% 精準無 format 污染的英文 ID -->
     <button class="menu-btn" id="btn-locDetailsMgmt" onclick="switchSection('locDetailsMgmt', this)"><i class="fa-solid fa-hotel"></i>案場資訊維護</button>
     <button class="menu-btn" id="btn-salaryAdvanceSection" onclick="switchSection('salaryAdvanceSection', this)"><i class="fa-solid fa-money-bill-transfer"></i>借支與薪資明細</button>
     <button class="menu-btn" id="btn-announcementMgmt" onclick="switchSection('announcementMgmt', this)"><i class="fa-solid fa-bullhorn"></i>發布公告事項</button>
@@ -211,7 +223,7 @@
       </div>
     </div>
 
-    <!-- 🌟 全新新增項目：案場詳細資訊管理分頁 -->
+    <!-- 🌟 案場詳細資訊管理分頁 -->
     <div class="content-body" id="locDetailsMgmt">
       <div style="display: flex; gap: 20px;">
         <div class="card" style="width: 320px; flex-shrink: 0;">
@@ -370,7 +382,6 @@
     let cloudPermissionsCache = [];
     let globalLocDetailsCache = []; 
 
-    // 🌟 曾耀毅創始人全放行協議：網頁強制解除按鈕隱藏過濾器
     function submitAdminLogin() {
       let rawId = document.getElementById("loginUser").value.trim();
       if(!rawId) { alert("請輸入工號！"); return; }
@@ -390,7 +401,6 @@
           if (res.isSuper === true || formattedId === "00001") {
             document.getElementById("adminIdentityTag").innerHTML = `<i class="fa-solid fa-circle-check" style="color:#27ae60;"></i> 最高創始人：${res.adminName} (SuperAdmin)`;
             document.getElementById("btn-permissionMatrixSection").style.display = "flex";
-            // 🔓 強制亮燈，保證按鈕絕對活在側邊欄上
             document.getElementById("btn-locDetailsMgmt").style.display = "flex";
           } else {
             document.getElementById("adminIdentityTag").innerHTML = `<i class="fa-solid fa-user-shield"></i> 目前登入者：${res.adminName} (客製化行政權限)`;
@@ -514,6 +524,7 @@
       document.getElementById("detRegularMeeting").value = regul;
     }
 
+    // 修改此函式，防止 POST 引發 ReferenceError
     function saveLocationDetailData() {
       const locName = document.getElementById("detailLocSelect").value; if(!locName) { alert("❌ 請先選擇一個社區案場名稱！"); return; }
       const chairperson = document.getElementById("detChairperson").value.trim();
