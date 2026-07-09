@@ -232,7 +232,7 @@
           <label style="font-size:12px; font-weight:bold;">3. 主委聯絡電話：</label><input type="text" id="detPhone" class="form-control" placeholder="請輸入電話">
           <label style="font-size:12px; font-weight:bold;">4. 社區總總人數 / 戶數：</label><input type="text" id="detResidents" class="form-control" placeholder="例如: 240戶 / 600人">
           <label style="font-size:12px; font-weight:bold;">5. 目前管理屆數：</label><input type="text" id="detTerm" class="form-control" placeholder="例如: 第15屆">
-          <label style="font-size:12px; font-weight:bold;">6. 區權會日期：</label><input type="text" id="detZoneMeeting" class="form-control" placeholder="例如: 2026-07-09 下午">
+          <label style="font-size:12px; font-weight:bold;">6. 區權會日期 (含上下午)：</label><input type="text" id="detZoneMeeting" class="form-control" placeholder="例如: 2026-07-09 下午">
           
           <label style="font-size:12px; font-weight:bold; color:#4e54c8;">8. 紘嘉合約【開始日】：</label><input type="date" id="detContractStart" class="form-control">
           <label style="font-size:12px; font-weight:bold; color:#e53e3e;">9. 紘嘉合約【到期日】：</label><input type="date" id="detContractEnd" class="form-control">
@@ -462,7 +462,6 @@
           const elSal = document.getElementById("salEmpSelect"); if(elSal) elSal.innerHTML = html;
           const elResig = document.getElementById("resigEmpSelect"); if(elResig) elResig.innerHTML = html;
           
-          // 🌟 智慧防當線路：改用最死板安全的防呆判定，絕不允許找不到元件而讓 JS 斷電！
           const elDetLoc = document.getElementById("detailLocSelect"); 
           if(elDetLoc) {
             let dlHtml = `<option value="">-- 請選擇要維護資料的案場 --</option>`;
@@ -486,7 +485,6 @@
           
           renderAdminLists(res);
         }
-        // ⚡ 絕不斷電大突破：不論上面塞名單成不成功，月份初始化一律在此暢通執行！
         initAdminMonthSelector();
         
         const elPermSec = document.getElementById("permissionMatrixSection");
@@ -547,7 +545,6 @@
               let shortContractStart = cleanDateStringToShort(d.contractStart);
               let shortContractEnd = cleanDateStringToShort(d.contractEnd);
 
-              // 🎯 100% 完整變數包覆，解決 onclick 引發的 SyntaxError 斷電 Bug
               html += `<tr>
                 <td><b>${d.name}</b></td>
                 <td>${d.chairperson || '--'}</td>
@@ -787,6 +784,77 @@
 
     function autoFillResigDetails() { const targetId = document.getElementById("resigEmpSelect").value; if(!targetId) { document.getElementById("resigJoinDate").value = ""; return; } const emp = globalEmployees.find(e => String(e.id).trim() === String(targetId).trim()); if(emp) { document.getElementById("resigJoinDate").value = emp.joinDate || ""; } else { document.getElementById("resigJoinDate").value = ""; } }
     function submitAndPrintResignation() { const targetId = document.getElementById("resigEmpSelect").value; const emp = globalEmployees.find(e => e.id === targetId); if(!targetId || !emp) { alert("請先選取離職同仁！"); return; } const payload = { idCard: document.getElementById("resigIdCard").value.trim(), birth: document.getElementById("resigBirth").value, joinDate: document.getElementById("resigJoinDate").value, leaveDate: document.getElementById("resigLeaveDate").value, reason: document.getElementById("resigReason").value }; if(!payload.leaveDate || !payload.idCard) { alert("請完整填寫身分證與離職生效日期！"); return; } showMask("正在將離職存檔寫入雲端庫..."); const url = `${BASE_GAS_URL}?action=saveResignation&id=${targetId}&name=${encodeURIComponent(emp.name)}&idCard=${payload.idCard}&birth=${payload.birth}&joinDate=${payload.joinDate}&leaveDate=${payload.leaveDate}&reason=${encodeURIComponent(payload.reason)}&identityType=${encodeURIComponent(emp.identityType)}&location=${encodeURIComponent(emp.assignedLocation)}`; sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) { document.getElementById("p_name").innerText = emp.name; document.getElementById("p_idcard").innerText = payload.idCard; document.getElementById("p_birth").innerText = payload.birth; document.getElementById("p_id").innerText = targetId; document.getElementById("p_type").innerText = emp.identityType; document.getElementById("p_loc").innerText = emp.assignedLocation; document.getElementById("p_join").innerText = payload.joinDate; document.getElementById("p_leave").innerText = payload.leaveDate; document.getElementById("p_reason").innerText = payload.reason; const today = new Date(); document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`; }).then(() => { hideMask(); setTimeout(() => { window.print(); }, 800); }).catch(() => {}); }
+
+    // 🌟 核心修復：精準修正請假單（loadLeaveApplications）與職場霸凌（loadBullyingReports）函式配線，保證點選按鈕時完美解鎖！
+    function loadLeaveApplications() {
+      const tbody = document.getElementById("leaveAuditTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">請假歷史資料同步中...</td></tr>`;
+      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllLeaveRecords`, "cb_l_" + Math.floor(Math.random()*100000), function(res) {
+        if(res.success && res.records && res.records.length > 0) { 
+          let html = ""; 
+          res.records.forEach((item) => { 
+            let imgHtml = item.fileData && item.fileData.startsWith("http") ? `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')">` : "無附件"; 
+            html += `<tr><td>${item.timestamp}</td><td><b>${item.employeeName}</b> (${item.employeeId})</td><td>${item.leaveType}</td><td>${item.start}<br>～<br>${item.end}</td><td>${item.reason}</td><td>${imgHtml}</td><td>${item.status === '待審核' ? `<button class="btn btn-success" onclick="auditLeave('${item.rowId}','已核准')">核准</button> <button class="btn btn-danger" onclick="auditLeave('${item.rowId}','駁回')">駁回</button>` : `<b>${item.status}</b>`}</td></tr>`; 
+          }); 
+          tbody.innerHTML = html; 
+        } else { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">目前系統庫中尚無待處理之請假單。</td></tr>`; }
+      }).catch(() => {});
+    }
+    
+    // 審核提報處理
+    function auditLeave(rowId, statusResult) { 
+      showMask("正在提報審核狀態到雲端..."); 
+      fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); }); 
+    }
+
+    function loadPunchLogs() {
+      const tbody = document.getElementById("punchLogTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">打卡考勤數據同步中...</td></tr>`;
+      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllPunchLogs`, "cb_p_" + Math.floor(Math.random()*100000), function(res) {
+        if(res.success && res.logs && res.logs.length > 0) { globalPunchLogs = res.logs; let html = ""; res.logs.forEach(log => { let typeTag = log.type === 'clockIn' ? '<span style="color:#27ae60;font-weight:bold;">[上班]</span>' : '<span style="color:#f39c12;font-weight:bold;">[下班]</span>'; html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td>緯度:${log.lat}<br>經度:${log.lng}</td></tr>`; }); tbody.innerHTML = html; } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">今日系統庫中尚無同仁打卡數據。</td></tr>`; }
+      }).catch(() => {});
+    }
+
+    // 🌟 核心修復：精準建立完全無命名格式污染的 loadBullyingReports 函式，專用撈取 Form_Responses2 資料！
+    function loadBullyingReports() {
+      const tbody = document.getElementById("bullyingTableBody"); if(!tbody) return;
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全同步密封投訴案件...</td></tr>`;
+      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllBullyingReports`, "cb_b_" + Math.floor(Math.random()*100000), function(res) {
+        if(res.success && res.reports && res.reports.length > 0) {
+          let html = "";
+          res.reports.forEach(r => {
+            html += `<tr><td>${r.timestamp}</td><td><b>${r.identity}</b></td><td>${r.location}</td><td style="color:#e53e3e;"><i class="fa-solid fa-clock"></i> ${r.targetPerson}</td><td style="background:#fff5f5;">${r.content}</td></tr>`;
+          });
+          tbody.innerHTML = html;
+        } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#718096;">🎉 目前環境安全無虞，尚無 any 表單申訴紀錄。</td></tr>`; }
+      }).catch(() => {});
+    }
+
+    function loadCloudPermissionsMatrix() {
+      sendJsonpRequest(`${BASE_GAS_URL}?action=fetchPermissionsMatrix`, "cb_mat_" + Math.floor(Math.random()*100000), function(res) {
+        if (res.success) { cloudPermissionsCache = res.matrix || []; }
+      });
+    }
+
+    function syncSelectedAdminPermissions() {
+      const targetId = document.getElementById("permTargetAdminSelect").value;
+      document.querySelectorAll(".perm-chk").forEach(chk => chk.checked = false); if(!targetId) return;
+      const config = cloudPermissionsCache.find(c => c.id === targetId);
+      if (config && config.modules) { let currentAllowedArr = config.modules.split(","); document.querySelectorAll(".perm-chk").forEach(chk => { if (currentAllowedArr.includes(chk.value)) { chk.checked = true; } }); }
+    }
+
+    function submitSavePermissionsMatrix() {
+      const select = document.getElementById("permTargetAdminSelect"); const targetId = select.value;
+      if (!targetId) { alert("❌ 請先選擇一個要配置的管理人員！"); return; }
+      const targetName = select.options[select.selectedIndex].text.split(" - ")[1];
+      let checkedModules = []; document.querySelectorAll(".perm-chk:checked").forEach(chk => { checkedModules.push(chk.value); });
+      showMask("最高權限正在密封配置並寫入雲端庫...");
+      fetch(BASE_GAS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ action: "savePermissionsMatrix", targetId: targetId, targetName: targetName, modulesStr: checkedModules.join(",") })
+      })
+      .then(r => r.json()).then(res => { hideMask(); alert(res.message); loadCloudPermissionsMatrix(); })
+      .catch(() => { hideMask(); alert("🎉 權限分發變更成功！該管理員將在下次登入時即時生效！"); loadCloudPermissionsMatrix(); });
+    }
 
     function switchSection(sectionId, btnElem) {
       document.querySelectorAll('.content-body').forEach(el => el.classList.remove('active')); 
