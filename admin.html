@@ -126,8 +126,10 @@
           <div style="flex: 1;">
             <h3>發布 / 覆蓋個別員工班表</h3>
             <div style="display: flex; gap: 15px; flex-direction: column; margin-bottom: 20px; margin-top: 10px;">
-              <div style="flex: 1;"><label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">選擇同仁：</label><select id="schedEmpSelect" class="form-control" style="margin-bottom:0;" onchange="generateCalendarRows()"></select></div>
-              <div style="flex: 1;"><label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">排班月份：</label><select id="schedMonthSelect" class="form-control" style="margin-bottom:0;" onchange="generateCalendarRows()"></select></div>
+              <div style="display: flex; gap: 15px;">
+                <div style="flex: 1;"><label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">選擇同仁：</label><select id="schedEmpSelect" class="form-control" style="margin-bottom:0;" onchange="generateCalendarRows()"></select></div>
+                <div style="flex: 1;"><label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">排班月份：</label><select id="schedMonthSelect" class="form-control" style="margin-bottom:0;" onchange="generateCalendarRows()"></select></div>
+              </div>
             </div>
             <div style="border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
               <table style="margin-top: 0; width: 100%;">
@@ -275,7 +277,6 @@
         <div style="max-width: 500px;">
           <label style="font-size:13px; font-weight:bold;">發布單位：</label><input type="text" id="annUnit" class="form-control" value="管理部">
           <label style="font-size:13px; font-weight:bold;">公告具體內容：</label><textarea id="annContent" class="form-control" rows="5"></textarea>
-          <!-- 🌟 修正：綁定正確的 submitAnnouncement() 處理器 -->
           <button class="btn btn-danger" style="padding:12px; width:100%;" onclick="submitAnnouncement()">發布最新公告</button>
         </div>
       </div>
@@ -555,7 +556,6 @@
       });
     }
 
-    // 🌟 補齊：發布公告功能 POST 處理器，打通資料線路！
     function submitAnnouncement() {
       const unit = document.getElementById("annUnit").value.trim();
       const content = document.getElementById("annContent").value.trim();
@@ -575,7 +575,7 @@
       .then(res => {
         hideMask();
         alert(res.message || "🎉 最新公告已成功發布並上線！");
-        document.getElementById("annContent").value = ""; // 清空輸入框
+        document.getElementById("annContent").value = ""; 
       })
       .catch(() => {
         hideMask();
@@ -656,6 +656,28 @@
       });
     }
 
+    // 🌟 全新精準綁定：選擇離職同仁時，自動調閱同仁快庫並秒速填入入職日期（到職日）！
+    function autoFillResigDetails() { 
+      const targetId = document.getElementById("resigEmpSelect").value; 
+      if(!targetId) { document.getElementById("resigJoinDate").value = ""; return; }
+      
+      const emp = globalEmployees.find(e => String(e.id).trim() === String(targetId).trim()); 
+      if(emp) { 
+        // 🎯 核心修復：直接從快取名冊內精準擷取 joinDate
+        document.getElementById("resigJoinDate").value = emp.joinDate || ""; 
+      } else {
+        document.getElementById("resigJoinDate").value = ""; 
+      }
+    }
+
+    function submitAndPrintResignation() {
+      const targetId = document.getElementById("resigEmpSelect").value; const emp = globalEmployees.find(e => e.id === targetId); if(!targetId || !emp) { alert("請先選取離職同仁！"); return; }
+      const payload = { idCard: document.getElementById("resigIdCard").value.trim(), birth: document.getElementById("resigBirth").value, joinDate: document.getElementById("resigJoinDate").value, leaveDate: document.getElementById("resigLeaveDate").value, reason: document.getElementById("resigReason").value };
+      if(!payload.leaveDate || !payload.idCard) { alert("請完整填寫身分證與離職生效日期！"); return; } showMask("正在將離職存檔寫入雲端庫...");
+      const url = `${BASE_GAS_URL}?action=saveResignation&id=${targetId}&name=${encodeURIComponent(emp.name)}&idCard=${payload.idCard}&birth=${payload.birth}&joinDate=${payload.joinDate}&leaveDate=${payload.leaveDate}&reason=${encodeURIComponent(payload.reason)}&identityType=${encodeURIComponent(emp.identityType)}&location=${encodeURIComponent(emp.assignedLocation)}`;
+      sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) { document.getElementById("p_name").innerText = emp.name; document.getElementById("p_idcard").innerText = payload.idCard; document.getElementById("p_birth").innerText = payload.birth; document.getElementById("p_id").innerText = targetId; document.getElementById("p_type").innerText = emp.identityType; document.getElementById("p_loc").innerText = emp.assignedLocation; document.getElementById("p_join").innerText = payload.joinDate; document.getElementById("p_leave").innerText = payload.leaveDate; document.getElementById("p_reason").innerText = payload.reason; const today = new Date(); document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`; }).then(() => { hideMask(); setTimeout(() => { window.print(); }, 800); }).catch(() => {});
+    }
+
     function loadLeaveApplications() {
       const tbody = document.getElementById("leaveAuditTableBody"); if(!tbody) return;
       tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">請假歷史資料同步中...</td></tr>`;
@@ -664,7 +686,6 @@
           let html = ""; 
           res.records.forEach((item) => { 
             let imgHtml = item.fileData && item.fileData.startsWith("http") ? `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')">` : "無附件"; 
-            // 🌟 修正點：將最後一格切換成正確的 item.status，終結文字錯位病因！
             html += `<tr><td>${item.timestamp}</td><td><b>${item.employeeName}</b> (${item.employeeId})</td><td>${item.leaveType}</td><td>${item.start}<br>～<br>${item.end}</td><td>${item.reason}</td><td>${imgHtml}</td><td>${item.status === '待審核' ? `<button class="btn btn-success" onclick="auditLeave('${item.rowId}','已核准')">核准</button> <button class="btn btn-danger" onclick="auditLeave('${item.rowId}','駁回')">駁回</button>` : `<b>${item.status}</b>`}</td></tr>`; 
           }); 
           tbody.innerHTML = html; 
