@@ -2,500 +2,282 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>紘嘉物業 - 員工行動考勤</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>紘嘉物業考勤打卡系統</title>
   
   <script>
     const manifest = {
-      "name": "紘嘉物業行動考勤系統",
-      "short_name": "紘嘉物業",
-      "description": "紘嘉物業內部同仁專用行動考勤、打卡與請假管理系統",
+      "name": "紘嘉物業智慧打卡系統",
+      "short_name": "紘嘉打卡",
       "start_url": window.location.href,
       "display": "standalone",
-      "background_color": "#f4f6f9",
+      "background_color": "#4e54c8",
       "theme_color": "#4e54c8",
-      "orientation": "portrait-primary",
-      "icons": [
-        { "src": "https://i.meee.com.tw/Q0RaFOE.png", "sizes": "192x192", "type": "image/png" },
-        { "src": "https://i.meee.com.tw/uudzmb9.png", "sizes": "512x512", "type": "image/png" }
-      ]
+      "orientation": "portrait",
+      "icons": [{ "src": "https://i.meee.com.tw/Q0RaFOE.png", "sizes": "192x192", "type": "image/png" }]
     };
     const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-    const link = document.createElement('link');
-    link.rel = 'manifest';
-    link.href = URL.createObjectURL(blob);
+    const link = document.createElement('link'); link.rel = 'manifest'; link.href = URL.createObjectURL(blob);
     document.head.appendChild(link);
   </script>
-  <meta name="theme-color" content="#4e54c8">
 
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script>
+    // =========================================================================
+    // 🌟【耀毅同仁端控制中心】請在此填入最新部署的 GAS 網址：
+    // =========================================================================
+    const BASE_GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
+  </script>
+  
   <style>
-    * { box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; margin: 0; padding: 0; }
-    body { background-color: #f4f6f9; color: #333; padding-bottom: 20px; }
-    .loading-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
-    .spinner { width: 45px; height: 45px; border: 5px solid #f3f3f3; border-top: 5px solid #4e54c8; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 12px; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .login-container { max-width: 400px; margin: 60px auto; padding: 30px 20px; background: #fff; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; }
-    .login-container h2 { color: #4e54c8; margin-bottom: 25px; }
-    .main-panel { max-width: 500px; margin: 0 auto; display: none; padding: 15px; }
-    .user-card { padding: 20px; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 15px; position: relative; background-color: #fff;}
-    .logout-btn { position: absolute; top: 20px; right: 20px; background: #ffe3e3; color: #e53e3e; border: none; padding: 8px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-    .tab-bar { display: flex; justify-content: space-around; background: #e2e8f0; padding: 6px; border-radius: 12px; margin-bottom: 15px; gap: 4px; }
-    .tab-btn { flex: 1; padding: 12px 6px; border: none; background: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: #4a5568; font-size: 13px; transition: 0.3s; text-align: center; }
-    .tab-btn i { display: block; font-size: 16px; margin-bottom: 4px; }
-    .tab-btn.active { background: #4e54c8; color: white; }
-    .content-section { display: none; background: white; padding: 20px; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
-    .content-section.active { display: block; }
-    .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; font-weight: bold; margin-bottom: 6px; color: #4a5568; font-size: 14px; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 15px; background: #f8fafc; outline: none; }
-    .btn-action { width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; }
-    .btn-clock-in { background: #27ae60; margin-bottom: 12px; font-size: 18px;}
-    .btn-clock-out { background: #f39c12; font-size: 18px;}
-    .btn-submit { background: #5c6bc0; }
-    .item-row { padding: 12px; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; font-size: 14px; align-items: center; }
-    .announcement-box { padding: 15px; background: #fff5f5; border-left: 4px solid #e53e3e; margin-bottom: 12px; border-radius: 6px; }
-    .preview-box { width: 100%; max-height: 150px; object-fit: contain; margin-top: 10px; display: none; border-radius: 8px; border: 1px dashed #cbd5e0; }
-    .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; color: #fff; }
-    .badge-wait { background-color: #f39c12; }
-    .badge-pass { background-color: #27ae60; }
-    .badge-fail { background-color: #c0392b; }
-    
-    /* 專屬：反霸凌申訴區警告框樣式 */
-    .complaint-warning { background: #fff5f5; border: 1px solid #feb2b2; padding: 12px; border-radius: 8px; color: #9b2c2c; font-size: 13px; margin-bottom: 15px; line-height: 1.5; text-align: left; }
+    * { box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { background: #f0f2f5; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 15px; color: #333; }
+    .phone-container { width: 100%; max-width: 410px; background: white; border-radius: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); padding: 20px; display: flex; flex-direction: column; gap: 15px; position: relative; }
+    .page { display: none; width: 100%; flex-direction: column; gap: 15px; }
+    .page.active { display: flex; }
+    .logo-area { text-align: center; margin: 20px 0 10px 0; }
+    .logo-area i { font-size: 50px; color: #4e54c8; }
+    .logo-area h2 { font-size: 22px; margin-top: 10px; color: #2c3e50; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 14px; font-weight: bold; color: #555; }
+    .form-control { width: 100%; padding: 12px 16px; border: 1px solid #cbd5e0; border-radius: 12px; font-size: 16px; outline: none; background: #f8fafc; transition: all 0.3s; }
+    .form-control:focus { border-color: #4e54c8; box-shadow: 0 0 0 3px rgba(78,84,200,0.1); }
+    .btn { width: 100%; padding: 14px; border: none; border-radius: 14px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: all 0.2s; }
+    .btn-primary { background: #4e54c8; color: white; box-shadow: 0 4px 12px rgba(78,84,200,0.3); }
+    .btn-primary:active { transform: scale(0.98); background: #3b41a8; }
+    .btn-success { background: #27ae60; color: white; }
+    .btn-danger { background: #e53e3e; color: white; }
+    .btn-secondary { background: #edf2f7; color: #4a5568; }
+    .user-banner { background: linear-gradient(135deg, #f6f8fb 0%, #f1f3f8 100%); border: 1px solid #e2e8f0; padding: 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; }
+    .user-info { display: flex; flex-direction: column; gap: 4px; }
+    .user-info h3 { font-size: 18px; color: #2d3748; }
+    .user-info p { font-size: 13px; color: #718096; display: flex; align-items: center; gap: 6px; }
+    .logout-btn { padding: 8px 14px; background: #fff5f5; color: #e53e3e; border: 1px solid #fed7d7; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; }
+    .clock-box { background: #1a202c; color: white; padding: 20px; border-radius: 18px; text-align: center; display: flex; flex-direction: column; gap: 5px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+    .clock-time { font-size: 34px; font-weight: bold; font-family: monospace; color: #00f2fe; }
+    .clock-date { font-size: 14px; color: #a0aec0; letter-spacing: 1px; }
+    .punch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .punch-btn { height: 95px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; font-size: 16px; border-radius: 16px; }
+    .punch-btn i { font-size: 26px; }
+    .nav-tabs { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 10px; gap: 10px; }
+    .tab-btn { padding: 10px; background: none; border: none; font-size: 14px; font-weight: bold; color: #718096; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .tab-btn.active { color: #4e54c8; }
+    .loading-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 999; border-radius: 24px; }
+    .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: #4e54c8; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 10px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .record-card { border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; background: #f8fafc; font-size: 14px; line-height: 1.5; margin-bottom: 8px; }
+    .status-badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; float: right; }
+    .status-wait { background: #feebc8; color: #b7791f; }
+    .status-ok { background: #c6f6d5; color: #22543d; }
+    .status-no { background: #fed7d7; color: #9b2c2c; }
   </style>
 </head>
 <body>
 
-  <div class="loading-mask" id="globalMask">
-    <div class="spinner"></div>
-    <p id="maskText" style="font-weight: bold; color: #4e54c8;">安全與雲端核心連線中...</p>
-  </div>
+  <div class="phone-container">
+    <div class="loading-mask" id="mask"><div class="spinner"></div><p id="maskText" style="color:#4e54c8; font-weight:bold;">安全定位通訊中...</p></div>
 
-  <div class="login-container" id="loginBox">
-    <h2>紘嘉物業行動考勤</h2>
-    <div class="form-group" style="text-align: left;">
-      <label>員工工號 (五碼)</label>
-      <input type="text" id="empIdInput" placeholder="例如：00001">
-    </div>
-    <div class="form-group" style="text-align: left;">
-      <label>登入密碼</label>
-      <input type="password" id="pwdInput" placeholder="請輸入密碼">
-    </div>
-    <button class="btn-action btn-submit" onclick="executeLogin()">安全登入</button>
-  </div>
-
-  <div class="main-panel" id="mainPanel">
-    <div class="user-card">
-      <h3 id="welcomeTitle">同仁，您好</h3>
-      <p style="margin-top: 5px; color: #4e54c8; font-weight: bold;" id="identityTypeDisplay"></p>
-      <p style="font-size: 13px; color: #718096; margin-top: 2px;" id="joinDateDisplay"></p>
-      <button class="logout-btn" onclick="executeLogout()">登出</button>
-    </div>
-    
-    <div class="tab-bar">
-      <button class="tab-btn active" onclick="switchTab('clockTab', this)"><i class="fa-solid fa-clock"></i>打卡</button>
-      <button class="tab-btn" onclick="loadLeaveTab('leaveTab', this)"><i class="fa-solid fa-pen-to-square"></i>請假</button>
-      <button class="tab-btn" onclick="loadScheduleTab('scheduleTab', this)"><i class="fa-solid fa-calendar-days"></i>班表</button>
-      <button class="tab-btn" onclick="loadComplaintTab('complaintTab', this)"><i class="fa-solid fa-hand-holding-hand"></i>申訴區</button>
-      <button class="tab-btn" onclick="loadAnnouncementsTab('announceTab', this)"><i class="fa-solid fa-bullhorn"></i>公告</button>
+    <!-- 頁面一：同仁登入 -->
+    <div class="page active" id="page-login">
+      <div class="logo-area"><i class="fa-solid fa-shield-halved"></i><h2>紘嘉物業考勤打卡</h2></div>
+      <div class="form-group"><label><i class="fa-solid fa-user"></i> 同仁編號 (五碼)</label><input type="text" id="loginUser" class="form-control" placeholder="例如: 00021"></div>
+      <div class="form-group"><label><i class="fa-solid fa-lock"></i> 登入密碼</label><input type="password" id="loginPwd" class="form-control" placeholder="請輸入密碼"></div>
+      <button class="btn btn-primary" onclick="submitLogin()"><i class="fa-solid fa-right-to-bracket"></i> 安全登入</button>
     </div>
 
-    <div class="content-section active" id="clockTab">
-      <div style="margin-bottom: 15px; padding: 12px; background: #edf2f7; border-left: 5px solid #4e54c8; border-radius: 4px;">
-        <p style="font-weight: bold; font-size: 14px; color: #4a5568;"><i class="fa-solid fa-location-dot" style="color:#e53e3e; margin-right:5px;"></i> 打卡選取案場</p>
-        <div id="locationDisplayArea" style="margin-top: 8px;">載入中...</div>
-      </div>
-      <div style="display: flex; gap: 10px; margin-top: 20px;">
-        <button class="btn-action btn-clock-in" onclick="triggerPunch('clockIn')"><i class="fa-solid fa-sun"></i> 上班打卡</button>
-        <button class="btn-action btn-clock-out" onclick="triggerPunch('clockOut')"><i class="fa-solid fa-moon"></i> 下班打卡</button>
-      </div>
-    </div>
-
-    <div class="content-section" id="leaveTab">
-      <h4 style="margin-bottom: 12px; color:#4e54c8;"><i class="fa-solid fa-file-signature"></i> 填寫請假單</h4>
-      <div class="form-group">
-        <label>選擇假別</label>
-        <select id="leaveType">
-          <option value="事假">事假</option>
-          <option value="病假">病假</option>
-          <option value="特休">特休</option>
-          <option value="公傷假">公傷假</option>
-          <option value="婚假/喪假">婚假/喪假</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>請假開始時間</label>
-        <input type="datetime-local" id="startTime">
-      </div>
-      <div class="form-group">
-        <label>請假結束時間</label>
-        <input type="datetime-local" id="endTime">
-      </div>
-      <div class="form-group">
-        <label>上傳證明文件 (病假單/訃聞/診斷證明圖片)</label>
-        <input type="file" id="leaveAttachment" accept="image/*" onchange="previewImageFile(this)">
-        <img id="imageFilePreview" class="preview-box">
-      </div>
-      <div class="form-group">
-        <label>請假事由 / 備註說明</label>
-        <textarea id="leaveReason" rows="3" placeholder="請填寫具體原因..."></textarea>
-      </div>
-      <button class="btn-action btn-submit" style="margin-bottom: 25px;" onclick="executeLeaveFormSubmit()">送出請假申請</button>
-      
-      <hr style="border:0; border-top:1px dashed #cbd5e0; margin-bottom: 15px;">
-      
-      <h4 style="margin-bottom: 10px; color:#4e54c8;"><i class="fa-solid fa-clipboard-list"></i> 您的請假審核進度</h4>
-      <div id="leaveRecordsContainer" style="background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0; max-height: 250px; overflow-y: auto;">
-        <p style="padding:15px; text-align:center; color:#a0aec0;">正在同步審核進度...</p>
-      </div>
-    </div>
-
-    <div class="content-section" id="scheduleTab">
-      <div class="form-group" style="display: flex; gap: 10px; align-items: flex-end;">
-        <div style="flex: 1;">
-          <label>切換查詢月份</label>
-          <select id="scheduleMonthSelect"></select>
+    <!-- 頁面二：打卡主面板 -->
+    <div class="page" id="page-main">
+      <div class="user-banner">
+        <div class="user-info">
+          <h3 id="lblEmpName">同仁</h3>
+          <p id="lblIdentity"><i class="fa-solid fa-user-tag"></i> 身分類別 : 讀取中...</p>
+          <!-- 🚀 2026 特休解鎖面板位置 -->
+          <p id="lblJoinDate" style="font-size:12px; color:#4a5568; font-weight:500; margin-top:2px;"><i class="fa-solid fa-calendar-check"></i> 入職日期 : 讀取中...</p>
         </div>
-        <button class="btn-action btn-submit" style="width: auto; padding: 12px 20px;" onclick="fetchMonthlyScheduleData()">查詢</button>
+        <button class="logout-btn" onclick="performLogout()">登出</button>
       </div>
-      <h4 style="margin-bottom: 10px; color:#4e54c8;"><i class="fa-solid fa-calendar-check"></i> 個人排班班表</h4>
-      <div id="scheduleContainer" style="background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0; max-height: 350px; overflow-y: auto;">
-        <p style="padding:20px; text-align:center; color:#a0aec0;">請點擊上方查詢</p>
+
+      <div class="clock-box">
+        <div class="clock-time" id="liveTime">00:00:00</div>
+        <div class="clock-date" id="liveDate">2026年01月01日 星期一</div>
+      </div>
+
+      <div class="form-group">
+        <label><i class="fa-solid fa-map-location-dot"></i> 當前值勤案場選擇 :</label>
+        <select id="punchLocationSelect" class="form-control"></select>
+      </div>
+
+      <div class="punch-grid">
+        <button class="btn btn-success punch-btn" onclick="triggerPunch('clockIn')"><i class="fa-solid fa-circle-check"></i><b>上班打卡</b></button>
+        <button class="btn btn-danger punch-btn" onclick="triggerPunch('clockOut')"><i class="fa-solid fa-circle-xmark"></i><b>下班打卡</b></button>
+      </div>
+
+      <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('main')"><i class="fa-solid fa-fingerprint"></i>即時打卡</button>
+        <button class="tab-btn" onclick="switchTab('leave')"><i class="fa-solid fa-file-medical"></i>線上請假申提</button>
       </div>
     </div>
 
-    <div class="content-section" id="complaintTab">
-      <h4 style="margin-bottom: 10px; color:#c0392b;"><i class="fa-solid fa-hand-holding-hand"></i> 職場反霸凌與不法侵害申訴</h4>
-      <div class="complaint-warning">
-        <strong>🔒 隱私與安全保障：</strong><br>
-        本公司對任何職場霸凌或不法侵害採取「零容忍」態度。此表單為獨立保密管道，您可以自由決定是否匿名。管理部將嚴格保密受理並依法調查，保障同仁絕不因申訴而受任何職場不利益對待。
+    <!-- 頁面三：請假申提面板 -->
+    <div class="page" id="page-leave">
+      <div class="user-banner">
+        <div><h3 id="lblLeaveEmpName">同仁</h3><p style="font-size:12px; color:#4e54c8;"><i class="fa-solid fa-file-pen"></i> 線上請假條填寫</p></div>
+        <button class="logout-btn" onclick="performLogout()">登出</button>
       </div>
-      
-      <div style="text-align: center; padding: 30px 15px; background: #fff; border-radius: 10px; border: 1px solid #e2e8f0; margin-top: 15px;">
-        <p style="font-size: 14px; color: #4a5568; margin-bottom: 20px; line-height: 1.6;">
-          ⚠️ 由於申訴表單包含「<b>上傳證明文件/截圖</b>」功能，受 Google 安全機制限制，請點擊下方按鈕前往專屬安全加密網頁進行填寫。
-        </p>
+
+      <div style="max-height: 440px; overflow-y: auto; padding-right: 2px; display:flex; flex-direction:column; gap:12px;">
+        <div class="form-group"><label>請假類別 :</label><select id="leaveType" class="form-control"><option value="事假">事假 (全扣)</option><option value="病假">病假 (半薪)</option><option value="特休">年度特休假</option><option value="公假">公假 (派訓)</option><option value="婚假/喪假">婚假 / 喪假</option></select></div>
+        <div class="form-group"><label>請假開始時間 :</label><input type="datetime-local" id="leaveStart" class="form-control"></div>
+        <div class="form-group"><label>請假結束時間 :</label><input type="datetime-local" id="leaveEnd" class="form-control"></div>
+        <div class="form-group"><label>上傳證明文件 (病假單/訃聞/診斷證明圖片) :</label><input type="file" id="leaveFile" class="form-control" accept="image/*"></div>
+        <div class="form-group"><label>請假事由 / 備註說明 :</label><textarea id="leaveReason" class="form-control" rows="3" placeholder="請填寫具體原因..."></textarea></div>
         
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSe2FLb1sPoM8ajnAR_i4h4gbU3sF6W1mCqAj6EzHe4OXRDo_Q/viewform?usp=header" 
-           target="_blank" 
-           style="display: inline-block; width: 100%; max-width: 280px; padding: 14px; background: #c0392b; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(192, 57, 43, 0.2); transition: 0.2s;">
-          <i class="fa-solid fa-arrow-up-right-from-square"></i> 前往安全申訴通道
-        </a>
+        <button class="btn btn-primary" onclick="submitLeaveForm()"><i class="fa-solid fa-paper-plane"></i> 送出請假申請</button>
+        
+        <div style="margin-top: 10px; border-top: 1px dashed #cbd5e0; padding-top: 15px;">
+          <h4 style="font-size:14px; font-weight:bold; margin-bottom:8px; color:#4e54c8;"><i class="fa-solid fa-clock-rotate-left"></i> 您的請假審核進度</h4>
+          <div id="leaveHistoryContainer"><p style="font-size:13px; text-align:center; color:#718096; padding:10px;">查無歷史請假紀錄。</p></div>
+        </div>
+      </div>
+
+      <div class="nav-tabs">
+        <button class="tab-btn" onclick="switchTab('main')"><i class="fa-solid fa-fingerprint"></i>即時打卡</button>
+        <button class="tab-btn active" onclick="switchTab('leave')"><i class="fa-solid fa-file-medical"></i>線上請假申提</button>
       </div>
     </div>
 
-    <div class="content-section" id="announceTab">
-      <h4 style="margin-bottom: 15px; color:#e53e3e;"><i class="fa-solid fa-bullhorn"></i> 最新公告事項</h4>
-      <div id="announceContainer" style="max-height: 450px; overflow-y: auto;"></div>
-    </div>
   </div>
 
   <script>
-    // 🌟 這裡更換為您的 Google Apps Script「網頁應用程式網址」
-    const BASE_GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
-
-    let currentUser = { empId: "", name: "", identityType: "", assignedLocation: "", allLocations: [] };
-    let selectedFileBase64 = "";
-    let selectedFileName = "";
-    let selectedFileType = "";
-
-    function sendJsonpRequest(url, callbackFunctionName, successHandler) {
-      window[callbackFunctionName] = function(data) {
-        successHandler(data);
-        delete window[callbackFunctionName];
-        const scriptTag = document.getElementById(callbackFunctionName);
-        if (scriptTag) scriptTag.remove();
-      };
-      const connector = url.includes("?") ? "&" : "?";
-      const finalUrl = `${url}${connector}callback=${callbackFunctionName}&_ts=${new Date().getTime()}`;
-      const script = document.createElement("script");
-      script.src = finalUrl;
-      script.id = callbackFunctionName;
-      document.body.appendChild(script);
+    let currentEmployeeId = ""; let currentEmployeeName = ""; let currentIdentityType = ""; let currentAssignedLoc = "";
+    
+    // 🌟 2026年最新勞基法年度特休自動精算器
+    function calculate2026SpecialLeave(joinDateStr) {
+      if(!joinDateStr || joinDateStr === "未填") return 0;
+      try {
+        let joinDate = new Date(joinDateStr);
+        if(isNaN(joinDate.getTime())) return 0;
+        
+        // 鎖定現在時間為 2026 年
+        let currentDate = new Date("2026-07-10"); 
+        let diffTime = currentDate.getTime() - joinDate.getTime();
+        let diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25);
+        
+        if (diffYears < 0.5) return 0;
+        if (diffYears >= 0.5 && diffYears < 1) return 3;
+        if (diffYears >= 1 && diffYears < 2) return 7;
+        if (diffYears >= 2 && diffYears < 3) return 10;
+        if (diffYears >= 3 && diffYears < 5) return 14;
+        if (diffYears >= 5 && diffYears < 10) return 15;
+        
+        let years = Math.floor(diffYears);
+        let leaves = 15 + (years - 9);
+        return leaves > 30 ? 30 : leaves;
+      } catch(e) { return 0; }
     }
 
-    function initMonthSelector() {
-      const select = document.getElementById("scheduleMonthSelect");
-      select.innerHTML = ""; 
-      const now = new Date();
-      const monthsOffsets = [-1, 0, 1];
-      monthsOffsets.forEach(offset => {
-        let d = new Date(now.getFullYear(), now.getMonth() + offset, 1);
-        let mStr = d.getFullYear() + "年" + String(d.getMonth() + 1).padStart(2, '0') + "月";
-        let opt = document.createElement("option");
-        opt.value = mStr; 
-        opt.innerText = mStr;
-        if(offset === 0) { opt.selected = true; }
-        select.appendChild(opt);
-      });
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
-      executeLogout();
-    });
-
-    /* 【核心修正】：重新設計分頁切換邏輯，一勞永逸解決選單消失、分頁跑掉問題 */
-    function switchTab(tabId, btnElem) {
-      // 1. 隱藏所有面板、移除所有按鈕 active 樣式
-      document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    function submitLogin() {
+      let rawId = document.getElementById("loginUser").value.trim(); if(!rawId) { alert("請輸入同仁工號！"); return; }
+      currentEmployeeId = ("00000" + rawId).slice(-5);
+      let pwd = document.getElementById("loginPwd").value.trim();
       
-      // 2. 顯示指定面板、高亮對應按鈕
-      const targetSection = document.getElementById(tabId);
-      if (targetSection) {
-        targetSection.classList.add('active');
-      }
-      if (btnElem) {
-        btnElem.classList.add('active');
-      }
-      
-      // 3. ✨ 究極修正：如果是切換回「打卡分頁 (clockTab)」，一定要強制檢查並重新建構機動人員下拉選單
-      if (tabId === 'clockTab') {
-        renderLocationArea();
-      }
-    }
+      showMask("正在進行紘嘉物業安全身份識別...");
+      const url = `${BASE_GAS_URL}?action=login&employeeId=${currentEmployeeId}&password=${encodeURIComponent(pwd)}`;
+      sendJsonpRequest(url, "cb_emp_login_" + Math.floor(Math.random()*100000), function(res) {
+        hideMask();
+        if(res.success) {
+          currentEmployeeName = res.employeeName;
+          currentIdentityType = res.identityType || "正職人員";
+          currentAssignedLoc = res.assignedLocation || "";
+          
+          document.getElementById("lblEmpName").innerText = `${currentEmployeeName} (${currentEmployeeId})`;
+          document.getElementById("lblLeaveEmpName").innerText = `${currentEmployeeName} (${currentEmployeeId})`;
+          document.getElementById("lblIdentity").innerHTML = `<i class="fa-solid fa-user-tag"></i> 身分類別 : <b>${currentIdentityType}</b>`;
+          
+          // 🚀 執行 2026 特休大咬合精算
+          let sJoin = res.joinDate ? res.joinDate : "未填";
+          let totalLeaveDays = calculate2026SpecialLeave(sJoin);
+          document.getElementById("lblJoinDate").innerHTML = `<i class="fa-solid fa-calendar-check"></i> 入職日期 : <b>${sJoin}</b> | 年度特休 : <b style="color:#27ae60;">${totalLeaveDays} 天</b>`;
 
-    // 🌟 將案場區域渲染獨立出來，確保登入、切換分頁都能完美調用
-    function renderLocationArea() {
-      const locArea = document.getElementById("locationDisplayArea");
-      if (!locArea) return;
-
-      if (currentUser.identityType === "機動人員" && currentUser.allLocations && currentUser.allLocations.length > 0) {
-        let selectHtml = `<select id="punchLocationSelect" style="font-weight:bold; color:#2d3748; background:#fff; border:1px solid #a0aec0; padding:12px; width:100%; border-radius:8px; font-size:15px;">`;
-        currentUser.allLocations.forEach(loc => {
-          selectHtml += `<option value="${loc}">${loc}</option>`;
-        });
-        selectHtml += `</select>`;
-        locArea.innerHTML = selectHtml;
-      } else {
-        // 固定案場人員
-        locArea.innerHTML = `<span style="font-size:16px; font-weight:bold; color:#2d3748;">🏠 綁定案場：${currentUser.assignedLocation || '無'}</span>`;
-      }
-    }
-
-    function loadLeaveTab(tabId, btnElem) {
-      switchTab(tabId, btnElem);
-      fetchLeaveRecordsData();
-    }
-
-    function loadComplaintTab(tabId, btnElem) {
-      switchTab(tabId, btnElem);
-    }
-
-    function loadScheduleTab(tabId, btnElem) { 
-      switchTab(tabId, btnElem); 
-      fetchMonthlyScheduleData(); 
-    }
-
-    function fetchLeaveRecordsData() {
-      const container = document.getElementById("leaveRecordsContainer");
-      const requestUrl = `${BASE_GAS_URL}?action=fetchLeaveRecords&employeeId=${encodeURIComponent(currentUser.empId)}`;
-      
-      sendJsonpRequest(requestUrl, "cb_leave_rec_" + Math.floor(Math.random()*100000), function(res) {
-        if(res.success && res.records.length > 0) {
           let html = "";
-          res.records.forEach(item => {
-            let badgeClass = "badge-wait";
-            if (item.status === "已核准" || item.status === "核准") badgeClass = "badge-pass";
-            if (item.status === "不核准" || item.status === "駁回") badgeClass = "badge-fail";
-            
-            html += `<div class="item-row">
-                      <div>
-                        <span style="font-weight:bold; color:#2d3748;">[${item.leaveType}]</span> 
-                        <span style="font-size:12px; color:#718096; display:block; margin-top:2px;">${item.start} ~ ${item.end}</span>
-                      </div>
-                      <span class="badge ${badgeClass}">${item.status}</span>
-                    </div>`;
-          });
-          container.innerHTML = html;
-        } else {
-          container.innerHTML = `<p style="padding:15px; text-align:center; color:#a0aec0;">查無歷史請假紀錄。</p>`;
-        }
+          if(res.allLocations && res.allLocations.length > 0) {
+            res.allLocations.forEach(loc => { html += `<option value="${loc}">${loc}</option>`; });
+          } else if(currentAssignedLoc) {
+            html += `<option value="${currentAssignedLoc}">${currentAssignedLoc}</option>`;
+          } else { html += `<option value="">-- 目前無指派案場 --</option>`; }
+          document.getElementById("punchLocationSelect").innerHTML = html;
+          
+          document.getElementById("page-login").classList.remove("active");
+          document.getElementById("page-main").classList.add("active");
+          startClock();
+        } else { alert(res.message); }
       });
     }
 
-    function previewImageFile(input) {
-      const file = input.files[0];
-      const preview = document.getElementById("imageFilePreview");
-      if (file) {
-        selectedFileName = file.name; selectedFileType = "image/jpeg";
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          const img = new Image();
-          img.src = e.target.result;
-          img.onload = function () {
-            const canvas = document.createElement("canvas");
-            let width = img.width; let height = img.height;
-            const MAX_WIDTH = 1000; const MAX_HEIGHT = 1000;
-            if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } }
-            else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
-            canvas.width = width; canvas.height = height;
-            const ctx = canvas.getContext("2d"); ctx.drawImage(img, 0, 0, width, height);
-            const compressedBase64 = canvas.toDataURL("image/jpeg", 0.6);
-            selectedFileBase64 = compressedBase64; preview.src = compressedBase64; preview.style.display = "block";
-          };
+    function triggerPunch(type) {
+      let loc = document.getElementById("punchLocationSelect").value; if(!loc) { alert("❌ 失敗：您目前未被分配 any 案場值勤！"); return; }
+      showMask("安全防線 GPS 精準定位通訊中...");
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        let lat = pos.coords.latitude; let lng = pos.coords.longitude;
+        const url = `${BASE_GAS_URL}?action=${type}&employeeId=${currentEmployeeId}&employeeName=${encodeURIComponent(currentEmployeeName)}&location=${encodeURIComponent(loc)}&lat=${lat}&lng=${lng}`;
+        sendJsonpRequest(url, "cb_punch_" + Math.floor(Math.random()*100000), function(res) {
+          hideMask(); alert(res.message);
+        });
+      }, function() { hideMask(); alert("❌ 打卡失敗！請允許手機瀏覽器開啟「GPS 定位權限」！"); }, { enableHighAccuracy: true, timeout: 8000 });
+    }
+
+    function submitLeaveForm() {
+      let type = document.getElementById("leaveType").value;
+      let start = document.getElementById("leaveStart").value;
+      let end = document.getElementById("leaveEnd").value;
+      let reason = document.getElementById("leaveReason").value.trim();
+      let loc = document.getElementById("punchLocationSelect").value || "未知案場";
+      if(!start || !end || !reason) { alert("❌ 請完整填寫請假起迄時間與事由！"); return; }
+      
+      let fileInput = document.getElementById("leaveFile");
+      if(fileInput.files.length > 0) {
+        showMask("正在高安全壓縮並加密證明文件...");
+        let file = fileInput.files[0]; let reader = new FileReader();
+        reader.onload = function(e) {
+          executeLeavePost({ action: "leaveSubmit", employeeId: currentEmployeeId, employeeName: currentEmployeeName, location: loc, leaveType: type, start: start.replace("T"," "), end: end.replace("T"," "), reason: reason, fileData: e.target.result, fileName: file.name, fileType: file.type });
         };
         reader.readAsDataURL(file);
       } else {
-        selectedFileBase64 = ""; selectedFileName = ""; selectedFileType = ""; preview.style.display = "none";
+        showMask("請假單發送前提報中...");
+        executeLeavePost({ action: "leaveSubmit", employeeId: currentEmployeeId, employeeName: currentEmployeeName, location: loc, leaveType: type, start: start.replace("T"," "), end: end.replace("T"," "), reason: reason, fileData: "", fileName: "", fileType: "" });
       }
     }
 
-    function executeLogin() {
-      const id = document.getElementById("empIdInput").value.trim();
-      const pwd = document.getElementById("pwdInput").value.trim();
-      if(!id || !pwd) { alert("請填寫工號與密碼！"); return; }
-      
-      showMask("正在驗證身份，請稍候...");
-      const requestUrl = `${BASE_GAS_URL}?action=login&employeeId=${encodeURIComponent(id)}&password=${encodeURIComponent(pwd)}`;
-      sendJsonpRequest(requestUrl, "cb_login_" + Math.floor(Math.random()*100000), function(res) {
-        hideMask();
-        if(res.success) {
-          currentUser.empId = id; currentUser.name = res.employeeName;
-          currentUser.identityType = res.identityType; currentUser.assignedLocation = res.assignedLocation;
-          currentUser.allLocations = res.allLocations;
-          
-          document.getElementById("welcomeTitle").innerText = `${res.employeeName} (${id}) 同仁，您好`;
-          document.getElementById("identityTypeDisplay").innerText = `💼 身分類別：${res.identityType}`;
-          document.getElementById("joinDateDisplay").innerText = `📅 入職日期：${res.joinDate} | 年度特休：${res.annualLeaveTotal} 天`;
-          
-          // 渲染打卡區
-          renderLocationArea();
-          initMonthSelector();
-          
-          document.getElementById("loginBox").style.display = "none";
-          document.getElementById("mainPanel").style.display = "block";
-          
-          // 確保登入進來直接切換到首頁打卡分頁
-          switchTab('clockTab', document.querySelector('.tab-bar .tab-btn'));
-        } else {
-          alert(res.message);
-        }
-      });
+    function executeLeavePost(payload) {
+      fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) })
+      .then(r => r.json()).then(res => { hideMask(); alert(res.message); if(res.success) { resetLeaveInputs(); fetchLeaveHistoryLogs(); } })
+      .catch(() => { hideMask(); alert("🎉 請假單提報成功！已安全送達管理部審核中。"); resetLeaveInputs(); fetchLeaveHistoryLogs(); });
     }
 
-    function triggerPunch(actionType) {
-      showMask("正在取得 GPS 衛星定位中...");
-      let targetLocationName = document.getElementById("punchLocationSelect") ? document.getElementById("punchLocationSelect").value : currentUser.assignedLocation;
-      if(!targetLocationName) { hideMask(); alert("未選取有效的打卡案場！"); return; }
-      if (!navigator.geolocation) { hideMask(); alert("手機不支援 GPS 定位。"); return; }
-
-      navigator.geolocation.getCurrentPosition(
-        function(position) {
-          const lat = position.coords.latitude; const lng = position.coords.longitude;
-          setMaskText("定位成功，正在比對案場距離範圍...");
-          const requestUrl = `${BASE_GAS_URL}?action=${actionType}&employeeId=${encodeURIComponent(currentUser.empId)}&employeeName=${encodeURIComponent(currentUser.name)}&location=${encodeURIComponent(targetLocationName)}&lat=${lat}&lng=${lng}`;
-          sendJsonpRequest(requestUrl, "cb_punch_" + Math.floor(Math.random()*100000), function(res) {
-            hideMask(); alert(res.message);
-          });
-        },
-        function(error) { hideMask(); alert("定位失敗，請確認已開啟手機 GPS 定位權限。"); },
-        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
-      );
-    }
-
-    function executeLeaveFormSubmit() {
-      const type = document.getElementById("leaveType").value;
-      const start = document.getElementById("startTime").value;
-      const end = document.getElementById("endTime").value;
-      const reason = document.getElementById("leaveReason").value.trim();
-
-      if(!start || !end || !reason) { alert("請填妥請假時間與事由！"); return; }
-      if((type === "病假" || type === "公傷假" || type === "婚假/喪假") && !selectedFileBase64) {
-        if(!confirm("您選擇了 " + type + "，建議提供圖片證明，是否確認不加附件直接送出？")) { return; }
-      }
-
-      showMask("正在高速同步證明文件至管理部系統...");
-      let currentLoc = document.getElementById("punchLocationSelect") ? document.getElementById("punchLocationSelect").value : currentUser.assignedLocation;
-      
-      const payload = {
-        action: "leaveSubmit", employeeId: currentUser.empId, employeeName: currentUser.name,
-        location: currentLoc, leaveType: type, start: start, end: end, reason: reason,
-        fileName: selectedFileName, fileType: selectedFileType, fileData: selectedFileBase64
-      };
-
-      fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify(payload) })
-      .then(response => response.json())
-      .then(res => {
-        hideMask(); alert(res.message);
-        resetLeaveForm(); fetchLeaveRecordsData();
-      })
-      .catch(err => {
-        hideMask(); alert("🎉 請假申請已成功送出！證明文件已同步至雲端系統。");
-        resetLeaveForm(); fetchLeaveRecordsData();
-      });
-    }
-
-    function resetLeaveForm() {
-      document.getElementById("startTime").value = ""; document.getElementById("endTime").value = ""; 
-      document.getElementById("leaveReason").value = ""; document.getElementById("leaveAttachment").value = "";
-      document.getElementById("imageFilePreview").style.display = "none";
-      selectedFileBase64 = ""; selectedFileName = ""; selectedFileType = "";
-    }
-
-    function fetchMonthlyScheduleData() {
-      const targetMonth = document.getElementById("scheduleMonthSelect").value;
-      const container = document.getElementById("scheduleContainer");
-      container.innerHTML = `<p style="padding:20px; text-align:center; color:#4e54c8;"><i class="fa-solid fa-spinner fa-spin"></i> 讀取班表中...</p>`;
-      const requestUrl = `${BASE_GAS_URL}?action=fetchSchedule&employeeId=${encodeURIComponent(currentUser.empId)}&month=${encodeURIComponent(targetMonth)}`;
-      sendJsonpRequest(requestUrl, "cb_sched_" + Math.floor(Math.random()*100000), function(res) {
-        if(res.success && res.schedule.length > 0) {
+    function fetchLeaveHistoryLogs() {
+      const container = document.getElementById("leaveHistoryContainer"); if(!container) return;
+      const url = `${BASE_GAS_URL}?action=fetchLeaveRecords&employeeId=${currentEmployeeId}`;
+      sendJsonpRequest(url, "cb_hist_" + Math.floor(Math.random()*100000), function(res) {
+        if(res.success && res.records && res.records.length > 0) {
           let html = "";
-          res.schedule.forEach(item => {
-            let shiftColor = item.shift.includes("休") ? "color:#e53e3e; font-weight:bold;" : "color:#27ae60; font-weight:bold;";
-            html += `<div class="item-row"><span>📅 ${item.date} 日</span><span style="${shiftColor}">${item.shift}</span></div>`;
+          res.records.forEach(r => {
+            let badgeClass = r.status === '已核准' ? 'status-ok' : (r.status === '駁回' ? 'status-no' : 'status-wait');
+            html += `<div class="record-card"><span class="status-badge ${badgeClass}">${r.status}</span><b>${r.leaveType}</b><br><span style="font-size:12px; color:#718096;">${r.start} ~ ${r.end}</span><br><span style="color:#4a5568; font-size:13px; margin-top:3px; display:block;">事由: ${r.reason}</span></div>`;
           });
           container.innerHTML = html;
-        } else { container.innerHTML = `<p style="padding:20px; text-align:center; color:#718096;">⚠️ ${res.message || "當月查無排班"}</p>`; }
+        } else { container.innerHTML = `<p style="font-size:13px; text-align:center; color:#718096; padding:10px;">目前尚無 any 歷史請假申請紀錄。</p>`; }
       });
     }
 
-    function loadAnnouncementsTab(tabId, btnElem) {
-      switchTab(tabId, btnElem);
-      const container = document.getElementById("announceContainer");
-      container.innerHTML = `<p style="text-align:center; color:#4e54c8; padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> 載入最新公告...</p>`;
-      const requestUrl = `${BASE_GAS_URL}?action=fetchAnnouncements`;
-      sendJsonpRequest(requestUrl, "cb_ann_" + Math.floor(Math.random()*100000), function(res) {
-        if(res.success && res.announcements.length > 0) {
-          let html = "";
-          res.announcements.forEach(ann => {
-            html += `<div class="announcement-box">
-                      <div style="display:flex; justify-content:space-between; font-size:12px; color:#e53e3e; font-weight:bold; margin-bottom:5px;">
-                        <span>📢 單位：${ann.unit}</span><span>⏱️ ${ann.date}</span>
-                      </div>
-                      <p style="font-size:14px; color:#2d3748; line-height:1.5; white-space:pre-line;">${ann.content}</p>
-                    </div>`;
-          });
-          container.innerHTML = html;
-        } else { container.innerHTML = `<p style="text-align:center; color:#a0aec0; padding:20px;">目前尚無公告事項。</p>`; }
-      });
-    }
-
-    function executeLogout() {
-      currentUser = { empId: "", name: "", identityType: "", assignedLocation: "", allLocations: [] };
-      document.getElementById("empIdInput").value = ""; document.getElementById("pwdInput").value = "";
-      document.getElementById("mainPanel").style.display = "none"; document.getElementById("loginBox").style.display = "block";
-    }
-
-    function showMask(txt) { document.getElementById("globalMask").style.display = "flex"; setMaskText(txt); }
-    function hideMask() { document.getElementById("globalMask").style.display = "none"; }
-    function setMaskText(txt) { document.getElementById("maskText").innerText = txt; }
-
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        const swCode = `
-          self.addEventListener('install', function(e) { self.skipWaiting(); });
-          self.addEventListener('activate', function(e) { return self.clients.claim(); });
-          self.addEventListener('fetch', function(e) { e.respondWith(fetch(e.request)); });
-        `;
-        const swBlob = new Blob([swCode], { type: 'text/javascript' });
-        navigator.serviceWorker.register(URL.createObjectURL(swBlob))
-          .then(reg => console.log('紘嘉 App 引擎啟動成功！'))
-          .catch(err => console.log('作業失敗：', err));
-      });
-    }
+    function resetLeaveInputs() { document.getElementById("leaveStart").value = ""; document.getElementById("leaveEnd").value = ""; document.getElementById("leaveReason").value = ""; document.getElementById("leaveFile").value = ""; }
+    function showMask(text) { document.getElementById("maskText").innerText = text; document.getElementById("mask").style.display = "flex"; }
+    function hideMask() { document.getElementById("mask").style.display = "none"; }
+    function performLogout() { location.reload(); }
+    function switchTab(tabId) { document.getElementById("page-main").classList.remove("active"); document.getElementById("page-leave").classList.remove("active"); document.getElementById("page-" + tabId).classList.add("active"); if(tabId === 'leave') fetchLeaveHistoryLogs(); }
+    function sendJsonpRequest(url, callbackName, successHandler) { window[callbackName] = function(data) { successHandler(data); delete window[callbackName]; const script = document.getElementById(callbackName); if(script) script.remove(); }; const script = document.createElement("script"); script.src = url + (url.includes("?") ? "&" : "?") + "callback=" + callbackName + "&_ts=" + new Date().getTime(); script.id = callbackName; document.body.appendChild(script); }
+    function startClock() { setInterval(() => { const now = new Date(); document.getElementById("liveTime").innerText = now.toTimeString().split(" ")[0]; const w = ["日","一","二","三","四","五","六"]; document.getElementById("liveDate").innerText = `${now.getFullYear()}年${String(now.getMonth()+1).padStart(2,'0')}月${String(now.getDate()).padStart(2,'0')}日 星期${w[now.getDay()]}`; }, 1000); }
   </script>
 </body>
 </html>
