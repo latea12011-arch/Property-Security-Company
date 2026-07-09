@@ -232,13 +232,10 @@
           <label style="font-size:12px; font-weight:bold;">3. 主委聯絡電話：</label><input type="text" id="detPhone" class="form-control" placeholder="請輸入電話">
           <label style="font-size:12px; font-weight:bold;">4. 社區總總人數 / 戶數：</label><input type="text" id="detResidents" class="form-control" placeholder="例如: 240戶 / 600人">
           <label style="font-size:12px; font-weight:bold;">5. 目前管理屆數：</label><input type="text" id="detTerm" class="form-control" placeholder="例如: 第15屆">
-          <label style="font-size:12px; font-weight:bold;">6. 區權會日期：</label>
-          <input type="text" id="detZoneMeeting" class="form-control" placeholder="例如: 2026-07-09 下午">
+          <label style="font-size:12px; font-weight:bold;">6. 區權會日期：</label><input type="text" id="detZoneMeeting" class="form-control" placeholder="例如: 2026-07-09 下午">
           
-          <label style="font-size:12px; font-weight:bold; color:#4e54c8;">8. 紘嘉合約【開始日】：</label>
-          <input type="date" id="detContractStart" class="form-control">
-          <label style="font-size:12px; font-weight:bold; color:#e53e3e;">9. 紘嘉合約【到期日】：</label>
-          <input type="date" id="detContractEnd" class="form-control">
+          <label style="font-size:12px; font-weight:bold; color:#4e54c8;">8. 紘嘉合約【開始日】：</label><input type="date" id="detContractStart" class="form-control">
+          <label style="font-size:12px; font-weight:bold; color:#e53e3e;">9. 紘嘉合約【到期日】：</label><input type="date" id="detContractEnd" class="form-control">
 
           <label style="font-size:12px; font-weight:bold;">7. 每月固定例會時間：</label><input type="text" id="detRegularMeeting" class="form-control" placeholder="例如: 每月第一個週六 09:30">
           <button class="btn btn-success" style="width: 100%; padding:12px; font-weight: bold;" onclick="saveLocationDetailData()"><i class="fa-solid fa-floppy-disk"></i> 儲存案場與合約防線</button>
@@ -465,9 +462,13 @@
           const elSal = document.getElementById("salEmpSelect"); if(elSal) elSal.innerHTML = html;
           const elResig = document.getElementById("resigEmpSelect"); if(elResig) elResig.innerHTML = html;
           
-          let dlHtml = `<option value="">-- 請選擇要維護資料的案場 --</option>`;
-          locNames.forEach(name => { dlHtml += `<option value="${name}">${name}</option>`; });
-          const elDetLoc = document.getElementById("detailLocSelect"); if(elDetLoc) elDetLoc.innerHTML = dlHtml;
+          // 🌟 智慧防當線路：改用最死板安全的防呆判定，絕不允許找不到元件而讓 JS 斷電！
+          const elDetLoc = document.getElementById("detailLocSelect"); 
+          if(elDetLoc) {
+            let dlHtml = `<option value="">-- 請選擇要維護資料的案場 --</option>`;
+            locNames.forEach(name => { dlHtml += `<option value="${name}">${name}</option>`; });
+            elDetLoc.innerHTML = dlHtml;
+          }
 
           const elPermSelect = document.getElementById("permTargetAdminSelect");
           if(elPermSelect) {
@@ -476,14 +477,20 @@
             elPermSelect.innerHTML = permHtml;
           }
           
-          let lHtml = `<option value="">-- 請選擇指定要下載的案場 --</option>`;
-          locNames.forEach(name => { lHtml += `<option value="${name}">${name}</option>`; });
-          const elExpLoc = document.getElementById("exportLocationSelect"); if(elExpLoc) lExpLoc.innerHTML = lHtml;
+          const elExpLoc = document.getElementById("exportLocationSelect");
+          if(elExpLoc) {
+            let lHtml = `<option value="">-- 請選擇指定要下載的案場 --</option>`;
+            locNames.forEach(name => { lHtml += `<option value="${name}">${name}</option>`; });
+            elExpLoc.innerHTML = lHtml;
+          }
           
           renderAdminLists(res);
         }
+        // ⚡ 絕不斷電大突破：不論上面塞名單成不成功，月份初始化一律在此暢通執行！
         initAdminMonthSelector();
-        if(document.getElementById("btn-permissionMatrixSection") && document.getElementById("btn-permissionMatrixSection").style.display !== "none") {
+        
+        const elPermSec = document.getElementById("permissionMatrixSection");
+        if(elPermSec && elPermSec.style.display !== "none") {
           loadCloudPermissionsMatrix();
         }
       });
@@ -537,11 +544,10 @@
           let html = "";
           if(globalLocDetailsCache.length > 0) {
             globalLocDetailsCache.forEach(d => {
-              let shortZoneTime = cleanDateStringToShort(d.zoneMeeting);
               let shortContractStart = cleanDateStringToShort(d.contractStart);
               let shortContractEnd = cleanDateStringToShort(d.contractEnd);
 
-              // 🌟 終極修正：補齊 onclick 觸發時呼叫的所有對齊變數，徹底破除 JavaScript 斷電崩潰！
+              // 🎯 100% 完整變數包覆，解決 onclick 引發的 SyntaxError 斷電 Bug
               html += `<tr>
                 <td><b>${d.name}</b></td>
                 <td>${d.chairperson || '--'}</td>
