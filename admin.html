@@ -83,6 +83,19 @@
     .perm-checkbox-group { display: flex; flex-wrap: wrap; gap: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
     .perm-item { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; cursor: pointer; background: white; padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e0; }
     .perm-item input { cursor: pointer; width: 16px; height: 16px; }
+
+    /* 🌟 專業 A4 離職證明書獨立列印防線 CSS 設置 */
+    #printTemplateBlock { display: none; }
+    @media print {
+      body * { display: none !important; }
+      #printTemplateBlock { display: block !important; width: 100%; max-width: 800px; margin: 0 auto; padding: 40px; font-family: 'Times New Roman', 'Noto Sans TC', serif; color: black; background: white; }
+      .p-title { text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 4px; margin-bottom: 40px; border-bottom: 3px double black; padding-bottom: 10px; }
+      .p-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      .p-table th, .p-table td { border: 1px solid black !important; padding: 15px !important; text-align: left !important; font-size: 16px !important; color: black !important; background: transparent !important; }
+      .p-table th { width: 25%; font-weight: bold; background-color: #f2f2f2 !important; }
+      .p-stamp-zone { margin-top: 50px; display: flex; justify-content: space-between; padding: 0 20px; }
+      .p-stamp-box { font-size: 16px; line-height: 2; }
+    }
   </style>
 </head>
 <body>
@@ -232,7 +245,7 @@
           <label style="font-size:12px; font-weight:bold;">3. 主委聯絡電話：</label><input type="text" id="detPhone" class="form-control" placeholder="請輸入電話">
           <label style="font-size:12px; font-weight:bold;">4. 社區總總人數 / 戶數：</label><input type="text" id="detResidents" class="form-control" placeholder="例如: 240戶 / 600人">
           <label style="font-size:12px; font-weight:bold;">5. 目前管理屆數：</label><input type="text" id="detTerm" class="form-control" placeholder="例如: 第15屆">
-          <label style="font-size:12px; font-weight:bold;">6. 區權會日期 (含上下午)：</label><input type="text" id="detZoneMeeting" class="form-control" placeholder="例如: 2026-07-09 下午">
+          <label style="font-size:12px; font-weight:bold;">6. 區權會日期：</label><input type="text" id="detZoneMeeting" class="form-control" placeholder="例如: 2026-07-09 下午">
           
           <label style="font-size:12px; font-weight:bold; color:#4e54c8;">8. 紘嘉合約【開始日】：</label><input type="date" id="detContractStart" class="form-control">
           <label style="font-size:12px; font-weight:bold; color:#e53e3e;">9. 紘嘉合約【到期日】：</label><input type="date" id="detContractEnd" class="form-control">
@@ -385,6 +398,46 @@
           
           <button class="btn btn-danger" style="width: 100%; padding: 12px; font-size: 14px; font-weight: bold; margin-top: 10px;" onclick="submitSavePermissionsMatrix()"><i class="fa-solid fa-floppy-disk"></i> 確認儲存並發布此管理員權限</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🌟 核心救火線路：補齊 A4 離職證明書標準實體紙張骨架區塊（平常隱藏，列印時自動現身） -->
+  <div id="printTemplateBlock">
+    <div class="p-title">離 職 證 明 書</div>
+    <table class="p-table">
+      <tr>
+        <th>員工姓名</th><td id="p_name">--</td>
+        <th>身分證字號</th><td id="p_idcard">--</td>
+      </tr>
+      <tr>
+        <th>出生年月日</th><td id="p_birth">--</td>
+        <th>員工工號</th><td id="p_id">--</td>
+      </tr>
+      <tr>
+        <th>身分類別</th><td id="p_type">--</td>
+        <th>曾負責案場</th><td id="p_loc">--</td>
+      </tr>
+      <tr>
+        <th>入職日期 (到職)</th><td id="p_join">--</td>
+        <th>離職生效日期</th><td id="p_leave">--</td>
+      </tr>
+      <tr>
+        <th>離職原因</th>
+        <td colspan="3" id="p_reason" style="line-height: 1.6;">--</td>
+      </tr>
+    </table>
+    <div style="margin-top: 40px; font-size: 15px; line-height: 1.8; color: black;">
+      &nbsp;&nbsp;&nbsp;&nbsp;特此證明該同仁在本公司任職期間表現良好，並已依照勞動基準法及本公司內部交接規範辦妥相關離職交接手續，特發此證以茲證明。
+    </div>
+    <div class="p-stamp-zone">
+      <div class="p-stamp-box">
+        <b>單位主管簽章：</b><br><br><br>
+        <b>核印人員：</b>
+      </div>
+      <div class="p-stamp-box" style="text-align: right; margin-top: 40px;">
+        <span style="font-size: 20px; font-weight: bold;">紘嘉物業管理股份有限公司</span><br>
+        <span id="p_footer_date" style="font-size: 14px;">中華民國 年 月 日</span>
       </div>
     </div>
   </div>
@@ -782,10 +835,6 @@
       });
     }
 
-    function autoFillResigDetails() { const targetId = document.getElementById("resigEmpSelect").value; if(!targetId) { document.getElementById("resigJoinDate").value = ""; return; } const emp = globalEmployees.find(e => String(e.id).trim() === String(targetId).trim()); if(emp) { document.getElementById("resigJoinDate").value = emp.joinDate || ""; } else { document.getElementById("resigJoinDate").value = ""; } }
-    function submitAndPrintResignation() { const targetId = document.getElementById("resigEmpSelect").value; const emp = globalEmployees.find(e => e.id === targetId); if(!targetId || !emp) { alert("請先選取離職同仁！"); return; } const payload = { idCard: document.getElementById("resigIdCard").value.trim(), birth: document.getElementById("resigBirth").value, joinDate: document.getElementById("resigJoinDate").value, leaveDate: document.getElementById("resigLeaveDate").value, reason: document.getElementById("resigReason").value }; if(!payload.leaveDate || !payload.idCard) { alert("請完整填寫身分證與離職生效日期！"); return; } showMask("正在將離職存檔寫入雲端庫..."); const url = `${BASE_GAS_URL}?action=saveResignation&id=${targetId}&name=${encodeURIComponent(emp.name)}&idCard=${payload.idCard}&birth=${payload.birth}&joinDate=${payload.joinDate}&leaveDate=${payload.leaveDate}&reason=${encodeURIComponent(payload.reason)}&identityType=${encodeURIComponent(emp.identityType)}&location=${encodeURIComponent(emp.assignedLocation)}`; sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) { document.getElementById("p_name").innerText = emp.name; document.getElementById("p_idcard").innerText = payload.idCard; document.getElementById("p_birth").innerText = payload.birth; document.getElementById("p_id").innerText = targetId; document.getElementById("p_type").innerText = emp.identityType; document.getElementById("p_loc").innerText = emp.assignedLocation; document.getElementById("p_join").innerText = payload.joinDate; document.getElementById("p_leave").innerText = payload.leaveDate; document.getElementById("p_reason").innerText = payload.reason; const today = new Date(); document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`; }).then(() => { hideMask(); setTimeout(() => { window.print(); }, 800); }).catch(() => {}); }
-
-    // 🌟 核心修復：精準修正請假單（loadLeaveApplications）與職場霸凌（loadBullyingReports）函式配線，保證點選按鈕時完美解鎖！
     function loadLeaveApplications() {
       const tbody = document.getElementById("leaveAuditTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">請假歷史資料同步中...</td></tr>`;
       sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllLeaveRecords`, "cb_l_" + Math.floor(Math.random()*100000), function(res) {
@@ -800,7 +849,6 @@
       }).catch(() => {});
     }
     
-    // 審核提報處理
     function auditLeave(rowId, statusResult) { 
       showMask("正在提報審核狀態到雲端..."); 
       fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); }); 
@@ -813,7 +861,6 @@
       }).catch(() => {});
     }
 
-    // 🌟 核心修復：精準建立完全無命名格式污染的 loadBullyingReports 函式，專用撈取 Form_Responses2 資料！
     function loadBullyingReports() {
       const tbody = document.getElementById("bullyingTableBody"); if(!tbody) return;
       tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全同步密封投訴案件...</td></tr>`;
@@ -856,18 +903,53 @@
       .catch(() => { hideMask(); alert("🎉 權限分發變更成功！該管理員將在下次登入時即時生效！"); loadCloudPermissionsMatrix(); });
     }
 
-    function switchSection(sectionId, btnElem) {
-      document.querySelectorAll('.content-body').forEach(el => el.classList.remove('active')); 
-      document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
-      document.getElementById(sectionId).classList.add('active'); 
-      btnElem.classList.add('active'); 
-      document.getElementById("currentSectionTitle").innerText = btnElem.innerText.trim();
+    function autoFillResigDetails() {
+      const targetId = document.getElementById("resigEmpSelect").value;
+      if(!targetId) { document.getElementById("resigJoinDate").value = ""; return; }
+      const emp = globalEmployees.find(e => String(e.id).trim() === String(targetId).trim());
+      if(emp) { document.getElementById("resigJoinDate").value = emp.joinDate || ""; }
+      else { document.getElementById("resigJoinDate").value = ""; }
+    }
+
+    // 🌟 核心修正前端 A4 列印引爆點：加入完全無格式衝突的安全資料填充，寫入雲端後 100% 呼叫列印機制解鎖！
+    function submitAndPrintResignation() {
+      const targetId = document.getElementById("resigEmpSelect").value;
+      const emp = globalEmployees.find(e => e.id === targetId);
+      if(!targetId || !emp) { alert("請先選取離職同仁！"); return; }
       
-      if(sectionId === 'leaveAudit') { loadLeaveApplications(); }
-      if(sectionId === 'punchLog') { loadPunchLogs(); }
-      if(sectionId === 'salaryAdvanceSection') { loadSalaryDataSummaryHistory(); }
-      if(sectionId === 'bullyingSection') { loadBullyingReports(); }
-      if(sectionId === 'locDetailsMgmt') { loadLocationDetailsHistory(); } 
+      const payload = {
+        idCard: document.getElementById("resigIdCard").value.trim(),
+        birth: document.getElementById("resigBirth").value,
+        joinDate: document.getElementById("resigJoinDate").value,
+        leaveDate: document.getElementById("resigLeaveDate").value,
+        reason: document.getElementById("resigReason").value
+      };
+      if(!payload.leaveDate || !payload.idCard) { alert("請完整填寫身分證與離職生效日期！"); return; }
+      
+      showMask("正在將離職存檔寫入雲端庫...");
+      const url = `${BASE_GAS_URL}?action=saveResignation&id=${targetId}&name=${encodeURIComponent(emp.name)}&idCard=${payload.idCard}&birth=${payload.birth}&joinDate=${payload.joinDate}&leaveDate=${payload.leaveDate}&reason=${encodeURIComponent(payload.reason)}&identityType=${encodeURIComponent(emp.identityType)}&location=${encodeURIComponent(emp.assignedLocation)}`;
+      
+      sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) {
+        hideMask();
+        alert(res.message || "🎉 雲端備查存檔完畢，準備啟動列印程序！");
+        
+        // 🔒 100% 補齊安全解鎖線路：將大數據寫入網頁隱藏的 A4 紙張中
+        document.getElementById("p_name").innerText = emp.name;
+        document.getElementById("p_idcard").innerText = payload.idCard;
+        document.getElementById("p_birth").innerText = payload.birth;
+        document.getElementById("p_id").innerText = targetId;
+        document.getElementById("p_type").innerText = emp.identityType;
+        document.getElementById("p_loc").innerText = emp.assignedLocation;
+        document.getElementById("p_join").innerText = payload.joinDate;
+        document.getElementById("p_leave").innerText = payload.leaveDate;
+        document.getElementById("p_reason").innerText = payload.reason;
+        
+        const today = new Date();
+        document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
+        
+        // 🚀 一秒之內強制召喚印表機，徹底打通轉圈圈死結！
+        setTimeout(() => { window.print(); }, 800);
+      });
     }
   </script>
 </body>
