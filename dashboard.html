@@ -82,6 +82,19 @@ a{text-decoration:none;color:inherit}
 <section class="card"><div class="card-title"><i class="fa-solid fa-clipboard-check"></i>今日打卡狀態</div><div class="grid-2"><div class="stat"><small>上班打卡</small><strong id="clockIn">尚未打卡</strong></div><div class="stat"><small>下班打卡</small><strong id="clockOut">尚未打卡</strong></div></div><div class="notice" id="statusNote" style="margin-top:10px;text-align:center">正在同步今日紀錄...</div></section>
 <section class="clock"><div class="clock-time" id="liveTime">00:00:00</div><div class="clock-date" id="liveDate">--</div></section>
 <section class="card"><div class="form-group"><label>目前值勤案場</label><select id="locationSelect" class="control"></select></div><div class="punch-grid"><button class="btn btn-success" onclick="punch('clockIn')"><i class="fa-solid fa-circle-check"></i>上班打卡</button><button class="btn btn-danger" onclick="punch('clockOut')"><i class="fa-solid fa-circle-xmark"></i>下班打卡</button></div></section>
+
+<section class="card" style="border:1px solid #fed7d7;background:#fffafa;">
+  <div class="card-title" style="color:#9b2c2c;">
+    <i class="fa-solid fa-shield-heart"></i>員工職場安全與反霸凌申訴
+  </div>
+  <p style="font-size:13px;line-height:1.6;color:#4a5568;margin-bottom:12px;">
+    如遇職場霸凌、不法侵害、騷擾、威脅或其他職場安全問題，可由此進入申訴表單。
+  </p>
+  <button class="btn btn-danger" onclick="openBullyingForm()">
+    <i class="fa-solid fa-gavel"></i>開啟反霸凌申訴通道
+  </button>
+</section>
+
 <section class="card"><div class="card-title"><i class="fa-solid fa-bullhorn"></i>公司最新公告</div><div class="notice" id="announcements">讀取中...</div></section>
 </main><nav class="bottom-nav">
 <a class="nav-item NAV_DASH active" href="dashboard.html"><i class="fa-solid fa-fingerprint"></i>打卡首頁</a>
@@ -167,5 +180,11 @@ async function loadLeaveSummary(){
  }catch(e){ annualLeavePending.textContent="特休資料讀取失敗"; }
 }
 function fmtDay(v){const n=Number(v||0);return Number.isInteger(n)?String(n):n.toFixed(2).replace(/0+$/,"").replace(/\.$/,"")}
+
+function openBullyingForm(){
+  const url="https://docs.google.com/forms/d/e/1FAIpQLSe2FLb1sPoM8ajnAR_i4h4gbU3sF6W1mCqAj6EzHe4OXRDo_Q/viewform?usp=header";
+  window.open(url,"_blank","noopener,noreferrer");
+}
+
 initLocations();startClock();loadHome();loadAnnouncements();loadLeaveSummary();
 </script></body></html>
