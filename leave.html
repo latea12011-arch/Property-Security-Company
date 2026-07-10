@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>請假申請｜紘嘉物業</title>
+<!doctype html><html lang="zh-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>請假申請｜紘嘉物業</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><style>
 
 *{box-sizing:border-box;margin:0;padding:0;font-family:"Noto Sans TC",sans-serif;-webkit-tap-highlight-color:transparent}
@@ -78,7 +78,7 @@ a{text-decoration:none;color:inherit}
 <div class="form-group"><label>開始時間</label><input type="datetime-local" id="leaveStart" class="control"></div><div class="form-group"><label>結束時間</label><input type="datetime-local" id="leaveEnd" class="control"></div>
 <div class="form-group"><label>證明文件</label><input type="file" id="leaveFile" class="control" accept="image/*"></div><div class="form-group"><label>請假事由</label><textarea id="leaveReason" class="control" rows="4" placeholder="請填寫具體原因"></textarea></div>
 <div class="duration" id="durationInfo"><i class="fa-solid fa-calculator"></i> 選擇起迄時間後自動估算。</div><button class="btn btn-primary" style="margin-top:12px" onclick="submitLeave()"><i class="fa-solid fa-paper-plane"></i>送出請假申請</button></section>
-<section class="card"><div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i>審核紀錄</div><div id="history">讀取中...</div></section>
+<section class="card"><div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i>審核紀錄 <span style="margin-left:auto;font-size:10px;color:#4e54c8;">v2.2</span></div><div id="history">讀取中...</div></section>
 </main><nav class="bottom-nav">
 <a class="nav-item NAV_DASH" href="dashboard.html"><i class="fa-solid fa-fingerprint"></i>打卡首頁</a>
 <a class="nav-item NAV_SCHEDULE" href="schedule.html"><i class="fa-solid fa-calendar-days"></i>我的班表</a>
@@ -181,29 +181,38 @@ function validateSpecialLeave(){
  return true;
 }
 function updateDuration(){const s=leaveStart.value,e=leaveEnd.value;if(!s||!e){durationInfo.innerHTML='<i class="fa-solid fa-calculator"></i> 選擇起迄時間後自動估算。';return}const h=(new Date(e)-new Date(s))/3600000;if(h<=0){durationInfo.textContent="結束時間必須晚於開始時間";return}durationInfo.innerHTML=`預估請假：<b>${h.toFixed(h%1?1:0)} 小時</b>（約 <b>${(h/8).toFixed(2)} 日</b>）`;validateSpecialLeave()}
+async function requestLeaveRecords(actionName){
+  const url=`${BASE_GAS_URL}?action=${actionName}&employeeId=${encodeURIComponent(session.employeeId)}`;
+  return await jsonp(url,"cb_leave_"+actionName+"_"+Date.now());
+}
+function renderLeaveRecords(res){
+  if(!res || res.success!==true){
+    throw new Error((res&&res.message)||"後端未回傳正確資料");
+  }
+  const records=Array.isArray(res.records)?res.records:[];
+  if(!records.length){
+    history.innerHTML='<div class="empty">目前尚無請假紀錄。</div>';
+    return;
+  }
+  history.innerHTML=records.map(r=>`
+    <div class="history-card">
+      <span class="badge ${r.status==="已核准"?"badge-ok":r.status==="駁回"?"badge-no":"badge-wait"}" style="float:right">${esc(r.status||"待審核")}</span>
+      <b>${esc(r.leaveType||"未填假別")}</b>
+      <br><small>${esc(r.start||"--")} ～ ${esc(r.end||"--")}</small>
+      <br>事由：${esc(r.reason||"--")}
+      ${r.applyTime?`<br><small style="color:#718096;">申請時間：${esc(r.applyTime)}</small>`:""}
+    </div>`).join("");
+}
 async function loadHistory(){
-  history.innerHTML='<div class="empty"><i class="fa-solid fa-spinner fa-spin"></i> 正在讀取審核紀錄...</div>';
+  history.innerHTML='<div class="empty"><i class="fa-solid fa-spinner fa-spin"></i> 正在讀取審核紀錄（v2.2）...</div>';
   try{
-    const url=`${BASE_GAS_URL}?action=fetchEmployeeLeaveRecords&employeeId=${encodeURIComponent(session.employeeId)}`;
-    const res=await jsonp(url,"cb_leave_history_"+Date.now());
-    if(!res || res.success!==true){
-      const msg=(res&&res.message)?res.message:"後端未回傳正確資料";
-      history.innerHTML=`<div class="empty" style="color:#e53e3e;">${esc(msg)}<br><button class="btn btn-light" style="margin-top:12px;" onclick="loadHistory()"><i class="fa-solid fa-rotate-right"></i>重新讀取</button></div>`;
-      return;
+    let res;
+    try{
+      res=await requestLeaveRecords("fetchEmployeeLeaveRecords");
+    }catch(firstError){
+      res=await requestLeaveRecords("fetchLeaveRecords");
     }
-    const records=Array.isArray(res.records)?res.records:[];
-    if(!records.length){
-      history.innerHTML='<div class="empty">目前尚無請假紀錄。</div>';
-      return;
-    }
-    history.innerHTML=records.map(r=>`
-      <div class="history-card">
-        <span class="badge ${r.status==="已核准"?"badge-ok":r.status==="駁回"?"badge-no":"badge-wait"}" style="float:right">${esc(r.status||"待審核")}</span>
-        <b>${esc(r.leaveType||"未填假別")}</b>
-        <br><small>${esc(r.start||"--")} ～ ${esc(r.end||"--")}</small>
-        <br>事由：${esc(r.reason||"--")}
-        ${r.applyTime?`<br><small style="color:#718096;">申請時間：${esc(r.applyTime)}</small>`:""}
-      </div>`).join("");
+    renderLeaveRecords(res);
   }catch(e){
     history.innerHTML=`<div class="empty" style="color:#e53e3e;">審核紀錄讀取失敗：${esc(e.message||"通訊逾時")}<br><button class="btn btn-light" style="margin-top:12px;" onclick="loadHistory()"><i class="fa-solid fa-rotate-right"></i>重新讀取</button></div>`;
   }
