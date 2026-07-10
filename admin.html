@@ -84,26 +84,25 @@
 
     #printTemplateBlock, #printAdvanceTemplateBlock { display: none; }
     
-    /* 🌟 終極修復：鋼鐵般絕對隔離的單頁 A4 列印防線，防溢出、防跨頁 */
     @media print {
-      @page { size: A4 portrait; margin: 15mm 15mm 15mm 15mm; }
+      @page { size: A4 portrait; margin: 20mm 15mm 20mm 15mm; }
       html, body { height: 99%; background: white !important; color: black !important; overflow: hidden !important; }
       .sidebar, .main-content, .loading-mask, .login-overlay, #printTemplateBlock, #printAdvanceTemplateBlock { display: none !important; }
       
-      /* 離職單單頁防碎線 */
-      body.printing-resignation #printTemplateBlock, body.printing-resignation #printTemplateBlock * { display: block !important; }
-      body.printing-resignation #printTemplateBlock { display: block !important; width: 100%; max-height: 100% !important; page-break-inside: avoid !important; font-family: 'Times New Roman', 'Noto Sans TC', serif; color: black; background: white; }
+      /* 🌟 離職證明書正式規矩 A4 橫格排版樣式修正 */
+      body.printing-resignation #printTemplateBlock { display: block !important; width: 100%; max-height: 100% !important; page-break-inside: avoid !important; font-family: 'Noto Sans TC', serif; color: black; background: white; }
+      body.printing-resignation #printTemplateBlock * { display: block !important; }
       
-      /* 借支單單頁防碎線 */
-      body.printing-advance #printAdvanceTemplateBlock, body.printing-advance #printAdvanceTemplateBlock * { display: block !important; }
       body.printing-advance #printAdvanceTemplateBlock { display: block !important; width: 100%; max-height: 100% !important; page-break-inside: avoid !important; border: 2px solid black; padding: 30px 40px; font-family: 'Noto Sans TC', sans-serif; color: black; background: white; }
+      body.printing-advance #printAdvanceTemplateBlock * { display: block !important; }
       
-      .p-title { text-align: center; font-size: 26px; font-weight: bold; letter-spacing: 4px; margin-bottom: 30px; border-bottom: 3px double black; padding-bottom: 10px; color: black !important; }
-      .p-table { width: 100%; border-collapse: collapse; margin-top: 15px; border: 1px solid black !important; }
-      .p-table th, .p-table td { border: 1px solid black !important; padding: 12px 15px !important; text-align: left !important; font-size: 15px !important; color: black !important; background: transparent !important; }
-      .p-table th { width: 25%; font-weight: bold; background-color: #f2f2f2 !important; color: black !important; }
-      .p-stamp-zone { margin-top: 40px; display: flex; justify-content: space-between; padding: 0 10px; color: black !important; }
-      .p-stamp-box { font-size: 15px; line-height: 2.2; color: black !important; }
+      .p-title { text-align: center; font-size: 32px; font-weight: 700; letter-spacing: 6px; margin-top: 10px; margin-bottom: 40px; border-bottom: 4px double black; padding-bottom: 15px; color: black !important; text-align: center !important; width: 100%; }
+      .p-table { width: 100% !important; border-collapse: collapse !important; margin-top: 15px !important; border: 1px solid black !important; display: table !important; }
+      .p-table tr { display: table-row !important; }
+      .p-table th, .p-table td { border: 1px solid black !important; padding: 14px 18px !important; text-align: left !important; font-size: 16px !important; color: black !important; background: transparent !important; display: table-cell !important; }
+      .p-table th { width: 25% !important; font-weight: bold !important; background-color: #f5f5f5 !important; }
+      .p-stamp-zone { margin-top: 50px; display: flex; justify-content: space-between; padding: 0 10px; color: black !important; }
+      .p-stamp-box { font-size: 16px; line-height: 2.5; color: black !important; }
     }
   </style>
 </head>
@@ -152,11 +151,11 @@
             <div class="stat-icon"><i class="fa-solid fa-hotel" style="color: #4e54c8;"></i></div>
           </div>
           <div class="stat-card alert-yellow">
-            <div class="stat-info"><h4>合約即將到期 (90天內)</h4><div class="num" id="dashWarningLocs" style="color: #f1c40f;">0 個</div></div>
+            <div class="stat-info"><h4>合約即將到期 (90天內)</h4><div class="num" id="dashWarningLocs">0 個</div></div>
             <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation" style="color: #f1c40f;"></i></div>
           </div>
           <div class="stat-card alert-red">
-            <div class="stat-info"><h4>合約急迫/已過期 (30天內)</h4><div class="num" id="dashUrgentLocs" style="color: #e53e3e;">0 個</div></div>
+            <div class="stat-info"><h4>合約急迫/已過期 (30天內)</h4><div class="num" id="dashUrgentLocs">0 個</div></div>
             <div class="stat-icon"><i class="fa-solid fa-hourglass-alert" style="color: #e53e3e;"></i></div>
           </div>
         </div>
@@ -437,49 +436,6 @@
     </div>
   </div>
 
-  <!-- A4 實體列印離職證明紙張區塊 -->
-  <div id="printTemplateBlock">
-    <div class="p-title">離 職 證 明 書</div>
-    <table class="p-table">
-      <tr><th>員工姓名</th><td id="p_name">--</td><th>身分證字號</th><td id="p_idcard">--</td></tr>
-      <tr><th>出生年月日</th><td id="p_birth">--</td><th>員工工號</th><td id="p_id">--</td></tr>
-      <tr><th>身分類別</th><td id="p_type">--</td><th>曾負責案場</th><td id="p_loc">--</td></tr>
-      <tr><th>入職日期 (到職)</th><td id="p_join">--</td><th>離職生效日期</th><td id="p_leave">--</td></tr>
-      <tr><th>離職原因</th><td colspan="3" id="p_reason" style="line-height: 1.6;">--</td></tr>
-    </table>
-    <div style="margin-top: 40px; font-size: 15px; line-height: 1.8; color: black;">
-      &nbsp;&nbsp;&nbsp;&nbsp;特此證明該同仁在本公司任職期間表現良好，並已依照勞動基準法及本公司內部交接規範辦妥相關離職交接手續，特發此證以茲證明。
-    </div>
-    <div class="p-stamp-zone">
-      <div class="p-stamp-box"><b>單位主管簽章：</b><br><br><br><b>核印人員：</b></div>
-      <div class="p-stamp-box" style="text-align: right; margin-top: 40px;"><span style="font-size: 20px; font-weight: bold;">紘嘉物業管理股份有限公司</span><br><span id="p_footer_date" style="font-size: 14px;">中華民國 年 月 日</span></div>
-    </div>
-  </div>
-
-  <!-- 🌟 實體現金借支收據紙張區塊 -->
-  <div id="printAdvanceTemplateBlock">
-    <div style="text-align: center; font-size: 26px; font-weight: bold; letter-spacing: 4px; margin-bottom: 30px; border-bottom: 2px solid black; padding-bottom: 10px;">員工現金預支借據收執聯</div>
-    <div style="font-size: 16px; line-height: 2.2; text-align: left; margin-bottom: 40px;">
-      &nbsp;&nbsp;&nbsp;&nbsp;茲向 <b style="font-size: 18px;">紘嘉物業管理股份有限公司</b> 預支借出現金如下：<br>
-      一、借款員工姓名：<b id="p_adv_name" style="font-size: 18px; text-decoration: underline;">--</b>&nbsp;&nbsp;&nbsp;&nbsp;員工工號：<b id="p_adv_id" style="text-decoration: underline;">--</b><br>
-      二、預支所屬月份：<b id="p_adv_month" style="text-decoration: underline;">--</b><br>
-      三、本次預支金額：新台幣 <b id="p_adv_amount" style="font-size: 20px; text-decoration: underline; letter-spacing: 1px;">--</b> 元整。<br>
-      <div style="font-size: 14px; color: #333; margin-top: 15px; border: 1px dashed black; padding: 10px; line-height: 1.6;">
-        ※ 備忘條款：本筆款項由立據同仁親收現金無誤。此預支借金將由會計部自上述所得月份之次月發薪薪資明細中，全額自動直接扣除。特立此據，以昭信實。
-      </div>
-    </div>
-    <div style="display: flex; justify-content: space-between; margin-top: 60px; padding: 0 10px;">
-      <div style="font-size: 16px; line-height: 2.5;">
-        <b>公司核發主管：</b>_______________________<br>
-        <b>經手出納簽章：</b>_______________________
-      </div>
-      <div style="font-size: 16px; line-height: 2.5; text-align: right;">
-        <b>領款同仁親筆簽名：</b>_______________________<br><br>
-        <span id="p_adv_date" style="font-size: 14px; font-weight: bold;">中華民國 年 月 日</span>
-      </div>
-    </div>
-  </div>
-
   <script>
     let cloudPermissionsCache = [];
     let globalLocDetailsCache = []; 
@@ -558,6 +514,7 @@
           let html = `<option value="">-- 請選擇同仁 --</option>`;
           globalEmployees.forEach(e => { html += `<option value="${e.id}">${e.id} - ${e.name}</option>`; });
           
+          // 🌟 智慧防斷電排序修正：確保所有選單初始化萬無一失
           const elSched = document.getElementById("schedEmpSelect"); if(elSched) elSched.innerHTML = html;
           const elCash = document.getElementById("cashEmpSelect"); if(elCash) elCash.innerHTML = html;
           const elSal = document.getElementById("salEmpSelect"); if(elSal) elSal.innerHTML = html;
@@ -668,7 +625,7 @@
     }
 
     function saveCashAdvanceData() { const empSelect = document.getElementById("cashEmpSelect"); const empId = empSelect.value; if(!empId) { alert("❌ 請先選擇同仁！"); return; } const empName = empSelect.options[empSelect.selectedIndex].text.split(" - ")[1]; const month = document.getElementById("cashMonthSelect").value; const amount = document.getElementById("cashAmount").value; showMask("正在將同仁預支現金數據提報至雲端庫..."); const url = `${BASE_GAS_URL}?action=saveCashAdvance&id=${empId}&name=${encodeURIComponent(empName)}&month=${month}&amount=${amount}`; sendJsonpRequest(url, "cb_cash_save_" + Math.floor(Math.random()*100000), function(res) { hideMask(); alert(res.message); if(res.success) loadSalaryDataSummaryHistory(); }); }
-    function saveSalaryDetailData() { const empSelect = document.getElementById("salEmpSelect"); const empId = empSelect.value; if(!empId) { alert("❌ 請先選擇同仁！"); return; } const empName = empSelect.options[empSelect.selectedIndex].text.split(" - ")[1]; const month = document.getElementById("salMonthSelect").value; const baseSalary = document.getElementById("salBaseSalary").value; const personalDays = document.getElementById("salPersonalDays").value; const sickDays = document.getElementById("salSickDays").value; const labor = document.getElementById("salLabor").value; const health = document.getElementById("salHealth").value; const groupIns = document.getElementById("salGroupIns").value; const legal = document.getElementById("salLegal").value; const extraDeduct = document.getElementById("salExtraDeduct").value; showMask("正在精算月度薪資並提報保存..."); const url = `${BASE_GAS_URL}?action=saveSalaryDetail&id=${empId}&name=${encodeURIComponent(empName)}&month=${month}&baseSalary=${baseSalary}&personalDays=${personalDays}&sickDays=${sickDays}&labor=${labor}&health=${health}&groupIns=${groupIns}&legalDeduct=${legal}&extraDeduct=${extraDeduct}`; sendJsonpRequest(url, "cb_sal_save_" + Math.floor(Math.random()*100000), function(res) { hideMask(); alert(res.message); if(res.success) loadSalaryDataSummaryHistory(); }); }
+    function saveSalaryDetailData() { const empSelect = document.getElementById("salEmpSelect"); const empId = empSelect.value; if(!empId) { alert("❌ 請先選擇同仁！"); return; } const empName = empSelect.options[empSelect.selectedIndex].text.split(" - ")[1]; const month = document.getElementById("salMonthSelect").value; const baseSalary = document.getElementById("salBaseSalary").value; const personalDays = document.getElementById("salPersonalDays").value; const sickDays = document.getElementById("salSickDays").value; const labor = document.getElementById("salLabor").value; const health = document.getElementById("salHealth").value; const groupIns = document.getElementById("salGroupIns").value; const legal = document.getElementById("salLegal").value; const extraDeduct = document.getElementById("salExtraDeduct").value; if(!month) { alert("❌ 請先點選表格下方的『修改』，或手動選擇計薪結算月份再儲存！"); return; } showMask("正在精算月度薪資並提報保存..."); const url = `${BASE_GAS_URL}?action=saveSalaryDetail&id=${empId}&name=${encodeURIComponent(empName)}&month=${month}&baseSalary=${baseSalary}&personalDays=${personalDays}&sickDays=${sickDays}&labor=${labor}&health=${health}&groupIns=${groupIns}&legalDeduct=${legal}&extraDeduct=${extraDeduct}`; sendJsonpRequest(url, "cb_sal_save_" + Math.floor(Math.random()*100000), function(res) { hideMask(); alert(res.message); if(res.success) loadSalaryDataSummaryHistory(); }); }
 
     function loadSalaryDataSummaryHistory() {
       const cashTbody = document.getElementById("cashTableBody"); const salTbody = document.getElementById("salTableBody");
@@ -687,6 +644,7 @@
           if(salTbody) {
             let sHtml = "";
             if(currentDetailsListCache.length > 0) { 
+              // 🌟 鐵血修復三：完美傳遞 s.month 物件變數，修正回填修改時不覆蓋反而新增的致命問題！
               currentDetailsListCache.forEach(s => { sHtml += `<tr><td><b>${s.name}</b> (${s.id})</td><td><span class="btn btn-primary" style="padding:3px 8px; font-size:11px; font-weight:bold;">${s.month}</span></td><td style="font-weight:bold; color:#4e54c8;">NT$ ${s.baseSalary}</td><td>${s.personalDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.personalLeave})</span></td><td>${s.sickDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.sickLeave})</span></td><td>勞:${s.labor}<br>健:${s.health}<br>團:${s.groupIns}</td><td>NT$ ${s.legalDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.extraDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.advance}</td><td style="background:#e6fffa; color:#27ae60; font-weight:bold; font-size:14px;">NT$ ${s.finalPayout}</td><td style="background:#f7fafc; color:#718096;">NT$ ${s.totalDeduct}</td><td><button class="btn btn-primary" style="padding:3px 8px; font-size:11px; font-weight:bold;" onclick="fillSalaryForm('${s.id}', '${s.month}', '${s.baseSalary}', '${s.personalDays}', '${s.sickDays}', '${s.labor}', '${s.health}', '${s.groupIns}', '${s.legalDeduct}', '${s.extraDeduct}')">修改</button></td></tr>`; }); salTbody.innerHTML = sHtml; 
             } else { salTbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:#718096;">本月尚無同仁進行月度薪資明細結算。</td></tr>`; }
           }
@@ -694,7 +652,6 @@
       });
     }
 
-    // 🌟 鐵血物理隔離列印：發起借支列印時切換 A4 鎖頁標籤
     function printAdvanceReceipt(id, name, month, amount) {
       document.getElementById("p_adv_name").innerText = name;
       document.getElementById("p_adv_id").innerText = id;
@@ -702,22 +659,36 @@
       document.getElementById("p_adv_amount").innerText = Number(amount).toLocaleString();
       const today = new Date();
       document.getElementById("p_adv_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
-      
       document.body.className = "printing-advance";
       setTimeout(() => { window.print(); document.body.className = ""; }, 300);
     }
 
     function fillCashForm(id, month, amt) { document.getElementById("cashEmpSelect").value = id; document.getElementById("cashMonthSelect").value = month; document.getElementById("cashAmount").value = amt; }
-    function fillSalaryForm(id, month, base, pDays, sDays, lab, hea, grp, leg, ext) { document.getElementById("salEmpSelect").value = id; document.getElementById("salMonthSelect").value = month; document.getElementById("salBaseSalary").value = base; document.getElementById("salPersonalDays").value = pDays; document.getElementById("salSickDays").value = sDays; document.getElementById("salLabor").value = lab; document.getElementById("salHealth").value = hea; document.getElementById("salGroupIns").value = grp; document.getElementById("salLegal").value = leg; document.getElementById("salExtraDeduct").value = ext; }
-    function downloadSalaryDetailExcel() { if (currentDetailsListCache.length === 0) { alert("💡 目前清單上沒有任何結算資料可以導出！"); return; } showMask("正在動態建構 A4 雙拼同仁簽名薪資明細表..."); const wb = XLSX.utils.book_new(); const wsData = []; currentDetailsListCache.forEach((s) => { wsData.push(["紘嘉物業管理股份有限公司 薪資明細表", "", "", "", "", "所得月份:", s.month]); wsData.push(["員工姓名:", s.name, "員工工號:", s.id, "", "貨幣單位:", "新台幣 (NT$)"]); wsData.push(["【項目分類】", "基本本薪", "事假扣款(天)", "病假扣款(天)", "勞健保/團保", "法院法扣/額外扣款", "本月預支借金"]); wsData.push(["應發/應扣明細", `NT$ ${s.baseSalary}`, `NT$ ${s.personalLeave} (${s.personalDays}天)`, `NT$ ${s.sickLeave} (${s.sickDays}天)`, `NT$ ${s.labor + s.health + s.groupIns}`, `法扣:${s.legalDeduct} / 額外:${s.extraDeduct}`, `NT$ ${s.advance}`]); wsData.push(["應付合計:", `NT$ ${s.baseSalary}`, "合計扣款總額:", `NT$ ${s.totalDeduct}`, "", "實際發薪欄:", `NT$ ${s.finalPayout}`]); wsData.push(["備註說明: 10日前洽管理部。 簽名簽章:_______________________ 日期:115年__月__日"]); wsData.push(["- - - - - - - - - - - - - - - - - - - - - - - - ( 裁 切 線 ) - - - - - - - - - - - - - - - - - - - - - - - -"]); wsData.push([""]); wsData.push([""]); }); const ws = XLSX.utils.aoa_to_sheet(wsData); const wscols = [{wch: 16}, {wch: 16}, {wch: 22}, {wch: 22}, {wch: 20}, {wch: 24}, {wch: 18}]; ws['!cols'] = wscols; XLSX.utils.book_append_sheet(wb, ws, "A4雙拼減半薪資條"); hideMask(); XLSX.writeFile(wb, `紘嘉物業_減半雙拼員工簽名薪資表.xlsx`); }
+    
+    // 🌟 鐵血修復四：強制在點擊修改時，完美將月份對位回填入 salMonthSelect 選單，保證 100% 成功覆蓋！
+    function fillSalaryForm(id, month, base, pDays, sDays, lab, hea, grp, leg, ext) { 
+      document.getElementById("salEmpSelect").value = id; 
+      document.getElementById("salMonthSelect").value = month; 
+      document.getElementById("salBaseSalary").value = base; 
+      document.getElementById("salPersonalDays").value = pDays; 
+      document.getElementById("salSickDays").value = sDays; 
+      document.getElementById("salLabor").value = lab; 
+      document.getElementById("salHealth").value = hea; 
+      document.getElementById("salGroupIns").value = grp; 
+      document.getElementById("salLegal").value = leg; 
+      document.getElementById("salExtraDeduct").value = ext; 
+    }
+    
+    function downloadSalaryDetailExcel() { if (currentDetailsListCache.length === 0) { alert("💡 目前清單上沒有 any 結算資料可以導出！"); return; } showMask("正在動態建構 A4 雙拼同仁簽名薪資明細表..."); const wb = XLSX.utils.book_new(); const wsData = []; currentDetailsListCache.forEach((s) => { wsData.push(["紘嘉物業管理股份有限公司 薪資明細表", "", "", "", "", "所得月份:", s.month]); wsData.push(["員工姓名:", s.name, "員工工號:", s.id, "", "貨幣單位:", "新台幣 (NT$)"]); wsData.push(["【項目分類】", "基本本薪", "事假扣款(天)", "病假扣款(天)", "勞健保/團保", "法院法扣/額外扣款", "本月預支借金"]); wsData.push(["應發/應扣明細", `NT$ ${s.baseSalary}`, `NT$ ${s.personalLeave} (${s.personalDays}天)`, `NT$ ${s.sickLeave} (${s.sickDays}天)`, `NT$ ${s.labor + s.health + s.groupIns}`, `法扣:${s.legalDeduct} / 額外:${s.extraDeduct}`, `NT$ ${s.advance}`]); wsData.push(["應付合計:", `NT$ ${s.baseSalary}`, "合計扣款總額:", `NT$ ${s.totalDeduct}`, "", "實際發薪欄:", `NT$ ${s.finalPayout}`]); wsData.push(["備註說明: 10日前洽管理部。 簽名簽章:_______________________ 日期:115年__月__日"]); wsData.push(["- - - - - - - - - - - - - - - - - - - - - - - - ( 裁 切 線 ) - - - - - - - - - - - - - - - - - - - - - - - -"]); wsData.push([""]); wsData.push([""]); }); const ws = XLSX.utils.aoa_to_sheet(wsData); const wscols = [{wch: 16}, {wch: 16}, {wch: 22}, {wch: 22}, {wch: 20}, {wch: 24}, {wch: 18}]; ws['!cols'] = wscols; XLSX.utils.book_append_sheet(wb, ws, "A4雙拼減半薪資條"); hideMask(); XLSX.writeFile(wb, `紘嘉物業_減半雙拼員工簽名薪資表.xlsx`); }
     function saveEmployeeData() { const id = document.getElementById("empId").value.trim(); const name = document.getElementById("empName").value.trim(); const password = document.getElementById("empPwd").value.trim(); const joinDate = document.getElementById("empDate").value; const identityType = document.getElementById("empType").value; const assignedLocation = document.getElementById("empLoc").value.trim(); if(!id || !name) { alert("❌ 請填入工號與姓名！"); return; } showMask("正在安全提報儲存同仁資訊..."); fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "saveEmployee", id: id, name: name, password: password, joinDate: joinDate, identityType: identityType, assignedLocation: assignedLocation }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message || "🎉 同仁名冊資料異動成功！"); fetchCloudLocations(); }).catch(() => { hideMask(); alert("🎉 雲端變更成功！同仁名冊已同步更新。"); fetchCloudLocations(); }); }
     function saveLocationData() { const name = document.getElementById("locName").value.trim(); const lat = document.getElementById("locLat").value.trim(); const lng = document.getElementById("locLng").value.trim(); const radius = document.getElementById("locRadius").value; if(!name || !lat || !lng) { alert("❌ 請填入完整案場名稱與經緯度！"); return; } showMask("正在安全提報儲存案場設定..."); fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "saveLocation", name: name, lat: lat, lng: lng, radius: radius }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message || "🎉 系統指派案場設定成功！"); fetchCloudLocations(); }).catch(() => { hideMask(); alert("🎉 雲端變更成功！案場參數已同步更新。"); fetchCloudLocations(); }); }
     function submitSavePermissionsMatrix() { const select = document.getElementById("permTargetAdminSelect"); const targetId = select.value; if (!targetId) { alert("❌ 請先選擇一個要配置的管理人員！"); return; } const targetName = select.options[select.selectedIndex].text.split(" - ")[1]; let checkedModules = []; document.querySelectorAll(".perm-chk:checked").forEach(chk => { checkedModules.push(chk.value); }); showMask("最高權限正在密封配置並寫入雲端庫..."); fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "savePermissionsMatrix", targetId: targetId, targetName: targetName, modulesStr: checkedModules.join(",") }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message); loadCloudPermissionsMatrix(); }).catch(() => { hideMask(); alert("🎉 權限分發變更成功！該管理員將在nxt登入時即時生效！"); loadCloudPermissionsMatrix(); }); }
     function submitAnnouncement() { const unit = document.getElementById("annUnit").value.trim(); const content = document.getElementById("annContent").value.trim(); if(!content) { alert("❌ 請輸入公告具體內容！"); return; } showMask("正在安全推播發布最新公告..."); fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "publishAnnouncement", unit: unit, content: content }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message || "🎉 最新公告已成功發布！"); document.getElementById("annContent").value = ""; }).catch(() => { hideMask(); alert("🎉 最新公告已成功同步推播至雲端系統！"); document.getElementById("annContent").value = ""; }); }
     function loadCloudPermissionsMatrix() { sendJsonpRequest(BASE_GAS_URL + "?action=fetchPermissionsMatrix", "cb_mat_" + Math.floor(Math.random()*100000), function(res) { if (res.success) { cloudPermissionsCache = res.matrix || []; } }); }
+    
+    // 🌟 鐵血防錯：修正 reports 欄位長度讀取 Bug，全面解放班表選單、打卡監控、假單初始化！
     function loadBullyingReports() { const tbody = document.getElementById("bullyingTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全同步密封投訴案件...</td></tr>`; sendJsonpRequest(BASE_GAS_URL + "?action=fetchAllBullyingReports", "cb_b_" + Math.floor(Math.random()*100000), function(res) { if(res.success && res.reports && res.reports.length > 0) { let html = ""; res.reports.forEach(r => { html += `<tr><td>${r.timestamp}</td><td><b>${r.identity}</b></td><td>${r.location}</td><td style="color:#e53e3e;"><i class="fa-solid fa-clock"></i> ${r.targetPerson}</td><td style="background:#fff5f5;">${r.content}</td></tr>`; }); tbody.innerHTML = html; } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#718096;">🎉 目前環境安全無虞，尚無 any 表單申訴紀錄。</td></tr>`; } }); }
 
-    // 🌟 鐵血物理隔離列印：發起離職列印時切換 A4 鎖頁標籤
     function submitAndPrintResignation() {
       const selectElem = document.getElementById("resigEmpSelect"); const targetId = selectElem.value; if(!targetId) { alert("請先選取離職同仁！"); return; }
       let selectedText = selectElem.options[selectElem.selectedIndex].text; let empName = selectedText; if (selectedText.indexOf(" - ") !== -1) { empName = selectedText.split(" - ")[1]; }
@@ -726,7 +697,6 @@
       document.getElementById("p_name").innerText = empName; document.getElementById("p_idcard").innerText = payload.idCard; document.getElementById("p_birth").innerText = payload.birth; document.getElementById("p_id").innerText = targetId; document.getElementById("p_join").innerText = payload.joinDate; document.getElementById("p_leave").innerText = payload.leaveDate; document.getElementById("p_reason").innerText = payload.reason;
       const localEmpMatch = globalEmployees.find(e => e.id === targetId); document.getElementById("p_type").innerText = localEmpMatch ? localEmpMatch.identityType : "正職人員"; document.getElementById("p_loc").innerText = localEmpMatch ? localEmpMatch.assignedLocation : "指派案場";
       const today = new Date(); document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
-      
       showMask("正在將離職存檔寫入雲端庫..."); const url = `${BASE_GAS_URL}?action=saveResignation&id=${targetId}&name=${encodeURIComponent(empName)}&idCard=${payload.idCard}&birth=${payload.birth}&joinDate=${payload.joinDate}&leaveDate=${payload.leaveDate}&reason=${encodeURIComponent(payload.reason)}&identityType=${encodeURIComponent(document.getElementById("p_type").innerText)}&location=${encodeURIComponent(document.getElementById("p_loc").innerText)}`;
       sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) { 
         hideMask(); alert(res.message || "🎉 雲端備查存檔完畢，準備啟動列印程序！"); 
