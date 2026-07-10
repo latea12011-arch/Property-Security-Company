@@ -33,11 +33,11 @@
   
   <style>
     * { box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body { background: #f0f2f5; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 15px; color: #333; }
     
-    /* 🌟 修正：手機端核心容器，確保外觀在 any 手機上絕不偏掉、四平八穩 */
+    /* 🌟 鐵血修正：強制 body 在任何大螢幕、寬手機下一律「完美英挺置中」，絕不偏左！ */
+    body { background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 15px; color: #333; }
+    
     .phone-container { width: 100%; max-width: 410px; background: white; border-radius: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); padding: 20px; display: flex; flex-direction: column; gap: 15px; position: relative; overflow: hidden; }
-    
     .page { display: none; width: 100%; flex-direction: column; gap: 15px; }
     .page.active { display: flex; }
     .logo-area { text-align: center; margin: 20px 0 10px 0; }
@@ -60,13 +60,19 @@
     .user-info p { font-size: 13px; color: #718096; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
     .logout-btn { padding: 8px 14px; background: #fff5f5; color: #e53e3e; border: 1px solid #fed7d7; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; flex-shrink: 0; }
     
-    .clock-box { background: #1a202c; color: white; padding: 20px; border-radius: 18px; text-align: center; display: flex; flex-direction: column; gap: 5px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
-    .clock-time { font-size: 34px; font-weight: bold; font-family: monospace; color: #00f2fe; }
-    .clock-date { font-size: 14px; color: #a0aec0; letter-spacing: 1px; }
+    .clock-box { background: #1a202c; color: white; padding: 15px; border-radius: 18px; text-align: center; display: flex; flex-direction: column; gap: 3px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+    .clock-time { font-size: 32px; font-weight: bold; font-family: monospace; color: #00f2fe; }
+    .clock-date { font-size: 13px; color: #a0aec0; letter-spacing: 1px; }
     .punch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .punch-btn { height: 95px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; font-size: 16px; border-radius: 16px; }
-    .punch-btn i { font-size: 26px; }
-    .nav-tabs { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 10px; gap: 10px; }
+    .punch-btn { height: 85px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; font-size: 16px; border-radius: 16px; }
+    .punch-btn i { font-size: 24px; }
+    
+    /* 🌟 公告欄特別精製樣式 */
+    .announcement-box { background: #fffaf0; border: 1px solid #feebc8; border-radius: 14px; padding: 12px; max-height: 110px; overflow-y: auto; font-size: 13px; line-height: 1.5; }
+    .ann-item { border-bottom: 1px dashed #fbd38d; padding-bottom: 6px; margin-bottom: 6px; }
+    .ann-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    
+    .nav-tabs { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 5px; gap: 10px; }
     .tab-btn { padding: 10px; background: none; border: none; font-size: 14px; font-weight: bold; color: #718096; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .tab-btn.active { color: #4e54c8; }
     .loading-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 999; border-radius: 24px; }
@@ -84,7 +90,6 @@
   <div class="phone-container">
     <div class="loading-mask" id="mask"><div class="spinner"></div><p id="maskText" style="color:#4e54c8; font-weight:bold;">安全定位通訊中...</p></div>
 
-    <!-- 頁面一：同仁登入 -->
     <div class="page active" id="page-login">
       <div class="logo-area"><i class="fa-solid fa-shield-halved"></i><h2>紘嘉物業考勤打卡</h2></div>
       <div class="form-group"><label><i class="fa-solid fa-user"></i> 同仁編號 (五碼)</label><input type="text" id="loginUser" class="form-control" placeholder="例如: 00021"></div>
@@ -92,15 +97,19 @@
       <button class="btn btn-primary" onclick="submitLogin()"><i class="fa-solid fa-right-to-bracket"></i> 安全登入</button>
     </div>
 
-    <!-- 頁面二：打卡主面板 -->
     <div class="page" id="page-main">
       <div class="user-banner">
         <div class="user-info">
           <h3 id="lblEmpName">同仁</h3>
           <p id="lblIdentity"><i class="fa-solid fa-user-tag"></i> 身分類別 : 讀取中...</p>
-          <p id="lblJoinDate"><i class="fa-solid fa-calendar-check"></i> 入職日期 : 讀取中...</p>
+          <p id="lblJoinDate"><i class="fa-solid fa-calendar-days"></i> 入職日期 : 讀取中...</p>
         </div>
         <button class="logout-btn" onclick="performLogout()">登出</button>
+      </div>
+
+      <div class="form-group">
+        <label><i class="fa-solid fa-bullhorn" style="color:#e53e3e;"></i> 公司最新公告事項 :</label>
+        <div class="announcement-box" id="lblAnnouncementsContainer">正在同步調閱總部發布事項...</div>
       </div>
 
       <div class="clock-box">
@@ -118,13 +127,16 @@
         <button class="btn btn-danger punch-btn" onclick="triggerPunch('clockOut')"><i class="fa-solid fa-circle-xmark"></i><b>下班打卡</b></button>
       </div>
 
+      <button class="btn btn-secondary" style="color:#e53e3e; border:1px solid #feb2b2; background:#fff5f5; font-size:14px; padding:10px;" onclick="window.open('https://forms.gle/4iQ8R3Sg2DAtAEnC7')">
+        <i class="fa-solid fa-gavel"></i> <b>員工職場安全危害申訴通道</b>
+      </button>
+
       <div class="nav-tabs">
         <button class="tab-btn active" onclick="switchTab('main')"><i class="fa-solid fa-fingerprint"></i>即時打卡</button>
         <button class="tab-btn" onclick="switchTab('leave')"><i class="fa-solid fa-file-medical"></i>線上請假申提</button>
       </div>
     </div>
 
-    <!-- 頁面三：請假申提面板 -->
     <div class="page" id="page-leave">
       <div class="user-banner">
         <div><h3 id="lblLeaveEmpName">同仁</h3><p style="font-size:12px; color:#4e54c8;"><i class="fa-solid fa-file-pen"></i> 線上請假條填寫</p></div>
@@ -160,10 +172,8 @@
     function calculate2026SpecialLeave(joinDateStr) {
       if(!joinDateStr || joinDateStr === "未填" || joinDateStr === "undefined") return 0;
       try {
-        let joinDate = new Date(joinDateStr);
-        if(isNaN(joinDate.getTime())) return 0;
-        let currentDate = new Date("2026-07-10"); 
-        let diffTime = currentDate.getTime() - joinDate.getTime();
+        let joinDate = new Date(joinDateStr); if(isNaN(joinDate.getTime())) return 0;
+        let currentDate = new Date("2026-07-10"); let diffTime = currentDate.getTime() - joinDate.getTime();
         let diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25);
         if (diffYears < 0.5) return 0;
         if (diffYears >= 0.5 && diffYears < 1) return 3;
@@ -171,46 +181,49 @@
         if (diffYears >= 2 && diffYears < 3) return 10;
         if (diffYears >= 3 && diffYears < 5) return 14;
         if (diffYears >= 5 && diffYears < 10) return 15;
-        let years = Math.floor(diffYears);
-        let leaves = 15 + (years - 9);
-        return leaves > 30 ? 30 : leaves;
+        let years = Math.floor(diffYears); let leaves = 15 + (years - 9); return leaves > 30 ? 30 : leaves;
       } catch(e) { return 0; }
     }
 
     function submitLogin() {
       let rawId = document.getElementById("loginUser").value.trim(); if(!rawId) { alert("請輸入同仁工號！"); return; }
-      currentEmployeeId = ("00000" + rawId).slice(-5);
-      let pwd = document.getElementById("loginPwd").value.trim();
+      currentEmployeeId = ("00000" + rawId).slice(-5); let pwd = document.getElementById("loginPwd").value.trim();
       
       showMask("正在進行紘嘉物業安全身份識別...");
       const url = `${BASE_GAS_URL}?action=login&employeeId=${currentEmployeeId}&password=${encodeURIComponent(pwd)}`;
       sendJsonpRequest(url, "cb_emp_login_" + Math.floor(Math.random()*100000), function(res) {
         hideMask();
         if(res.success) {
-          currentEmployeeName = res.employeeName;
-          currentIdentityType = res.identityType || "正職人員";
-          currentAssignedLoc = res.assignedLocation || "";
+          currentEmployeeName = res.employeeName; currentIdentityType = res.identityType || "正職人員"; currentAssignedLoc = res.assignedLocation || "";
           
           document.getElementById("lblEmpName").innerText = `${currentEmployeeName} (${currentEmployeeId})`;
           document.getElementById("lblLeaveEmpName").innerText = `${currentEmployeeName} (${currentEmployeeId})`;
           document.getElementById("lblIdentity").innerHTML = `<i class="fa-solid fa-user-tag"></i> 身分類別 : <b>${currentIdentityType}</b>`;
           
-          let sJoin = res.joinDate ? res.joinDate : "未填";
-          let totalLeaveDays = calculate2026SpecialLeave(sJoin);
+          let sJoin = res.joinDate ? res.joinDate : "未填"; let totalLeaveDays = calculate2026SpecialLeave(sJoin);
           document.getElementById("lblJoinDate").innerHTML = `<i class="fa-solid fa-calendar-days"></i> 入職日期 : <b>${sJoin}</b><br><i class="fa-solid fa-star"></i> 2026年度特休 : <b style="color:#27ae60;">${totalLeaveDays} 天</b>`;
 
           let html = "";
-          if(res.allLocations && res.allLocations.length > 0) {
-            res.allLocations.forEach(loc => { html += `<option value="${loc}">${loc}</option>`; });
-          } else if(currentAssignedLoc) {
-            html += `<option value="${currentAssignedLoc}">${currentAssignedLoc}</option>`;
-          } else { html += `<option value="">-- 目前無指派案場 --</option>`; }
+          if(res.allLocations && res.allLocations.length > 0) { res.allLocations.forEach(loc => { html += `<option value="${loc}">${loc}</option>`; }); } 
+          else if(currentAssignedLoc) { html += `<option value="${currentAssignedLoc}">${currentAssignedLoc}</option>`; } 
+          else { html += `<option value="">-- 目前無指派案場 --</option>`; }
           document.getElementById("punchLocationSelect").innerHTML = html;
           
           document.getElementById("page-login").classList.remove("active");
           document.getElementById("page-main").classList.add("active");
-          startClock();
+          startClock(); fetchCloudAnnouncements();
         } else { alert(res.message); }
+      });
+    }
+
+    function fetchCloudAnnouncements() {
+      const url = `${BASE_GAS_URL}?action=fetchAnnouncements`;
+      sendJsonpRequest(url, "cb_ann_" + Math.floor(Math.random()*100000), function(res) {
+        if(res.success && res.announcements && res.announcements.length > 0) {
+          let html = "";
+          res.announcements.slice(0, 5).forEach(a => { html += `<div class="ann-item"><b>[${a.date}] ${a.unit}通知 :</b><br>${a.content}</div>`; });
+          document.getElementById("lblAnnouncementsContainer").innerHTML = html;
+        } else { document.getElementById("lblAnnouncementsContainer").innerText = "📢 目前暫無最新公告事項。"; }
       });
     }
 
@@ -265,7 +278,7 @@
     function hideMask() { document.getElementById("mask").style.display = "none"; }
     function performLogout() { location.reload(); }
     function switchTab(tabId) { document.getElementById("page-main").classList.remove("active"); document.getElementById("page-leave").classList.remove("active"); document.getElementById("page-" + tabId).classList.add("active"); if(tabId === 'leave') fetchLeaveHistoryLogs(); }
-    function sendJsonpRequest(url, callbackName, successHandler) { window[callbackName] = function(data) { successHandler(data); delete window[callbackName]; const script = document.getElementById(callbackName); if(script) script.remove(); }; const script = document.createElement("script"); script.src = url + (url.includes("?") ? "&" : "?") + "callback=" + callbackName + "&_ts=" + new Date().getTime(); script.id = callbackName; document.body.appendChild(script); }
+    function sendJsonpRequest(url, callbackName, successHandler) { window[callbackName] = function(data) { successHandler(data); delete window[callbackName]; const script = document.getElementById(callbackName); if (script) script.remove(); }; const script = document.createElement("script"); script.src = url + (url.includes("?") ? "&" : "?") + "callback=" + callbackName + "&_ts=" + new Date().getTime(); script.id = callbackName; document.body.appendChild(script); }
     function startClock() { setInterval(() => { const now = new Date(); document.getElementById("liveTime").innerText = now.toTimeString().split(" ")[0]; const w = ["日","一","二","三","四","五","六"]; document.getElementById("liveDate").innerText = `${now.getFullYear()}年${String(now.getMonth()+1).padStart(2,'0')}月${String(now.getDate()).padStart(2,'0')}日 星期${w[now.getDay()]}`; }, 1000); }
   </script>
 </body>
