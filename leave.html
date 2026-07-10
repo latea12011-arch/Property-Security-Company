@@ -181,7 +181,33 @@ function validateSpecialLeave(){
  return true;
 }
 function updateDuration(){const s=leaveStart.value,e=leaveEnd.value;if(!s||!e){durationInfo.innerHTML='<i class="fa-solid fa-calculator"></i> 選擇起迄時間後自動估算。';return}const h=(new Date(e)-new Date(s))/3600000;if(h<=0){durationInfo.textContent="結束時間必須晚於開始時間";return}durationInfo.innerHTML=`預估請假：<b>${h.toFixed(h%1?1:0)} 小時</b>（約 <b>${(h/8).toFixed(2)} 日</b>）`;validateSpecialLeave()}
-async function loadHistory(){try{const res=await jsonp(`${BASE_GAS_URL}?action=fetchLeaveRecords&employeeId=${session.employeeId}`,"cb_h_"+Date.now());history.innerHTML=res.success&&res.records?.length?res.records.map(r=>`<div class="history-card"><span class="badge ${r.status==="已核准"?"badge-ok":r.status==="駁回"?"badge-no":"badge-wait"}" style="float:right">${esc(r.status)}</span><b>${esc(r.leaveType)}</b><br><small>${esc(r.start)} ～ ${esc(r.end)}</small><br>事由：${esc(r.reason)}</div>`).join(""):'<div class="empty">目前尚無請假紀錄。</div>'}catch(e){history.innerHTML='<div class="empty">紀錄讀取失敗。</div>'}}
+async function loadHistory(){
+  history.innerHTML='<div class="empty"><i class="fa-solid fa-spinner fa-spin"></i> 正在讀取審核紀錄...</div>';
+  try{
+    const url=`${BASE_GAS_URL}?action=fetchEmployeeLeaveRecords&employeeId=${encodeURIComponent(session.employeeId)}`;
+    const res=await jsonp(url,"cb_leave_history_"+Date.now());
+    if(!res || res.success!==true){
+      const msg=(res&&res.message)?res.message:"後端未回傳正確資料";
+      history.innerHTML=`<div class="empty" style="color:#e53e3e;">${esc(msg)}<br><button class="btn btn-light" style="margin-top:12px;" onclick="loadHistory()"><i class="fa-solid fa-rotate-right"></i>重新讀取</button></div>`;
+      return;
+    }
+    const records=Array.isArray(res.records)?res.records:[];
+    if(!records.length){
+      history.innerHTML='<div class="empty">目前尚無請假紀錄。</div>';
+      return;
+    }
+    history.innerHTML=records.map(r=>`
+      <div class="history-card">
+        <span class="badge ${r.status==="已核准"?"badge-ok":r.status==="駁回"?"badge-no":"badge-wait"}" style="float:right">${esc(r.status||"待審核")}</span>
+        <b>${esc(r.leaveType||"未填假別")}</b>
+        <br><small>${esc(r.start||"--")} ～ ${esc(r.end||"--")}</small>
+        <br>事由：${esc(r.reason||"--")}
+        ${r.applyTime?`<br><small style="color:#718096;">申請時間：${esc(r.applyTime)}</small>`:""}
+      </div>`).join("");
+  }catch(e){
+    history.innerHTML=`<div class="empty" style="color:#e53e3e;">審核紀錄讀取失敗：${esc(e.message||"通訊逾時")}<br><button class="btn btn-light" style="margin-top:12px;" onclick="loadHistory()"><i class="fa-solid fa-rotate-right"></i>重新讀取</button></div>`;
+  }
+}
 async function postPayload(payload){const r=await fetch(BASE_GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(payload)});return await r.json()}
 async function submitLeave(){const start=leaveStart.value,end=leaveEnd.value,reason=leaveReason.value.trim();if(!start||!end||!reason){alert("請完整填寫請假時間與事由");return}if(leaveType.value==="特休"&&!validateSpecialLeave()){alert(leaveLimitWarning.textContent);return}const loc=session.allLocations?.[0]||session.assignedLocation||"未知案場";showLoading("正在送出請假單...");const file=leaveFile.files[0];const send=async(fileData="",fileName="",fileType="")=>{try{const res=await postPayload({action:"leaveSubmit",employeeId:session.employeeId,employeeName:session.employeeName,location:loc,leaveType:leaveType.value,start:start.replace("T"," "),end:end.replace("T"," "),reason,fileData,fileName,fileType});hideLoading();alert(res.message||"送出完成");if(res.success){leaveStart.value=leaveEnd.value=leaveReason.value=leaveFile.value="";updateDuration();loadHistory();loadLeaveSummary()}}catch(e){hideLoading();alert("請假單送出失敗，請稍後再試")}};if(file){const reader=new FileReader();reader.onload=e=>send(e.target.result,file.name,file.type);reader.readAsDataURL(file)}else send()}
 leaveStart.addEventListener("change",updateDuration);leaveEnd.addEventListener("change",updateDuration);leaveType.addEventListener("change",validateSpecialLeave);loadHistory();loadLeaveSummary();
