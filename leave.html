@@ -78,7 +78,7 @@ a{text-decoration:none;color:inherit}
 <div class="form-group"><label>開始時間</label><input type="datetime-local" id="leaveStart" class="control"></div><div class="form-group"><label>結束時間</label><input type="datetime-local" id="leaveEnd" class="control"></div>
 <div class="form-group"><label>證明文件</label><input type="file" id="leaveFile" class="control" accept="image/*"></div><div class="form-group"><label>請假事由</label><textarea id="leaveReason" class="control" rows="4" placeholder="請填寫具體原因"></textarea></div>
 <div class="duration" id="durationInfo"><i class="fa-solid fa-calculator"></i> 選擇起迄時間後自動估算。</div><button class="btn btn-primary" style="margin-top:12px" onclick="submitLeave()"><i class="fa-solid fa-paper-plane"></i>送出請假申請</button></section>
-<section class="card"><div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i>審核紀錄 <span style="margin-left:auto;font-size:10px;color:#4e54c8;">v2.3</span></div><div id="history">讀取中...</div></section>
+<section class="card"><div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i>審核紀錄 <span style="margin-left:auto;font-size:10px;color:#4e54c8;">正式版 1.0</span></div><div id="history">讀取中...</div></section>
 </main><nav class="bottom-nav">
 <a class="nav-item NAV_DASH" href="dashboard.html"><i class="fa-solid fa-fingerprint"></i>打卡首頁</a>
 <a class="nav-item NAV_SCHEDULE" href="schedule.html"><i class="fa-solid fa-calendar-days"></i>我的班表</a>
@@ -281,7 +281,7 @@ function renderLeaveRecords(res) {
 
 async function loadHistory() {
   el.history.innerHTML =
-    '<div class="empty"><i class="fa-solid fa-spinner fa-spin"></i> 正在讀取審核紀錄（v2.3）...</div>';
+    '<div class="empty"><i class="fa-solid fa-spinner fa-spin"></i> 正在讀取審核紀錄（正式版 1.0）...</div>';
 
   try {
     let res;
@@ -294,4 +294,107 @@ async function loadHistory() {
   } catch (e) {
     el.history.innerHTML = `
       <div class="empty" style="color:#e53e3e;">
-        審核紀錄讀取失敗：${esc(e.messag
+        審核紀錄讀取失敗：${esc(e.message || "通訊逾時")}
+        <br>
+        <button class="btn btn-light" style="margin-top:12px;" onclick="loadHistory()">
+          <i class="fa-solid fa-rotate-right"></i>重新讀取
+        </button>
+      </div>`;
+  }
+}
+
+async function postPayload(payload) {
+  const response = await fetch(BASE_GAS_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify(payload)
+  });
+  return await response.json();
+}
+
+async function submitLeave() {
+  const start = el.leaveStart.value;
+  const end = el.leaveEnd.value;
+  const reason = el.leaveReason.value.trim();
+
+  if (!start || !end || !reason) {
+    alert("請完整填寫請假時間與事由");
+    return;
+  }
+
+  if (el.leaveType.value === "特休" && !validateSpecialLeave()) {
+    alert(el.leaveLimitWarning.textContent);
+    return;
+  }
+
+  const location =
+    (session.allLocations && session.allLocations[0]) ||
+    session.assignedLocation ||
+    "未知案場";
+
+  showLoading("正在送出請假單...");
+  const file = el.leaveFile.files[0];
+
+  const send = async (fileData = "", fileName = "", fileType = "") => {
+    try {
+      const res = await postPayload({
+        action: "leaveSubmit",
+        employeeId: session.employeeId,
+        employeeName: session.employeeName,
+        location,
+        leaveType: el.leaveType.value,
+        start: start.replace("T", " "),
+        end: end.replace("T", " "),
+        reason,
+        fileData,
+        fileName,
+        fileType
+      });
+
+      hideLoading();
+      alert(res.message || "送出完成");
+
+      if (res.success) {
+        el.leaveStart.value = "";
+        el.leaveEnd.value = "";
+        el.leaveReason.value = "";
+        el.leaveFile.value = "";
+        updateDuration();
+        await loadHistory();
+        await loadLeaveSummary();
+      }
+    } catch (e) {
+      hideLoading();
+      alert("請假單送出失敗：" + (e.message || "通訊異常"));
+    }
+  };
+
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = e => send(e.target.result, file.name, file.type);
+    reader.readAsDataURL(file);
+  } else {
+    send();
+  }
+}
+
+el.leaveStart.addEventListener("change", updateDuration);
+el.leaveEnd.addEventListener("change", updateDuration);
+el.leaveType.addEventListener("change", validateSpecialLeave);
+
+window.addEventListener("error", function(event) {
+  if (el.history && el.history.textContent.includes("讀取中")) {
+    el.history.innerHTML = `
+      <div class="empty" style="color:#e53e3e;">
+        頁面程式錯誤：${esc(event.message || "未知錯誤")}
+        <br>
+        <button class="btn btn-light" style="margin-top:12px;" onclick="location.reload()">
+          重新整理
+        </button>
+      </div>`;
+  }
+});
+
+loadHistory();
+loadLeaveSummary();
+</script></body></html>
