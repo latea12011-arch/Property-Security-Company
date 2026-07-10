@@ -48,13 +48,24 @@ a{text-decoration:none;color:inherit}
 .empty{text-align:center;color:var(--muted);font-size:13px;padding:24px}
 @media(max-width:480px){.page-content{padding:12px}.topbar{padding:10px 12px}.brand h1{font-size:15px}.hero h2{font-size:20px}}
 
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.profile-item{background:#f8fafc;border:1px solid var(--line);border-radius:13px;padding:11px}
+.profile-item small{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}
+.profile-item strong{font-size:15px}
+.leave-balance{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.leave-balance .balance-box{border-radius:13px;padding:11px 6px;text-align:center;background:#f8fafc;border:1px solid var(--line)}
+.balance-box b{display:block;font-size:20px;color:var(--primary)}
+.balance-box span{font-size:11px;color:var(--muted)}
+.balance-box.remaining{background:#f0fff4;border-color:#c6f6d5}.balance-box.remaining b{color:#23834c}
+.balance-warning{background:#fff5f5;border:1px solid #fed7d7;color:#9b2c2c;padding:10px 12px;border-radius:12px;font-size:13px;margin-top:10px}
+
 </style></head>
 <body><div class="login-page"><div class="login-card">
 <div class="login-logo"><img src="https://i.meee.com.tw/2Pr2uHH.png" alt="紘嘉物業 Logo"><h1>紘嘉物業員工系統</h1><p>打卡・班表・請假</p></div>
 <div class="form-group"><label>同仁工號</label><input id="loginUser" class="control" inputmode="numeric" placeholder="例如：00021"></div>
 <div class="form-group"><label>登入密碼</label><input id="loginPwd" type="password" class="control" placeholder="請輸入密碼"></div>
 <button class="btn btn-primary" onclick="login()"><i class="fa-solid fa-right-to-bracket"></i>登入系統</button>
-<p style="text-align:center;color:#a0aec0;font-size:11px;margin-top:16px;">員工端多頁式 v1</p>
+<p style="text-align:center;color:#a0aec0;font-size:11px;margin-top:16px;">員工端多頁式 v2｜特休控管</p>
 </div></div>
 <div class="loading" id="loading"><div class="spinner"></div><b id="loadingText">登入中...</b></div>
 <script>
