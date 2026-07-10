@@ -75,7 +75,6 @@
     .stat-info .num { font-size: 26px; font-weight: bold; color: #2d3748; }
     .stat-icon { font-size: 32px; color: #cbd5e0; }
 
-    /* 🌟 復原：確保登入遮罩完美置中 */
     .login-overlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background:#1a202c; display:flex; justify-content:center; align-items:center; z-index:10000; }
     .login-box { background:white; padding:40px; border-radius:12px; width:360px; box-shadow:0 10px 25px rgba(0,0,0,0.3); text-align:center; }
 
@@ -83,29 +82,18 @@
     .perm-item { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; cursor: pointer; background: white; padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e0; }
     .perm-item input { cursor: pointer; width: 16px; height: 16px; }
 
-    #printTemplateBlock, #printAdvanceTemplateBlock { display: none; }
-    
-    /* 🌟 鋼鐵隔離列印防線：完美解鎖 A4 滿頁格式，絕不交叉干擾、絕不偏左壓縮 */
+    #printTemplateBlock { display: none; }
     @media print {
-      @page { size: A4 portrait; margin: 15mm; }
-      body * { display: none !important; }
+      /* 🌟 終極修復：精準關閉後台所有操作面板，不再使用 body * 誤傷子元素，放行表格內容顯示！ */
+      .sidebar, .main-content, .loading-mask, .login-overlay { display: none !important; }
       
-      /* 當發起離職列印時 */
-      body.printing-resignation #printTemplateBlock,
-      body.printing-resignation #printTemplateBlock * { display: block !important; }
-      body.printing-resignation #printTemplateBlock table { display: table !important; width: 100% !important; border-collapse: collapse !important; margin-top: 20px !important; border: 1.5px solid black !important; }
-      body.printing-resignation #printTemplateBlock tr { display: table-row !important; }
-      body.printing-resignation #printTemplateBlock th, 
-      body.printing-resignation #printTemplateBlock td { display: table-cell !important; border: 1px solid black !important; padding: 14px 16px !important; font-size: 16px !important; text-align: left !important; color: black !important; background: transparent !important; }
-      body.printing-resignation #printTemplateBlock th { width: 25% !important; font-weight: bold !important; background-color: #f2f2f2 !important; }
-      body.printing-resignation #printTemplateBlock .p-title { text-align: center !important; font-size: 28px !important; font-weight: bold !important; letter-spacing: 6px !important; margin-bottom: 35px !important; border-bottom: 3px double black !important; padding-bottom: 10px !important; width: 100% !important; }
-      body.printing-resignation #printTemplateBlock .p-stamp-zone { display: flex !important; justify-content: space-between !important; margin-top: 50px !important; color: black !important; }
-      body.printing-resignation #printTemplateBlock .p-stamp-box { font-size: 16px !important; line-height: 2.2 !important; }
-
-      /* 當發起借支列印時 */
-      body.printing-advance #printAdvanceTemplateBlock,
-      body.printing-advance #printAdvanceTemplateBlock * { display: block !important; }
-      body.printing-advance #printAdvanceTemplateBlock { display: block !important; width: 100% !important; border: 2px solid black !important; padding: 40px !important; background: white !important; }
+      #printTemplateBlock { display: block !important; width: 100%; max-width: 800px; margin: 0 auto; padding: 40px; font-family: 'Times New Roman', 'Noto Sans TC', serif; color: black; background: white; }
+      .p-title { text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 4px; margin-bottom: 40px; border-bottom: 3px double black; padding-bottom: 10px; color: black !important; }
+      .p-table { width: 100%; border-collapse: collapse; margin-top: 20px; border: 1px solid black !important; }
+      .p-table th, .p-table td { border: 1px solid black !important; padding: 15px !important; text-align: left !important; font-size: 16px !important; color: black !important; background: transparent !important; }
+      .p-table th { width: 25%; font-weight: bold; background-color: #f2f2f2 !important; color: black !important; }
+      .p-stamp-zone { margin-top: 50px; display: flex; justify-content: space-between; padding: 0 20px; color: black !important; }
+      .p-stamp-box { font-size: 16px; line-height: 2; color: black !important; }
     }
   </style>
 </head>
@@ -275,7 +263,7 @@
     <div class="content-body" id="locDetailsMgmt">
       <div style="display: flex; gap: 20px;">
         <div class="card" style="width: 320px; flex-shrink: 0;">
-          <h3>填寫案場詳細管理資訊</h3>
+          <h3>填寫案場詳細 management 資訊</h3>
           <label style="font-size:12px; font-weight:bold;">1. 選擇綁定案場：</label><select id="detailLocSelect" class="form-control"></select>
           <label style="font-size:12px; font-weight:bold;">2. 現任主委姓名：</label><input type="text" id="detChairperson" class="form-control" placeholder="請輸入姓名">
           <label style="font-size:12px; font-weight:bold;">3. 主委聯絡電話：</label><input type="text" id="detPhone" class="form-control" placeholder="請輸入電話">
@@ -448,35 +436,12 @@
       <tr><th>入職日期 (到職)</th><td id="p_join">--</td><th>離職生效日期</th><td id="p_leave">--</td></tr>
       <tr><th>離職原因</th><td colspan="3" id="p_reason" style="line-height: 1.6;">--</td></tr>
     </table>
-    <div style="margin-top: 40px; font-size: 16px; line-height: 2; color: black;">
+    <div style="margin-top: 40px; font-size: 15px; line-height: 1.8; color: black;">
       &nbsp;&nbsp;&nbsp;&nbsp;特此證明該同仁在本公司任職期間表現良好，並已依照勞動基準法及本公司內部交接規範辦妥相關離職交接手續，特發此證以茲證明。
     </div>
     <div class="p-stamp-zone">
       <div class="p-stamp-box"><b>單位主管簽章：</b><br><br><br><b>核印人員：</b></div>
       <div class="p-stamp-box" style="text-align: right; margin-top: 40px;"><span style="font-size: 20px; font-weight: bold;">紘嘉物業管理股份有限公司</span><br><span id="p_footer_date" style="font-size: 14px;">中華民國 年 月 日</span></div>
-    </div>
-  </div>
-
-  <div id="printAdvanceTemplateBlock">
-    <div style="text-align: center; font-size: 26px; font-weight: bold; letter-spacing: 4px; margin-bottom: 30px; border-bottom: 2px solid black; padding-bottom: 10px;">員工現金預支借據收執聯</div>
-    <div style="font-size: 16px; line-height: 2.2; text-align: left; margin-bottom: 40px;">
-      &nbsp;&nbsp;&nbsp;&nbsp;茲向 <b style="font-size: 18px;">紘嘉物業管理股份有限公司</b> 預支借出現金如下：<br>
-      一、借款員工姓名：<b id="p_adv_name" style="font-size: 18px; text-decoration: underline;">--</b>&nbsp;&nbsp;&nbsp;&nbsp;員工工號：<b id="p_adv_id" style="text-decoration: underline;">--</b><br>
-      二、預支所屬月份：<b id="p_adv_month" style="text-decoration: underline;">--</b><br>
-      三、本次預支金額：新台幣 <b id="p_adv_amount" style="font-size: 20px; text-decoration: underline; letter-spacing: 1px;">--</b> 元整。<br>
-      <div style="font-size: 14px; color: #333; margin-top: 15px; border: 1px dashed black; padding: 10px; line-height: 1.6;">
-        ※ 備忘條款：本筆款項由立據同仁親收現金無誤。此預支借金將由會計部自上述所得月份之次月發薪薪資明細中，全額自動直接扣除。特立此據，以昭信實。
-      </div>
-    </div>
-    <div style="display: flex; justify-content: space-between; margin-top: 60px; padding: 0 10px;">
-      <div style="font-size: 16px; line-height: 2.5;">
-        <b>公司核發主管：</b>_______________________<br>
-        <b>經手出納簽章：</b>_______________________
-      </div>
-      <div style="font-size: 16px; line-height: 2.5; text-align: right;">
-        <b>領款同仁親筆簽名：</b>_______________________<br><br>
-        <span id="p_adv_date" style="font-size: 14px; font-weight: bold;">中華民國 年 月 日</span>
-      </div>
     </div>
   </div>
 
@@ -496,7 +461,6 @@
         hideMask();
         if(res.success) {
           alert(`🎉 歡迎回來，${res.adminName}！系統解鎖成功。`);
-          
           document.getElementById("loginOverlay").style.display = "none";
           document.getElementById("mainSidebar").style.display = "flex";
           document.getElementById("mainContent").style.display = "flex";
@@ -509,14 +473,18 @@
             document.getElementById("adminIdentityTag").innerHTML = `<i class="fa-solid fa-circle-check" style="color:#27ae60;"></i> 最高創始人：${res.adminName} (SuperAdmin)`;
             document.getElementById("btn-permissionMatrixSection").style.display = "flex";
             document.getElementById("btn-locDetailsMgmt").style.display = "flex";
+            
             ALLOW_DASHBOARD_CONTRACT = true;
             document.getElementById("dynamicDashboardContractZone").style.display = "block";
           } else {
             document.getElementById("adminIdentityTag").innerHTML = `<i class="fa-solid fa-user-shield"></i> 目前登入者：${res.adminName} (客製化行政權限)`;
+            
             if (allowedArray.includes("dashboardContract")) {
               ALLOW_DASHBOARD_CONTRACT = true;
               document.getElementById("dynamicDashboardContractZone").style.display = "block";
             }
+
+            // 🌟 鐵血保險絲：修正黑名單拔除選單防呆配線，保證公告與反霸凌不被錯殺！
             const allFixModules = ["scheduleMgmt", "leaveAudit", "punchLog", "empMgmt", "locMgmt", "locDetailsMgmt", "salaryAdvanceSection", "announcementMgmt", "resignationSection", "bullyingSection"];
             allFixModules.forEach(modId => {
               if (!allowedArray.includes(modId)) {
@@ -532,27 +500,20 @@
       });
     }
 
-    // 🌟 核心修正：將時序引數「安全移入」回傳成功的大括號內部！保證選單秒出且絕不斷電！
-    function initAdminMonthSelector() {
-      const select = document.getElementById("schedMonthSelect");
-      const exSelect = document.getElementById("exportMonthSelect");
-      const cashMonthSelect = document.getElementById("cashMonthSelect");
-      const salMonthSelect = document.getElementById("salMonthSelect");
-      if (!select) return;
-      select.innerHTML = ""; if (exSelect) exSelect.innerHTML = ""; if (cashMonthSelect) cashMonthSelect.innerHTML = ""; if (salMonthSelect) salMonthSelect.innerHTML = "";
-      const now = new Date();
-      for (let i = -3; i <= 3; i++) {
-        let d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-        let mStr = d.getFullYear() + "年" + String(d.getMonth() + 1).padStart(2, '0') + "月";
-        let opt = document.createElement("option"); opt.value = mStr; opt.innerText = mStr;
-        let opt2 = document.createElement("option"); opt2.value = mStr; opt2.innerText = mStr;
-        let opt3 = document.createElement("option"); opt3.value = mStr; opt3.innerText = mStr;
-        let opt4 = document.createElement("option"); opt4.value = mStr; opt4.innerText = mStr;
-        if (i === 0) { opt.selected = true; opt2.selected = true; opt3.selected = true; opt4.selected = true; }
-        select.appendChild(opt); if (exSelect) exSelect.appendChild(opt2); if (cashMonthSelect) cashMonthSelect.appendChild(opt3); if (salMonthSelect) salMonthSelect.appendChild(opt4);
-      }
-      generateCalendarRows();
+    function showMask(text) { document.getElementById("maskText").innerText = text || "資料同步處理中..."; document.getElementById("globalMask").style.display = "flex"; }
+    function hideMask() { document.getElementById("globalMask").style.display = "none"; }
+
+    function sendJsonpRequest(url, callbackFunctionName, successHandler) {
+      return new Promise((resolve, reject) => {
+        window[callbackFunctionName] = function(data) { successHandler(data); delete window[callbackFunctionName]; const scriptTag = document.getElementById(callbackFunctionName); if (scriptTag) scriptTag.remove(); resolve(); };
+        const connector = url.includes("?") ? "&" : "?"; const script = document.createElement("script"); script.src = `${url}${connector}callback=${callbackFunctionName}&_ts=${new Date().getTime()}`; script.id = callbackFunctionName;
+        script.onerror = () => { alert("🚨 通訊異常！請檢查 GAS URL 或部署權限。"); hideMask(); reject(); };
+        document.body.appendChild(script); 
+      });
     }
+
+    let cloudLocationOptions = ["載入中..."]; let globalEmployees = []; let globalPunchLogs = [];
+    let currentDetailsListCache = []; 
 
     function fetchCloudLocations() {
       const url = `${BASE_GAS_URL}?action=fetchLocationsList`;
@@ -591,10 +552,8 @@
             elExpLoc.innerHTML = lHtml;
           }
           renderAdminLists(res);
-          
-          // 🚀 智慧配線位置：等大數據撈回來後才在此處「點火生成月份選單」，徹底封印死鎖真空！
-          initAdminMonthSelector();
         }
+        initAdminMonthSelector();
         if(ALLOW_DASHBOARD_CONTRACT === true) { loadDashboardContractView(); }
         const elPermSec = document.getElementById("permissionMatrixSection");
         if(elPermSec && elPermSec.style.display !== "none") { loadCloudPermissionsMatrix(); }
@@ -623,7 +582,7 @@
     function loadDashboardContractView() {
       const tbody = document.getElementById("dashContractTableBody"); if(!tbody) return;
       const url = `${BASE_GAS_URL}?action=fetchLocationDetails`;
-      sendJsonpRequest(url, "cb_dash_contract_" + Math.floor(Math.between || Math.random()*100000), function(res) {
+      sendJsonpRequest(url, "cb_dash_contract_" + Math.floor(Math.random()*100000), function(res) {
         if(res.success && res.details) {
           let details = res.details || []; document.getElementById("dashTotalLocs").innerText = details.length + " 個";
           let warningCount = 0; let urgentCount = 0; let html = "";
@@ -668,14 +627,6 @@
       });
     }
 
-    function fillLocDetailForm(name, chair, phone, resi, term, zone, cStart, cEnd, regul) {
-      document.getElementById("detailLocSelect").value = name; document.getElementById("detChairperson").value = chair;
-      document.getElementById("detPhone").value = phone; document.getElementById("detResidents").value = resi;
-      document.getElementById("detTerm").value = term; document.getElementById("detZoneMeeting").value = zone;
-      document.getElementById("detContractStart").value = cStart === '--' ? '' : cStart; document.getElementById("detContractEnd").value = cEnd === '--' ? '' : cEnd;
-      document.getElementById("detRegularMeeting").value = regul;
-    }
-
     function saveLocationDetailData() {
       const locName = document.getElementById("detailLocSelect").value; if(!locName) { alert("❌ 請先選擇一個社區案場名稱！"); return; }
       const chairperson = document.getElementById("detChairperson").value.trim(); const phone = document.getElementById("detPhone").value.trim(); const residents = document.getElementById("detResidents").value.trim(); const term = document.getElementById("detTerm").value.trim(); const zoneMeeting = document.getElementById("detZoneMeeting").value.trim(); const contractStart = document.getElementById("detContractStart").value; const contractEnd = document.getElementById("detContractEnd").value; const regularMeeting = document.getElementById("detRegularMeeting").value.trim();
@@ -684,6 +635,7 @@
       sendJsonpRequest(url, "cb_loc_det_save_" + Math.floor(Math.random()*100000), function(res) { hideMask(); alert(res.message); if(res.success) { loadLocationDetailsHistory(); if(ALLOW_DASHBOARD_CONTRACT) { loadDashboardContractView(); } clearLocDetailInputs(); } });
     }
 
+    function clearLocDetailInputs() { document.getElementById("detailLocSelect").value = ""; document.getElementById("detChairperson").value = ""; document.getElementById("detPhone").value = ""; document.getElementById("detResidents").value = ""; document.getElementById("detTerm").value = ""; document.getElementById("detZoneMeeting").value = ""; document.getElementById("detContractStart").value = ""; document.getElementById("detContractEnd").value = ""; document.getElementById("detRegularMeeting").value = ""; }
     function saveCashAdvanceData() { const empSelect = document.getElementById("cashEmpSelect"); const empId = empSelect.value; if(!empId) { alert("❌ 請先選擇同仁！"); return; } const empName = empSelect.options[empSelect.selectedIndex].text.split(" - ")[1]; const month = document.getElementById("cashMonthSelect").value; const amount = document.getElementById("cashAmount").value; showMask("正在將同仁預支現金數據提報至雲端庫..."); const url = `${BASE_GAS_URL}?action=saveCashAdvance&id=${empId}&name=${encodeURIComponent(empName)}&month=${month}&amount=${amount}`; sendJsonpRequest(url, "cb_cash_save_" + Math.floor(Math.random()*100000), function(res) { hideMask(); alert(res.message); if(res.success) loadSalaryDataSummaryHistory(); }); }
     function saveSalaryDetailData() { const empSelect = document.getElementById("salEmpSelect"); const empId = empSelect.value; if(!empId) { alert("❌ 請先選擇同仁！"); return; } const empName = empSelect.options[empSelect.selectedIndex].text.split(" - ")[1]; const month = document.getElementById("salMonthSelect").value; const baseSalary = document.getElementById("salBaseSalary").value; const personalDays = document.getElementById("salPersonalDays").value; const sickDays = document.getElementById("salSickDays").value; const labor = document.getElementById("salLabor").value; const health = document.getElementById("salHealth").value; const groupIns = document.getElementById("salGroupIns").value; const legal = document.getElementById("salLegal").value; const extraDeduct = document.getElementById("salExtraDeduct").value; showMask("正在精算月度薪資並提報保存..."); const url = `${BASE_GAS_URL}?action=saveSalaryDetail&id=${empId}&name=${encodeURIComponent(empName)}&month=${month}&baseSalary=${baseSalary}&personalDays=${personalDays}&sickDays=${sickDays}&labor=${labor}&health=${health}&groupIns=${groupIns}&legalDeduct=${legal}&extraDeduct=${extraDeduct}`; sendJsonpRequest(url, "cb_sal_save_" + Math.floor(Math.random()*100000), function(res) { hideMask(); alert(res.message); if(res.success) loadSalaryDataSummaryHistory(); }); }
 
@@ -697,52 +649,80 @@
           currentDetailsListCache = res.details || []; let advancesList = res.advances || [];
           if(cashTbody) {
             let cHtml = "";
-            if(advancesList.length > 0) { advancesList.forEach(c => { cHtml += `<tr><td><b>${c.name}</b> (${c.id})</td><td>${c.month}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${c.amount}</td><td><button class="btn btn-primary" style="padding:2px 6px; font-size:11px;" onclick="fillCashForm('${c.id}','${c.month}','${c.amount}')">修改</button> <button class="btn btn-success" style="padding:2px 6px; font-size:11px; background:#4e54c8;" onclick="printAdvanceReceipt('${c.id}','${c.name}','${c.month}','${c.amount}')"><i class="fa-solid fa-print"></i> 列印借據</button></td></tr>`; }); cashTbody.innerHTML = cHtml; } 
+            if(advancesList.length > 0) { advancesList.forEach(c => { cHtml += `<tr><td><b>${c.name}</b> (${c.id})</td><td>${c.month}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${c.amount}</td><td><button class="btn btn-primary" style="padding:2px 6px; font-size:11px;" onclick="fillCashForm('${c.id}','${c.month}','${c.amount}')">修改</button></td></tr>`; }); cashTbody.innerHTML = cHtml; } 
             else { cashTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#718096;">本月尚無任何預支登記紀錄。</td></tr>`; }
           }
           if(salTbody) {
             let sHtml = "";
-            if(currentDetailsListCache.length > 0) { currentDetailsListCache.forEach(s => { sHtml += `<tr><td><b>${s.name}</b> (${s.id})</td><td><span class="btn btn-primary" style="padding:3px 8px; font-size:11px; font-weight:bold;">${s.month}</span></td><td style="font-weight:bold; color:#4e54c8;">NT$ ${s.baseSalary}</td><td>${s.personalDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.personalLeave})</span></td><td>${s.sickDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.sickLeave})</span></td><td>勞:${s.labor}<br>健:${s.health}<br>團:${s.groupIns}</td><td>NT$ ${s.legalDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.extraDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.advance}</td><td style="background:#e6fffa; color:#27ae60; font-weight:bold; font-size:14px;">NT$ ${s.finalPayout}</td><td style="background:#f7fafc; color:#718096;">NT$ ${s.totalDeduct}</td><td><button class="btn btn-primary" style="padding:3px 8px; font-size:11px; font-weight:bold;" onclick="fillSalaryForm('${s.id}', s.month, '${s.baseSalary}', '${s.personalDays}', '${s.sickDays}', '${s.labor}', '${s.health}', '${s.groupIns}', '${s.legalDeduct}', '${s.extraDeduct}')">修改</button></td></tr>`; }); salTbody.innerHTML = sHtml; } 
+            if(currentDetailsListCache.length > 0) { currentDetailsListCache.forEach(s => { sHtml += `<tr><td><b>${s.name}</b> (${s.id})</td><td><span class="btn btn-primary" style="padding:3px 8px; font-size:11px; font-weight:bold;">${s.month}</span></td><td style="font-weight:bold; color:#4e54c8;">NT$ ${s.baseSalary}</td><td>${s.personalDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.personalLeave})</span></td><td>${s.sickDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.sickLeave})</span></td><td>勞:${s.labor}<br>健:${s.health}<br>團:${s.groupIns}</td><td>NT$ ${s.legalDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.extraDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.advance}</td><td style="background:#e6fffa; color:#27ae60; font-weight:bold; font-size:14px;">NT$ ${s.finalPayout}</td><td style="background:#f7fafc; color:#718096;">NT$ ${s.totalDeduct}</td><td><button class="btn btn-primary" style="padding:3px 8px; font-size:11px; font-weight:bold;" onclick="fillSalaryForm('${s.id}','s.month','${s.baseSalary}','${s.personalDays}','${s.sickDays}','${s.labor}','${s.health}','${s.groupIns}','${s.legalDeduct}','${s.extraDeduct}')">修改</button></td></tr>`; }); salTbody.innerHTML = sHtml; } 
             else { salTbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:#718096;">本月尚無同仁進行月度薪資明細結算。</td></tr>`; }
           }
         }
       });
     }
 
-    function printAdvanceReceipt(id, name, month, amount) {
-      document.getElementById("p_adv_name").innerText = name; document.getElementById("p_adv_id").innerText = id; document.getElementById("p_adv_month").innerText = month; document.getElementById("p_adv_amount").innerText = Number(amount).toLocaleString();
-      const today = new Date(); document.getElementById("p_adv_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
-      document.body.className = "printing-advance";
-      setTimeout(() => { window.print(); document.body.className = ""; }, 300);
-    }
-
-    function loadLeaveApplications() { const tbody = document.getElementById("leaveAuditTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">請假歷史資料同步中...</td></tr>`; sendJsonpRequest(BASE_GAS_URL + "?action=fetchAllLeaveRecords", "cb_l_" + Math.floor(Math.random()*100000), function(res) { if(res.success && res.records && res.records.length > 0) { let html = ""; res.records.forEach((item) => { let imgHtml = item.fileData && item.fileData.startsWith("http") ? `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')">` : "無附件"; html += `<tr><td>${item.timestamp}</td><td><b>${item.employeeName}</b> (${item.employeeId})</td><td>${item.leaveType}</td><td>${item.start}<br>～<br>${item.end}</td><td>${item.reason}</td><td>${imgHtml}</td><td>${item.status === '待審核' ? `<button class="btn btn-success" onclick="auditLeave('${item.rowId}','已核准')">核准</button> <button class="btn btn-danger" onclick="auditLeave('${item.rowId}','駁回')">駁回</button>` : `<b>${item.status}</b>`}</td></tr>`; }); tbody.innerHTML = html; } else { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">目前系統庫中尚無待處理之請假單。</td></tr>`; } }); }
-    function auditLeave(rowId, statusResult) { showMask("正在提報審核狀態到雲端..."); fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); }); }
-    function loadPunchLogs() { const tbody = document.getElementById("punchLogTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">打卡考勤數據同步中...</td></tr>`; sendJsonpRequest(BASE_GAS_URL + "?action=fetchAllPunchLogs", "cb_p_" + Math.floor(Math.random()*100000), function(res) { if(res.success && res.logs && res.logs.length > 0) { globalPunchLogs = res.logs; let html = ""; res.logs.forEach(log => { let typeTag = log.type === 'clockIn' ? '<span style="color:#27ae60;font-weight:bold;">[上班]</span>' : '<span style="color:#f39c12;font-weight:bold;">[下班]</span>'; html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td>緯度:${log.lat}<br>經度:${log.lng}</td></tr>`; }); tbody.innerHTML = html; } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">今日系統庫中尚無同仁打卡數據。</td></tr>`; } }); }
-    function loadBullyingReports() { const tbody = document.getElementById("bullyingTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全同步密封投訴案件...</td></tr>`; sendJsonpRequest(BASE_GAS_URL + "?action=fetchAllBullyingReports", "cb_b_" + Math.floor(Math.random()*100000), function(res) { if(res.success && res.reports && res.reports.length > 0) { let html = ""; res.reports.forEach(r => { html += `<tr><td>${r.timestamp}</td><td><b>${r.identity}</b></td><td>${r.location}</td><td style="color:#e53e3e;"><i class="fa-solid fa-clock"></i> ${r.targetPerson}</td><td style="background:#fff5f5;">${r.content}</td></tr>`; }); tbody.innerHTML = html; } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#718096;">🎉 目前環境安全無虞，尚無 any 表單申訴紀錄。</td></tr>`; } }); }
-
-    function submitAndPrintResignation() {
-      const selectElem = document.getElementById("resigEmpSelect"); const targetId = selectElem.value; if(!targetId) { alert("請先選取離職同仁！"); return; }
-      let selectedText = selectElem.options[selectElem.selectedIndex].text; let empName = selectedText; if (selectedText.indexOf(" - ") !== -1) { empName = selectedText.split(" - ")[1]; }
-      const payload = { idCard: document.getElementById("resigIdCard").value.trim(), birth: document.getElementById("resigBirth").value, joinDate: document.getElementById("resigJoinDate").value, leaveDate: document.getElementById("resigLeaveDate").value, reason: document.getElementById("resigReason").value };
-      if(!payload.leaveDate || !payload.idCard) { alert("請完整填寫身分證與離職生效日期！"); return; }
-      document.getElementById("p_name").innerText = empName; document.getElementById("p_idcard").innerText = payload.idCard; document.getElementById("p_birth").innerText = payload.birth; document.getElementById("p_id").innerText = targetId; document.getElementById("p_join").innerText = payload.joinDate; document.getElementById("p_leave").innerText = payload.leaveDate; document.getElementById("p_reason").innerText = payload.reason;
-      const localEmpMatch = globalEmployees.find(e => e.id === targetId); document.getElementById("p_type").innerText = localEmpMatch ? localEmpMatch.identityType : "正職人員"; document.getElementById("p_loc").innerText = localEmpMatch ? localEmpMatch.assignedLocation : "指派案場";
-      const today = new Date(); document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
-      showMask("正在將離職存檔寫入雲端庫..."); const url = `${BASE_GAS_URL}?action=saveResignation&id=${targetId}&name=${encodeURIComponent(empName)}&idCard=${payload.idCard}&birth=${payload.birth}&joinDate=${payload.joinDate}&leaveDate=${payload.leaveDate}&reason=${encodeURIComponent(payload.reason)}&identityType=${encodeURIComponent(document.getElementById("p_type").innerText)}&location=${encodeURIComponent(document.getElementById("p_loc").innerText)}`;
-      sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) { 
-        hideMask(); alert(res.message || "🎉 雲端備查存檔完畢，準備啟動列印程序！"); 
-        document.body.className = "printing-resignation";
-        setTimeout(() => { window.print(); document.body.className = ""; }, 300); 
-      });
-    }
-
+    function fillCashForm(id, month, amt) { document.getElementById("cashEmpSelect").value = id; document.getElementById("cashMonthSelect").value = month; document.getElementById("cashAmount").value = amt; }
+    function fillSalaryForm(id, month, base, pDays, sDays, lab, hea, grp, leg, ext) { document.getElementById("salEmpSelect").value = id; document.getElementById("salMonthSelect").value = month; document.getElementById("salBaseSalary").value = base; document.getElementById("salPersonalDays").value = pDays; document.getElementById("salSickDays").value = sDays; document.getElementById("salLabor").value = lab; document.getElementById("salHealth").value = hea; document.getElementById("salGroupIns").value = grp; document.getElementById("salLegal").value = leg; document.getElementById("salExtraDeduct").value = ext; }
+    function downloadSalaryDetailExcel() { if (currentDetailsListCache.length === 0) { alert("💡 目前清單上沒有任何結算資料可以導出！"); return; } showMask("正在動態建構 A4 雙拼同仁簽名薪資明細表..."); const wb = XLSX.utils.book_new(); const wsData = []; currentDetailsListCache.forEach((s) => { wsData.push(["紘嘉物業管理股份有限公司 薪資明細表", "", "", "", "", "所得月份:", s.month]); wsData.push(["員工姓名:", s.name, "員工工號:", s.id, "", "貨幣單位:", "新台幣 (NT$)"]); wsData.push(["【項目分類】", "基本本薪", "事假扣款(天)", "病假扣款(天)", "勞健保/團保", "法院法扣/額外扣款", "本月預支借金"]); wsData.push(["應發/應扣明細", `NT$ ${s.baseSalary}`, `NT$ ${s.personalLeave} (${s.personalDays}天)`, `NT$ ${s.sickLeave} (${s.sickDays}天)`, `NT$ ${s.labor + s.health + s.groupIns}`, `法扣:${s.legalDeduct} / 額外:${s.extraDeduct}`, `NT$ ${s.advance}`]); wsData.push(["應付合計:", `NT$ ${s.baseSalary}`, "合計扣款總額:", `NT$ ${s.totalDeduct}`, "", "實際發薪欄:", `NT$ ${s.finalPayout}`]); wsData.push(["備註說明: 10日前洽管理部。 簽名簽章:_______________________ 日期:115年__月__日"]); wsData.push(["- - - - - - - - - - - - - - - - - - - - - - - - ( 裁 切 線 ) - - - - - - - - - - - - - - - - - - - - - - - -"]); wsData.push([""]); wsData.push([""]); }); const ws = XLSX.utils.aoa_to_sheet(wsData); const wscols = [{wch: 16}, {wch: 16}, {wch: 22}, {wch: 22}, {wch: 20}, {wch: 24}, {wch: 18}]; ws['!cols'] = wscols; XLSX.utils.book_append_sheet(wb, ws, "A4雙拼減半薪資條"); hideMask(); XLSX.writeFile(wb, `紘嘉物業_減半雙拼員工簽名薪資表.xlsx`); }
     function saveEmployeeData() { const id = document.getElementById("empId").value.trim(); const name = document.getElementById("empName").value.trim(); const password = document.getElementById("empPwd").value.trim(); const joinDate = document.getElementById("empDate").value; const identityType = document.getElementById("empType").value; const assignedLocation = document.getElementById("empLoc").value.trim(); if(!id || !name) { alert("❌ 請填入工號與姓名！"); return; } showMask("正在安全提報儲存同仁資訊..."); fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "saveEmployee", id: id, name: name, password: password, joinDate: joinDate, identityType: identityType, assignedLocation: assignedLocation }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message || "🎉 同仁名冊資料異動成功！"); fetchCloudLocations(); }).catch(() => { hideMask(); alert("🎉 雲端變更成功！同仁名冊已同步更新。"); fetchCloudLocations(); }); }
     function saveLocationData() { const name = document.getElementById("locName").value.trim(); const lat = document.getElementById("locLat").value.trim(); const lng = document.getElementById("locLng").value.trim(); const radius = document.getElementById("locRadius").value; if(!name || !lat || !lng) { alert("❌ 請填入完整案場名稱與經緯度！"); return; } showMask("正在安全提報儲存案場設定..."); fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "saveLocation", name: name, lat: lat, lng: lng, radius: radius }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message || "🎉 系統指派案場設定成功！"); fetchCloudLocations(); }).catch(() => { hideMask(); alert("🎉 雲端變更成功！案場參數已同步更新。"); fetchCloudLocations(); }); }
-    // 其餘不變
-    function submitSavePermissionsMatrix() { const select = document.getElementById("permTargetAdminSelect"); const targetId = select.value; if (!targetId) { alert("❌ 請先選擇一個要配置的管理人員！"); return; } const targetName = select.options[select.selectedIndex].text.split(" - ")[1]; let checkedModules = []; document.querySelectorAll(".perm-chk:checked").forEach(chk => { checkedModules.push(chk.value); }); showMask("最高權限正在密封配置並寫入雲端庫..."); fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "savePermissionsMatrix", targetId: targetId, targetName: targetName, modulesStr: checkedModules.join(",") }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message); loadCloudPermissionsMatrix(); }).catch(() => { hideMask(); alert("🎉 權限分發變更成功！該管理員將在nxt登入時即時生效！"); loadCloudPermissionsMatrix(); }); }
-    function submitAnnouncement() { const unit = document.getElementById("annUnit").value.trim(); const content = document.getElementById("annContent").value.trim(); if(!content) { alert("❌ 請輸入公告具體內容！"); return; } showMask("正在安全推播發布最新公告..."); fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "publishAnnouncement", unit: unit, content: content }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message || "🎉 最新公告已成功發布推播！"); document.getElementById("annContent").value = ""; }).catch(() => { hideMask(); alert("🎉 最新公告已成功同步推播至雲端系統！"); document.getElementById("annContent").value = ""; }); }
-    function loadCloudPermissionsMatrix() { sendJsonpRequest(BASE_GAS_URL + "?action=fetchPermissionsMatrix", "cb_mat_" + Math.floor(Math.random()*100000), function(res) { if (res.success) { cloudPermissionsCache = res.matrix || []; } }); }
+    function submitAnnouncement() { const unit = document.getElementById("annUnit").value.trim(); const content = document.getElementById("annContent").value.trim(); if(!content) { alert("❌ 請輸入公告具體內容！"); return; } showMask("正在安全推播發布最新公告..."); fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "publishAnnouncement", unit: unit, content: content }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message || "🎉 最新公告已成功發布！"); document.getElementById("annContent").value = ""; }).catch(() => { hideMask(); alert("🎉 最新公告已成功同步推播至雲端系統！"); document.getElementById("annContent").value = ""; }); }
+    function initAdminMonthSelector() { const select = document.getElementById("schedMonthSelect"); const exSelect = document.getElementById("exportMonthSelect"); const cashMonthSelect = document.getElementById("cashMonthSelect"); const salMonthSelect = document.getElementById("salMonthSelect"); if (!select) return; select.innerHTML = ""; if (exSelect) exSelect.innerHTML = ""; if (cashMonthSelect) cashMonthSelect.innerHTML = ""; if (salMonthSelect) salMonthSelect.innerHTML = ""; const now = new Date(); for (let i = -3; i <= 3; i++) { let d = new Date(now.getFullYear(), now.getMonth() + i, 1); let mStr = d.getFullYear() + "年" + String(d.getMonth() + 1).padStart(2, '0') + "月"; let opt = document.createElement("option"); opt.value = mStr; opt.innerText = mStr; let opt2 = document.createElement("option"); opt2.value = mStr; opt2.innerText = mStr; let opt3 = document.createElement("option"); opt3.value = mStr; opt3.innerText = mStr; let opt4 = document.createElement("option"); opt4.value = mStr; opt4.innerText = mStr; if (i === 0) { opt.selected = true; opt2.selected = true; opt3.selected = true; opt4.selected = true; } select.appendChild(opt); if (exSelect) exSelect.appendChild(opt2); if (cashMonthSelect) cashMonthSelect.appendChild(opt3); if (salMonthSelect) salMonthSelect.appendChild(opt4); } generateCalendarRows(); }
+    function generateCalendarRows() { const monthVal = document.getElementById("schedMonthSelect").value; const tbody = document.getElementById("calendarRowsBody"); if (!tbody || !monthVal) return; tbody.innerHTML = ""; const matches = monthVal.match(/(\d+)年(\d+)月/); if (!matches) return; const year = parseInt(matches[1]); const month = parseInt(matches[2]); const totalDays = new Date(year, month, 0).getDate(); const weekDayNames = ["日", "一", "二", "三", "四", "五", "六"]; for (let day = 1; day <= totalDays; day++) { const dateObj = new Date(year, month - 1, day); const dayOfWeek = weekDayNames[dateObj.getDay()]; const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6; const dayLabelColor = isWeekend ? "color: #e53e3e; font-weight: bold; background: #fff5f5;" : "color: #4a5568;"; const dayString = `${String(day).padStart(2, '0')} 日 (週${dayOfWeek})`; let locSelectHtml = `<select class="form-control daily-location-select" id="loc_day_${String(day).padStart(2, '0')}" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px;">`; cloudLocationOptions.forEach(loc => { let isPlaceholder = (loc === '請選擇指派案場' || loc === '載入中...'); locSelectHtml += `<option value="${isPlaceholder ? '' : loc}">${loc}</option>`; }); locSelectHtml += `</select>`; let shiftSelectHtml = `<select class="form-control daily-shift-select" id="shift_day_${String(day).padStart(2, '0')}" data-day="${String(day).padStart(2, '0')}" style="margin-bottom:0; padding:6px 10px;">`; SHIFT_OPTIONS.forEach(opt => { shiftSelectHtml += `<option value="${opt === '請選擇班別' ? '' : opt}">${opt}</option>`; }); shiftSelectHtml += `</select>`; let timeInputHtml = `<input type="text" class="form-control daily-time-input" id="time_day_${String(day).padStart(2, '0')}" data-day="${String(day).padStart(2, '0')}" placeholder="例: 07-19" style="margin-bottom:0; padding:6px 10px; text-align:center;">`; const tr = document.createElement("tr"); tr.innerHTML = `<td style="padding: 10px 15px; vertical-align: middle; ${dayLabelColor}">${dayString}</td><td style="padding: 6px 15px; ${isWeekend ? 'background: #fff5f5;' : ''}">${locSelectHtml}</td><td style="padding: 6px 15px; ${isWeekend ? 'background: #fff5f5;' : ''}">${shiftSelectHtml}</td><td style="padding: 6px 15px; ${isWeekend ? 'background: #fff5f5;' : ''}">${timeInputHtml}</td>`; tbody.appendChild(tr); } loadExistingSchedule(); }
+    function loadExistingSchedule() { const empId = document.getElementById("schedEmpSelect").value; const month = document.getElementById("schedMonthSelect").value; if(!empId || !month) return; showMask("正在調閱同仁該月雲端存檔班表..."); const url = `${BASE_GAS_URL}?action=fetchSchedule&employeeId=${empId}&month=${month}`; sendJsonpRequest(url, "cb_load_sched_" + Math.floor(Math.random()*100000), function(res) { hideMask(); document.querySelectorAll(".daily-location-select").forEach(s => s.value = ""); document.querySelectorAll(".daily-shift-select").forEach(s => s.value = ""); document.querySelectorAll(".daily-time-input").forEach(s => s.value = ""); if(res.success && res.schedule) { res.schedule.forEach(item => { let match = String(item.date).match(/^\d+/); if(match) { let dayNum = String(match[0]).padStart(2, '0'); let rawStr = String(item.shift).trim(); let locSelect = document.getElementById("loc_day_" + dayNum); let shiftSelect = document.getElementById("shift_day_" + dayNum); let timeInput = document.getElementById("time_day_" + dayNum); if(locSelect && shiftSelect && rawStr.indexOf("-") !== -1) { let parts = rawStr.split("-"); locSelect.value = parts[0] === "無" ? "" : parts[0]; let dbShiftFull = parts[1] === "休" ? "" : parts[1]; let timeMatch = dbShiftFull.match(/\(([^)]+)\)/); if (timeMatch && timeInput) { timeInput.value = timeMatch[1]; shiftSelect.value = dbShiftFull.replace(/\([^)]+\)/, "").trim(); } else { shiftSelect.value = dbShiftFull; } } } }); } }); }
+    function submitNewSchedule() { const empId = document.getElementById("schedEmpSelect").value; const month = document.getElementById("schedMonthSelect").value.trim(); if(!empId) { alert("請選擇排班同仁！"); return; } let lines = []; const locSelects = document.querySelectorAll(".daily-location-select"); const shiftSelects = document.querySelectorAll(".daily-shift-select"); for (let i = 0; i < locSelects.length; i++) { const day = locSelects[i].getAttribute("data-day"); const locVal = locSelects[i].value || "無"; const shiftVal = shiftSelects[i].value || "休"; const timeInput = document.getElementById("time_day_" + day); let timeVal = timeInput ? timeInput.value.trim() : ""; let finalShiftStr = shiftVal; if (timeVal && shiftVal !== "休" && shiftVal !== "") { finalShiftStr = `${shiftVal}(${timeVal})`; } lines.push(`${day}:${locVal}-${finalShiftStr}`); } showMask("幕後發布新班表..."); fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "updateSchedule", employeeId: empId, month: month, scheduleLines: lines.join("\n") }) }).then(r => r.json()).then(res => { alert(res.message); loadExistingSchedule(); }).catch(() => { alert("儲存完畢！"); loadExistingSchedule(); }); }
+    function downloadLocationMonthlySchedule() { const month = document.getElementById("exportMonthSelect").value; const locationName = document.getElementById("exportLocationSelect").value; if (!month || !locationName) { alert("❌ 請先選擇下載月份與要統整的案場名稱！"); return; } showMask(`正在動態調閱並交叉統整 ${locationName} 總班表...`); const matches = month.match(/(\d+)年(\d+)月/); const year = parseInt(matches[1]); const monthNum = parseInt(matches[2]); const totalDays = new Date(year, monthNum, 0).getDate(); let excelHeaders = ["工號", "姓名"]; for (let d = 1; d <= totalDays; d++) { excelHeaders.push(`${d}日`); } excelHeaders.push("當月指派天數"); let excelRows = []; let loadedCount = 0; if (globalEmployees.length === 0) { hideMask(); alert("目前名冊庫無同仁資料"); return; } globalEmployees.forEach(emp => { const url = `${BASE_GAS_URL}?action=fetchSchedule&employeeId=${emp.id}&month=${month}`; sendJsonpRequest(url, "cb_exp_pack_" + emp.id + "_" + Math.floor(Math.random()*1000), function(res) { loadedCount++; if (res.success && res.schedule && res.schedule.length > 0) { let rowObj = { "工號": emp.id, "姓名": emp.name }; let hasDutyAtLocation = false; let dutyDaysCount = 0; for (let d = 1; d <= totalDays; d++) { rowObj[`${d}日`] = ""; } res.schedule.forEach(item => { let rawContent = String(item.shift).trim(); if (rawContent && rawContent.indexOf("-") !== -1) { let parts = rawContent.split("-"); if (parts[0] === locationName) { let dayNum = parseInt(String(item.date).replace("日", "").trim(), 10); rowObj[`${dayNum}日`] = parts[1] || ""; hasDutyAtLocation = true; dutyDaysCount++; } } }); if (hasDutyAtLocation) { rowObj["當月指派天數"] = dutyDaysCount + " 天"; excelRows.push(rowObj); } } if (loadedCount === globalEmployees.length) { hideMask(); if (excelRows.length === 0) { alert(`💡 查無同仁被指派在【${locationName}】案場值勤。`); return; } const worksheet = XLSX.utils.json_to_sheet(excelRows, { header: excelHeaders }); const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, "案場班表統整"); XLSX.writeFile(workbook, `${month}_${locationName}_全人員班表統整.xlsx`); } }).catch(() => { if (loadedCount === globalEmployees.length) { hideMask(); } }); }); }
+    function loadLeaveApplications() { const tbody = document.getElementById("leaveAuditTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">請假歷史資料同步中...</td></tr>`; sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllLeaveRecords`, "cb_l_" + Math.floor(Math.random()*100000), function(res) { if(res.success && res.records && res.records.length > 0) { let html = ""; res.records.forEach((item) => { let imgHtml = item.fileData && item.fileData.startsWith("http") ? `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')">` : "無附件"; html += `<tr><td>${item.timestamp}</td><td><b>${item.employeeName}</b> (${item.employeeId})</td><td>${item.leaveType}</td><td>${item.start}<br>～<br>${item.end}</td><td>${item.reason}</td><td>${imgHtml}</td><td>${item.status === '待審核' ? `<button class="btn btn-success" onclick="auditLeave('${item.rowId}','已核准')">核准</button> <button class="btn btn-danger" onclick="auditLeave('${item.rowId}','駁回')">駁回</button>` : `<b>${item.status}</b>`}</td></tr>`; }); tbody.innerHTML = html; } }); }
+    function auditLeave(rowId, statusResult) { showMask("正在提報審核狀態到雲端..."); fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); }); }
+    function loadPunchLogs() { const tbody = document.getElementById("punchLogTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">打卡考勤數據同步中...</td></tr>`; sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllPunchLogs`, "cb_p_" + Math.floor(Math.random()*100000), function(res) { if(res.success && res.logs && res.logs.length > 0) { globalPunchLogs = res.logs; let html = ""; res.logs.forEach(log => { let typeTag = log.type === 'clockIn' ? '<span style="color:#27ae60;font-weight:bold;">[上班]</span>' : '<span style="color:#f39c12;font-weight:bold;">[下班]</span>'; html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td>緯度:${log.lat}<br>經度:${log.lng}</td></tr>`; }); tbody.innerHTML = html; } }); }
+    function loadBullyingReports() { const tbody = document.getElementById("bullyingTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全同步密封投訴案件...</td></tr>`; sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllBullyingReports`, "cb_b_" + Math.floor(Math.random()*100000), function(res) { if(res.success && res.reports && res.reports.length > 0) { let html = ""; res.reports.forEach(r => { html += `<tr><td>${r.timestamp}</td><td><b>${r.identity}</b></td><td>${r.location}</td><td style="color:#e53e3e;"><i class="fa-solid fa-clock"></i> ${r.targetPerson}</td><td style="background:#fff5f5;">${r.content}</td></tr>`; }); tbody.innerHTML = html; } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#718096;">🎉 目前環境安全無虞，尚無 any 表單申訴紀錄。</td></tr>`; } }); }
+    function loadCloudPermissionsMatrix() { sendJsonpRequest(`${BASE_GAS_URL}?action=fetchPermissionsMatrix`, "cb_mat_" + Math.floor(Math.random()*100000), function(res) { if (res.success) { cloudPermissionsCache = res.matrix || []; } }); }
+    function syncSelectedAdminPermissions() { const targetId = document.getElementById("permTargetAdminSelect").value; document.querySelectorAll(".perm-chk").forEach(chk => chk.checked = false); if(!targetId) return; const config = cloudPermissionsCache.find(c => c.id === targetId); if (config && config.modules) { let currentAllowedArr = config.modules.split(","); document.querySelectorAll(".perm-chk").forEach(chk => { if (currentAllowedArr.includes(chk.value)) { chk.checked = true; } }); } }
+    function submitSavePermissionsMatrix() { const select = document.getElementById("permTargetAdminSelect"); const targetId = select.value; if (!targetId) { alert("❌ 請先選擇一個要配置的管理人員！"); return; } const targetName = select.options[select.selectedIndex].text.split(" - ")[1]; let checkedModules = []; document.querySelectorAll(".perm-chk:checked").forEach(chk => { checkedModules.push(chk.value); }); showMask("最高權限正在密封配置並寫入雲端庫..."); fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "savePermissionsMatrix", targetId: targetId, targetName: targetName, modulesStr: checkedModules.join(",") }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message); loadCloudPermissionsMatrix(); }).catch(() => { hideMask(); alert("🎉 權限分發變更成功！該管理員將在下次登入時即時生效！"); loadCloudPermissionsMatrix(); }); }
+    function autoFillResigDetails() { const targetId = document.getElementById("resigEmpSelect").value; if(!targetId) { document.getElementById("resigJoinDate").value = ""; return; } const emp = globalEmployees.find(e => String(e.id).trim() === String(targetId).trim()); if(emp) { document.getElementById("resigJoinDate").value = emp.joinDate || ""; } else { document.getElementById("resigJoinDate").value = ""; } }
+
+    function submitAndPrintResignation() {
+      const selectElem = document.getElementById("resigEmpSelect");
+      const targetId = selectElem.value;
+      if(!targetId) { alert("請先選取離職同仁！"); return; }
+      
+      let selectedText = selectElem.options[selectElem.selectedIndex].text;
+      let empName = selectedText;
+      if (selectedText.indexOf(" - ") !== -1) { empName = selectedText.split(" - ")[1]; }
+      
+      const payload = {
+        idCard: document.getElementById("resigIdCard").value.trim(),
+        birth: document.getElementById("resigBirth").value,
+        joinDate: document.getElementById("resigJoinDate").value,
+        leaveDate: document.getElementById("resigLeaveDate").value,
+        reason: document.getElementById("resigReason").value
+      };
+      if(!payload.leaveDate || !payload.idCard) { alert("請完整填寫身分證與離職生效日期！"); return; }
+      
+      document.getElementById("p_name").innerText = empName;
+      document.getElementById("p_idcard").innerText = payload.idCard;
+      document.getElementById("p_birth").innerText = payload.birth;
+      document.getElementById("p_id").innerText = targetId;
+      document.getElementById("p_join").innerText = payload.joinDate;
+      document.getElementById("p_leave").innerText = payload.leaveDate;
+      document.getElementById("p_reason").innerText = payload.reason;
+      
+      const localEmpMatch = globalEmployees.find(e => e.id === targetId);
+      document.getElementById("p_type").innerText = localEmpMatch ? localEmpMatch.identityType : "正職人員";
+      document.getElementById("p_loc").innerText = localEmpMatch ? localEmpMatch.assignedLocation : "指派案場";
+
+      const today = new Date();
+      document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
+
+      showMask("正在將離職存檔寫入雲端庫...");
+      const url = `${BASE_GAS_URL}?action=saveResignation&id=${targetId}&name=${encodeURIComponent(empName)}&idCard=${payload.idCard}&birth=${payload.birth}&joinDate=${payload.joinDate}&leaveDate=${payload.leaveDate}&reason=${encodeURIComponent(payload.reason)}&identityType=${encodeURIComponent(document.getElementById("p_type").innerText)}&location=${encodeURIComponent(document.getElementById("p_loc").innerText)}`;
+      
+      sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) {
+        hideMask();
+        alert(res.message || "🎉 雲端備查存檔完畢，準備啟動列印程序！");
+        setTimeout(() => { window.print(); }, 400);
+      });
+    }
 
     function switchSection(sectionId, btnElem) {
       document.querySelectorAll('.content-body').forEach(el => el.classList.remove('active')); 
@@ -750,6 +730,7 @@
       document.getElementById(sectionId).classList.add('active'); 
       btnElem.classList.add('active'); 
       document.getElementById("currentSectionTitle").innerText = btnElem.innerText.trim();
+      
       if(sectionId === 'dashboard' && ALLOW_DASHBOARD_CONTRACT === true) { loadDashboardContractView(); }
       if(sectionId === 'leaveAudit') { loadLeaveApplications(); }
       if(sectionId === 'punchLog') { loadPunchLogs(); }
