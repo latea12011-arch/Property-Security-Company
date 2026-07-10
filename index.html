@@ -28,13 +28,11 @@
     // =========================================================================
     // 🌟【耀毅同仁端控制中心】請在此填入最新部署的 GAS 網址：
     // =========================================================================
-    const BASE_GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
+    const BASE_GAS_URL = "https://script.google.com/macros/s/XXXXXXXX/exec";
   </script>
   
   <style>
     * { box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    
-    /* 🌟 鐵血修正：強制 body 在任何大螢幕、寬手機下一律「完美英挺置中」，絕不偏左！ */
     body { background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 15px; color: #333; }
     
     .phone-container { width: 100%; max-width: 410px; background: white; border-radius: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); padding: 20px; display: flex; flex-direction: column; gap: 15px; position: relative; overflow: hidden; }
@@ -67,7 +65,6 @@
     .punch-btn { height: 85px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; font-size: 16px; border-radius: 16px; }
     .punch-btn i { font-size: 24px; }
     
-    /* 🌟 公告欄特別精製樣式 */
     .announcement-box { background: #fffaf0; border: 1px solid #feebc8; border-radius: 14px; padding: 12px; max-height: 110px; overflow-y: auto; font-size: 13px; line-height: 1.5; }
     .ann-item { border-bottom: 1px dashed #fbd38d; padding-bottom: 6px; margin-bottom: 6px; }
     .ann-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
@@ -127,7 +124,7 @@
         <button class="btn btn-danger punch-btn" onclick="triggerPunch('clockOut')"><i class="fa-solid fa-circle-xmark"></i><b>下班打卡</b></button>
       </div>
 
-      <button class="btn btn-secondary" style="color:#e53e3e; border:1px solid #feb2b2; background:#fff5f5; font-size:14px; padding:10px;" onclick="window.open('https://forms.gle/4iQ8R3Sg2DAtAEnC7')">
+      <button class="btn btn-secondary" style="color:#e53e3e; border:1px solid #feb2b2; background:#fff5f5; font-size:14px; padding:10px;" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSe2FLb1sPoM8ajnAR_i4h4gbU3sF6W1mCqAj6EzHe4OXRDo_Q/viewform?usp=header')">
         <i class="fa-solid fa-gavel"></i> <b>員工職場安全危害申訴通道</b>
       </button>
 
