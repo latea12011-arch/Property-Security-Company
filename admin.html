@@ -84,11 +84,11 @@
 
     #printTemplateBlock, #printAdvanceTemplateBlock { display: none; }
     
+    /* 🌟 鋼鐵隔離列印防線：完美解鎖 A4 滿頁格式，絕不交叉干擾、絕不偏左壓縮 */
     @media print {
-      @page { size: A4 portrait; margin: 20mm; }
+      @page { size: A4 portrait; margin: 15mm; }
       body * { display: none !important; }
       
-      /* 🌟 離職單單頁排版優化 */
       body.printing-resignation #printTemplateBlock,
       body.printing-resignation #printTemplateBlock * { display: block !important; }
       body.printing-resignation #printTemplateBlock table { display: table !important; width: 100% !important; border-collapse: collapse !important; margin-top: 20px !important; border: 1.5px solid black !important; }
@@ -100,7 +100,6 @@
       body.printing-resignation #printTemplateBlock .p-stamp-zone { display: flex !important; justify-content: space-between !important; margin-top: 50px !important; color: black !important; }
       body.printing-resignation #printTemplateBlock .p-stamp-box { font-size: 16px !important; line-height: 2.2 !important; }
 
-      /* 借支單單頁排版優化 */
       body.printing-advance #printAdvanceTemplateBlock,
       body.printing-advance #printAdvanceTemplateBlock * { display: block !important; }
       body.printing-advance #printAdvanceTemplateBlock { display: block !important; width: 100% !important; border: 2px solid black !important; padding: 40px !important; background: white !important; }
@@ -121,6 +120,7 @@
 
   <div class="loading-mask" id="globalMask"><div class="spinner"></div><p id="maskText" style="font-weight: bold; color: #4e54c8;">資料同步處理中...</p></div>
 
+  <!-- 側邊欄選單 -->
   <div class="sidebar" id="mainSidebar" style="display:none;">
     <h2>幕後特助管理中心</h2>
     <button class="menu-btn active" id="btn-dashboard" onclick="switchSection('dashboard', this)"><i class="fa-solid fa-chart-pie"></i>管理總覽</button>
@@ -179,6 +179,7 @@
       </div>
     </div>
 
+    <!-- 班表排程 -->
     <div class="content-body" id="scheduleMgmt">
       <div class="card">
         <div style="display: flex; gap: 20px; align-items: flex-start;">
@@ -192,7 +193,7 @@
             </div>
             <div style="border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
               <table style="margin-top: 0; width: 100%;">
-                <thead><tr><th>日期 / 星期</th><th>指派案場</th><th>指派班別</th><th>值勤時段 (可自打字)</th></tr></thead>
+                <thead><tr><th style="width: 25%;">日期 / 星期</th><th style="width: 30%;">指派案場</th><th style="width: 25%;">指派班別</th><th style="width: 20%;">值勤時段 (可自打字)</th></tr></thead>
                 <tbody id="calendarRowsBody"></tbody>
               </table>
             </div>
@@ -208,6 +209,7 @@
       </div>
     </div>
 
+    <!-- 請假單審核 -->
     <div class="content-body" id="leaveAudit">
       <div class="card">
         <h3>待處理假單清單</h3>
@@ -218,6 +220,7 @@
       </div>
     </div>
 
+    <!-- 即時打卡監控 -->
     <div class="content-body" id="punchLog">
       <div class="card">
         <h3>今日同仁打卡流水帳</h3>
@@ -228,6 +231,7 @@
       </div>
     </div>
 
+    <!-- 同仁名冊維護 -->
     <div class="content-body" id="empMgmt">
       <div style="display: flex; gap: 20px;">
         <div class="card" style="width: 300px; flex-shrink: 0;">
@@ -250,6 +254,7 @@
       </div>
     </div>
 
+    <!-- 案場 GPS 設定 -->
     <div class="content-body" id="locMgmt">
       <div style="display: flex; gap: 20px;">
         <div class="card" style="width: 300px; flex-shrink: 0;">
@@ -270,6 +275,7 @@
       </div>
     </div>
 
+    <!-- 案場資訊維護 -->
     <div class="content-body" id="locDetailsMgmt">
       <div style="display: flex; gap: 20px;">
         <div class="card" style="width: 320px; flex-shrink: 0;">
@@ -305,6 +311,7 @@
       </div>
     </div>
 
+    <!-- 借支與薪資明細 -->
     <div class="content-body" id="salaryAdvanceSection">
       <div style="display: flex; gap: 20px; margin-bottom: 25px;">
         <div class="card" style="width: 320px; margin-bottom: 0; border: 2px solid #e53e3e;">
@@ -362,6 +369,7 @@
       </div>
     </div>
 
+    <!-- 發布公告 -->
     <div class="content-body" id="announcementMgmt">
       <div class="card">
         <h3>新增發布公告</h3>
@@ -373,6 +381,7 @@
       </div>
     </div>
 
+    <!-- 離職證明 -->
     <div class="content-body" id="resignationSection">
       <div class="card" style="max-width: 600px;">
         <h3>填寫離職證明資訊</h3>
@@ -386,6 +395,7 @@
       </div>
     </div>
 
+    <!-- 職場霸凌申訴監控 -->
     <div class="content-body" id="bullyingSection">
       <div class="card">
         <h3><i class="fa-solid fa-gavel" style="color: #e53e3e;"></i> 職場安全保護 - 申訴事件即時監控中心</h3>
@@ -407,6 +417,7 @@
       </div>
     </div>
 
+    <!-- 權限分發 -->
     <div class="content-body" id="permissionMatrixSection">
       <div class="card" style="border: 2px solid #e53e3e;">
         <h3><i class="fa-solid fa-user-lock" style="color: #e53e3e;"></i> 各級行政/督導選單權限分發中心</h3>
@@ -437,6 +448,7 @@
     </div>
   </div>
 
+  <!-- A4 實體列印離職證明紙張區塊 -->
   <div id="printTemplateBlock">
     <div class="p-title">離 職 證 明 書</div>
     <table class="p-table">
@@ -455,6 +467,7 @@
     </div>
   </div>
 
+  <!-- 實體現金借支收據紙張區塊 -->
   <div id="printAdvanceTemplateBlock">
     <div style="text-align: center; font-size: 26px; font-weight: bold; letter-spacing: 4px; margin-bottom: 30px; border-bottom: 2px solid black; padding-bottom: 10px;">員工現金預支借據收執聯</div>
     <div style="font-size: 16px; line-height: 2.2; text-align: left; margin-bottom: 40px;">
@@ -479,10 +492,7 @@
   </div>
 
   <script>
-    let cloudPermissionsCache = [];
-    let globalLocDetailsCache = []; 
-
-    // 🌟 核心修復一：將被我失手刪除的解鎖開門、顯示選單的三行線路徹底補回焊死！
+    // 🌟 鐵血復原：將被我失手漏複製的開門開鎖、隱藏遮罩的三行線路徹底補回銲死！
     function submitAdminLogin() {
       let rawId = document.getElementById("loginUser").value.trim();
       if(!rawId) { alert("請輸入工號！"); return; }
@@ -496,7 +506,7 @@
         if(res.success) {
           alert(`🎉 歡迎回來，${res.adminName}！系統解鎖成功。`);
           
-          // 🚀 核心開門電線：立刻將死白登入遮罩隱藏，秀出紘嘉考勤管理系統大王國！
+          // 🚀 核心開門電線：立刻將死白登入遮罩隱藏，秀出紘嘉考勤選單！
           document.getElementById("loginOverlay").style.display = "none";
           document.getElementById("mainSidebar").style.display = "flex";
           document.getElementById("mainContent").style.display = "flex";
@@ -554,7 +564,7 @@
     }
 
     function fetchCloudLocations() {
-      initAdminMonthSelector(); // 🚀 優先強制載入生成四個功能區塊的月份下拉選單
+      initAdminMonthSelector(); 
       const url = `${BASE_GAS_URL}?action=fetchLocationsList`;
       sendJsonpRequest(url, "cb_admin_init_" + Math.floor(Math.random()*100000), function(res) {
         if(res.success) {
@@ -613,6 +623,8 @@
       }
     }
 
+    function editEmpForm(id, name, pwd, date, type, loc) { document.getElementById("empId").value = id; document.getElementById("empName").value = name; document.getElementById("empPwd").value = pwd; document.getElementById("empDate").value = date; document.getElementById("empType").value = type; document.getElementById("empLoc").value = loc; }
+    function editLocForm(name, lat, lng, rad) { document.getElementById("locName").value = name; document.getElementById("locLat").value = lat; document.getElementById("locLng").value = lng; document.getElementById("locRadius").value = rad; }
     function cleanDateStringToShort(str) { if(!str) return "--"; let s = String(str).trim(); if(s.includes("GMT") || s.indexOf(" ") > 10) { try { let d = new Date(s); if(!isNaN(d.getTime())) { return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0'); } } catch(e){} } return s; }
 
     function loadDashboardContractView() {
