@@ -1,6 +1,83 @@
 <!doctype html><html lang="zh-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>打卡首頁｜紘嘉物業</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="assets/app.css"></head>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><style>
+
+*{box-sizing:border-box;margin:0;padding:0;font-family:"Noto Sans TC",sans-serif;-webkit-tap-highlight-color:transparent}
+:root{--primary:#4e54c8;--primary-dark:#3d43a7;--success:#27ae60;--danger:#e53e3e;--warning:#d69e2e;--bg:#f3f5f9;--card:#fff;--text:#2d3748;--muted:#718096;--line:#e2e8f0}
+body{background:var(--bg);color:var(--text);min-height:100vh}
+a{text-decoration:none;color:inherit}
+.app-shell{max-width:720px;margin:0 auto;min-height:100vh;background:var(--bg);padding-bottom:82px}
+.topbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px}
+.brand img{width:42px;height:42px;object-fit:contain;border-radius:10px;background:white}
+.brand h1{font-size:17px}.brand p{font-size:11px;color:var(--muted);margin-top:2px}
+.header-action{border:none;background:#fff5f5;color:var(--danger);border:1px solid #fed7d7;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
+.page-content{padding:16px}
+.card{background:var(--card);border-radius:18px;padding:16px;box-shadow:0 5px 18px rgba(33,40,74,.07);margin-bottom:14px;border:1px solid rgba(226,232,240,.8)}
+.card-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;margin-bottom:12px}
+.hero{background:linear-gradient(135deg,#4e54c8,#7379e9);color:white}
+.hero .sub{font-size:12px;opacity:.85}.hero h2{font-size:22px;margin:6px 0 12px}.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hero-grid div{background:rgba(255,255,255,.13);border-radius:12px;padding:10px;font-size:13px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:12px}
+.stat small{display:block;color:var(--muted);margin-bottom:5px}.stat strong{font-size:18px}
+.clock{background:#1a202c;color:white;border-radius:18px;padding:16px;text-align:center}
+.clock-time{font:700 34px monospace;color:#65e7ef}.clock-date{font-size:13px;color:#a0aec0;margin-top:3px}
+.form-group{margin-bottom:13px}.form-group label{display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:#4a5568}
+.control{width:100%;border:1px solid #cbd5e0;border-radius:12px;padding:12px 14px;background:#fff;font-size:15px;outline:none}
+.control:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(78,84,200,.12)}
+.btn{width:100%;border:none;border-radius:13px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary{background:var(--primary);color:white}.btn-success{background:var(--success);color:white}.btn-danger{background:var(--danger);color:white}.btn-light{background:#edf2f7;color:#4a5568}
+.punch-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.punch-grid .btn{height:78px;flex-direction:column}
+.notice{background:#fffaf0;border:1px solid #feebc8;border-radius:14px;padding:12px;font-size:13px;line-height:1.55}
+.notice-item{padding-bottom:8px;margin-bottom:8px;border-bottom:1px dashed #fbd38d}.notice-item:last-child{border:0;margin:0;padding:0}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(720px,100%);z-index:50;background:white;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);padding:8px 8px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -6px 20px rgba(0,0,0,.06)}
+.nav-item{text-align:center;color:#718096;font-size:11px;font-weight:700;padding:5px}.nav-item i{display:block;font-size:20px;margin-bottom:4px}.nav-item.active{color:var(--primary)}
+.login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,#edf0ff,#f7f8fb 55%,#eef7f2)}
+.login-card{width:100%;max-width:410px;background:white;border-radius:24px;padding:28px;box-shadow:0 15px 45px rgba(38,47,89,.13)}
+.login-logo{text-align:center;margin-bottom:24px}.login-logo img{width:104px;height:104px;object-fit:contain}.login-logo h1{font-size:22px;margin-top:10px}.login-logo p{font-size:13px;color:var(--muted);margin-top:5px}
+.loading{position:fixed;inset:0;background:rgba(255,255,255,.86);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:999}
+.spinner{width:42px;height:42px;border:4px solid #e2e8f0;border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:10px}@keyframes spin{to{transform:rotate(360deg)}}
+.schedule-card{background:white;border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:9px}.schedule-card.today{border:2px solid var(--primary);background:#f8f8ff}
+.date-row{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px}.badge{display:inline-block;padding:3px 8px;border-radius:7px;font-size:11px;font-weight:700}.badge-ok{background:#c6f6d5;color:#22543d}.badge-wait{background:#feebc8;color:#975a16}.badge-no{background:#fed7d7;color:#9b2c2c}
+.month-bar{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}.month-bar .btn{width:auto;padding:12px}
+.history-card{background:#f8fafc;border:1px solid var(--line);border-radius:13px;padding:12px;margin-bottom:8px;font-size:13px;line-height:1.55}
+.duration{background:#f0fff4;border:1px solid #c6f6d5;color:#22543d;border-radius:12px;padding:10px 12px;font-size:13px}
+.empty{text-align:center;color:var(--muted);font-size:13px;padding:24px}
+@media(max-width:480px){.page-content{padding:12px}.topbar{padding:10px 12px}.brand h1{font-size:15px}.hero h2{font-size:20px}}
+
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.profile-item{background:#f8fafc;border:1px solid var(--line);border-radius:13px;padding:11px}
+.profile-item small{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}
+.profile-item strong{font-size:15px}
+.leave-balance{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.leave-balance .balance-box{border-radius:13px;padding:11px 6px;text-align:center;background:#f8fafc;border:1px solid var(--line)}
+.balance-box b{display:block;font-size:20px;color:var(--primary)}
+.balance-box span{font-size:11px;color:var(--muted)}
+.balance-box.remaining{background:#f0fff4;border-color:#c6f6d5}.balance-box.remaining b{color:#23834c}
+.balance-warning{background:#fff5f5;border:1px solid #fed7d7;color:#9b2c2c;padding:10px 12px;border-radius:12px;font-size:13px;margin-top:10px}
+
+</style></head>
 <body><div class="app-shell"><header class="topbar"><div class="brand"><img src="https://i.meee.com.tw/2Pr2uHH.png" alt="Logo"><div><h1>紘嘉物業員工系統</h1><p><span data-emp-name>同仁</span> 您好</p></div></div><button class="header-action" onclick="logout()">登出</button></header><main class="page-content">
+
+<section class="card">
+  <div class="card-title"><i class="fa-solid fa-id-card"></i>我的人事資料</div>
+  <div class="profile-grid">
+    <div class="profile-item"><small>員工姓名</small><strong id="profileName">--</strong></div>
+    <div class="profile-item"><small>員工工號</small><strong id="profileId">--</strong></div>
+    <div class="profile-item"><small>入職日期</small><strong id="profileJoinDate">--</strong></div>
+    <div class="profile-item"><small>身分類別</small><strong id="profileIdentity">--</strong></div>
+  </div>
+</section>
+<section class="card">
+  <div class="card-title"><i class="fa-solid fa-umbrella-beach"></i><span id="leaveYearTitle">本年度特休</span></div>
+  <div class="leave-balance">
+    <div class="balance-box"><b id="annualLeaveTotal">0</b><span>年度總額（日）</span></div>
+    <div class="balance-box"><b id="annualLeaveUsed">0</b><span>已核准（日）</span></div>
+    <div class="balance-box remaining"><b id="annualLeaveRemaining">0</b><span>可用餘額（日）</span></div>
+  </div>
+  <div class="notice" id="annualLeavePending" style="margin-top:10px;text-align:center">待審核特休：0 日</div>
+</section>
+
 <section class="card hero"><div class="sub"><i class="fa-solid fa-briefcase"></i> 今日勤務</div><h2 id="dutyShift">讀取中...</h2><div class="hero-grid"><div>案場<br><b id="dutyLocation">--</b></div><div>時段<br><b id="dutyTime">--</b></div></div></section>
 <section class="card"><div class="card-title"><i class="fa-solid fa-clipboard-check"></i>今日打卡狀態</div><div class="grid-2"><div class="stat"><small>上班打卡</small><strong id="clockIn">尚未打卡</strong></div><div class="stat"><small>下班打卡</small><strong id="clockOut">尚未打卡</strong></div></div><div class="notice" id="statusNote" style="margin-top:10px;text-align:center">正在同步今日紀錄...</div></section>
 <section class="clock"><div class="clock-time" id="liveTime">00:00:00</div><div class="clock-date" id="liveDate">--</div></section>
@@ -11,12 +88,84 @@
 <a class="nav-item NAV_SCHEDULE" href="schedule.html"><i class="fa-solid fa-calendar-days"></i>我的班表</a>
 <a class="nav-item NAV_LEAVE" href="leave.html"><i class="fa-solid fa-file-medical"></i>請假申請</a>
 </nav></div><div class="loading" id="loading"><div class="spinner"></div><b id="loadingText">資料讀取中...</b></div>
-<script src="assets/common.js"></script><script>
+<script>
+
+const BASE_GAS_URL = "https://script.google.com/macros/s/AKfycbzQp1OVw4DdjuO0XzQUH3G8b2I0URZcJqViMppUbnRcOFQZSBh8K2f3IkNOneB-ohM/exec";
+const SESSION_KEY = "hongjia_employee_session_v2";
+
+function saveSession(data) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(data));
+}
+function getSession() {
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch(e) { return null; }
+}
+function requireSession() {
+  const s = getSession();
+  if(!s || !s.employeeId) { location.href = "index.html"; return null; }
+  return s;
+}
+function logout() {
+  localStorage.removeItem(SESSION_KEY);
+  location.href = "index.html";
+}
+function showLoading(text) {
+  const el = document.getElementById("loading");
+  const t = document.getElementById("loadingText");
+  if(t) t.textContent = text || "資料處理中...";
+  if(el) el.style.display = "flex";
+}
+function hideLoading() {
+  const el = document.getElementById("loading");
+  if(el) el.style.display = "none";
+}
+function jsonp(url, callbackName) {
+  return new Promise((resolve,reject)=>{
+    let done=false;
+    const cleanup=()=>{ const s=document.getElementById(callbackName); if(s)s.remove(); try{delete window[callbackName]}catch(e){} };
+    const timer=setTimeout(()=>{ if(done)return; done=true; cleanup(); reject(new Error("timeout")); },15000);
+    window[callbackName]=(data)=>{ if(done)return; done=true; clearTimeout(timer); cleanup(); resolve(data); };
+    const script=document.createElement("script");
+    script.id=callbackName;
+    script.src=url+(url.includes("?")?"&":"?")+"callback="+encodeURIComponent(callbackName)+"&_ts="+Date.now();
+    script.onerror=()=>{ if(done)return; done=true; clearTimeout(timer); cleanup(); reject(new Error("network")); };
+    document.body.appendChild(script);
+  });
+}
+function esc(v) {
+  return String(v==null?"":v).replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+}
+function currentMonthName() {
+  const d=new Date();
+  return `${d.getFullYear()}年${String(d.getMonth()+1).padStart(2,"0")}月`;
+}
+function initBrandUser() {
+  const s=getSession();
+  document.querySelectorAll("[data-emp-name]").forEach(el=>el.textContent=s?.employeeName||"同仁");
+}
+
+</script><script>
 const session=requireSession(); initBrandUser(); let homeData=null;
+profileName.textContent=session.employeeName||"--";
+profileId.textContent=session.employeeId||"--";
+profileJoinDate.textContent=session.joinDate||"未填";
+profileIdentity.textContent=session.identityType||"--";
+leaveYearTitle.textContent=new Date().getFullYear()+" 年度特休";
 function startClock(){setInterval(()=>{const d=new Date(),w=["日","一","二","三","四","五","六"];liveTime.textContent=d.toTimeString().slice(0,8);liveDate.textContent=`${d.getFullYear()}年${String(d.getMonth()+1).padStart(2,"0")}月${String(d.getDate()).padStart(2,"0")}日 星期${w[d.getDay()]}`; },1000)}
 function initLocations(){const list=session.allLocations?.length?session.allLocations:(session.assignedLocation?[session.assignedLocation]:[]);locationSelect.innerHTML=list.length?list.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join(""):`<option value="">-- 無指派案場 --</option>`}
 async function loadHome(){try{const res=await jsonp(`${BASE_GAS_URL}?action=fetchEmployeeHomeData&employeeId=${session.employeeId}&month=${encodeURIComponent(currentMonthName())}`,"cb_home_"+Date.now());if(!res.success)return;homeData=res;const s=res.todaySchedule||{};dutyShift.textContent=s.shift||"今日尚未排班";dutyLocation.textContent=s.location||"--";dutyTime.textContent=s.time||"未設定";clockIn.textContent=res.clockIn||"尚未打卡";clockOut.textContent=res.clockOut||"尚未打卡";statusNote.textContent=res.clockIn?(res.clockOut?"今日上下班打卡皆已完成":"已完成上班打卡，值勤中"):"今日尚未開始出勤";if(s.location)locationSelect.value=s.location}catch(e){statusNote.textContent="今日紀錄讀取失敗"}}
 async function loadAnnouncements(){try{const res=await jsonp(`${BASE_GAS_URL}?action=fetchAnnouncements`,"cb_ann_"+Date.now());announcements.innerHTML=res.success&&res.announcements?.length?res.announcements.slice(0,5).map(a=>`<div class="notice-item"><b>[${esc(a.date)}] ${esc(a.unit)}通知</b><br>${esc(a.content)}</div>`).join(""):"目前暫無公告"}catch(e){announcements.textContent="公告讀取失敗"}}
 async function punch(type){const loc=locationSelect.value;if(!loc){alert("目前沒有可打卡的案場");return}if(homeData?.todaySchedule?.location&&homeData.todaySchedule.location!==loc&&!confirm(`今日排班案場為「${homeData.todaySchedule.location}」，確定在「${loc}」打卡嗎？`))return;showLoading("正在取得 GPS 定位...");navigator.geolocation.getCurrentPosition(async pos=>{try{const url=`${BASE_GAS_URL}?action=${type}&employeeId=${session.employeeId}&employeeName=${encodeURIComponent(session.employeeName)}&location=${encodeURIComponent(loc)}&lat=${pos.coords.latitude}&lng=${pos.coords.longitude}&accuracy=${Math.round(pos.coords.accuracy||0)}`;const res=await jsonp(url,"cb_punch_"+Date.now());hideLoading();alert(res.message||"完成");if(res.success)loadHome()}catch(e){hideLoading();alert("打卡通訊失敗")}},()=>{hideLoading();alert("請允許瀏覽器使用定位權限")},{enableHighAccuracy:true,timeout:12000,maximumAge:0})}
-initLocations();startClock();loadHome();loadAnnouncements();
+async function loadLeaveSummary(){
+ try{
+  const res=await jsonp(`${BASE_GAS_URL}?action=fetchEmployeeLeaveSummary&employeeId=${session.employeeId}`,"cb_ls_"+Date.now());
+  if(res.success){
+    annualLeaveTotal.textContent=fmtDay(res.totalDays);
+    annualLeaveUsed.textContent=fmtDay(res.approvedDays);
+    annualLeaveRemaining.textContent=fmtDay(res.remainingDays);
+    annualLeavePending.textContent=`待審核特休：${fmtDay(res.pendingDays)} 日（已先保留額度）`;
+  }
+ }catch(e){ annualLeavePending.textContent="特休資料讀取失敗"; }
+}
+function fmtDay(v){const n=Number(v||0);return Number.isInteger(n)?String(n):n.toFixed(2).replace(/0+$/,"").replace(/\.$/,"")}
+initLocations();startClock();loadHome();loadAnnouncements();loadLeaveSummary();
 </script></body></html>
