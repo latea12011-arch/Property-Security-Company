@@ -5,21 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>紘嘉物業考勤打卡系統</title>
   
-  <script>
-    const manifest = {
-      "name": "紘嘉物業智慧打卡系統",
-      "short_name": "紘嘉打卡",
-      "start_url": window.location.href,
-      "display": "standalone",
-      "background_color": "#4e54c8",
-      "theme_color": "#4e54c8",
-      "orientation": "portrait",
-      "icons": [{ "src": "https://i.meee.com.tw/Q0RaFOE.png", "sizes": "192x192", "type": "image/png" }]
-    };
-    const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-    const link = document.createElement('link'); link.rel = 'manifest'; link.href = URL.createObjectURL(blob);
-    document.head.appendChild(link);
-  </script>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="紘嘉打卡">
+  <link rel="apple-touch-icon" href="https://i.meee.com.tw/Q0RaFOE.png">
 
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -144,7 +133,7 @@
         <div class="form-group"><label>請假類別 :</label><select id="leaveType" class="form-control"><option value="事假">事假 (全扣)</option><option value="病假">病假 (半薪)</option><option value="特休">年度特休假</option><option value="公假">公假 (派訓)</option><option value="婚假/喪假">婚假 / 喪假</option></select></div>
         <div class="form-group"><label>請假開始時間 :</label><input type="datetime-local" id="leaveStart" class="form-control"></div>
         <div class="form-group"><label>請假結束時間 :</label><input type="datetime-local" id="leaveEnd" class="form-control"></div>
-        <div class="form-group"><label>上傳證明文件 (病假單/訃聞/診斷證明圖片) :</label><input type="file" id="leaveFile" class="form-control" accept="image/*"></div>
+        <div class="form-group"><label>上傳證明文件 :</label><input type="file" id="leaveFile" class="form-control" accept="image/*"></div>
         <div class="form-group"><label>請假事由 / 備註說明 :</label><textarea id="leaveReason" class="form-control" rows="3" placeholder="請填寫具體原因..."></textarea></div>
         
         <button class="btn btn-primary" onclick="submitLeaveForm()"><i class="fa-solid fa-paper-plane"></i> 送出請假申請</button>
@@ -225,7 +214,7 @@
     }
 
     function triggerPunch(type) {
-      let loc = document.getElementById("punchLocationSelect").value; if(!loc) { alert("❌ 失敗：您目前未被分配 any 案場值勤！"); return; }
+      let loc = document.getElementById("punchLocationSelect").value; if(!loc) { alert("❌ 失敗：您目前未被分配任何案場值勤！"); return; }
       showMask("安全防線 GPS 精準定位通訊中...");
       navigator.geolocation.getCurrentPosition(function(pos) {
         let lat = pos.coords.latitude; let lng = pos.coords.longitude;
@@ -266,7 +255,7 @@
             html += `<div class="record-card"><span class="status-badge ${badgeClass}">${r.status}</span><b>${r.leaveType}</b><br><span style="font-size:12px; color:#718096;">${r.start} ~ ${r.end}</span><br><span style="color:#4a5568; font-size:13px; margin-top:3px; display:block;">事由: ${r.reason}</span></div>`;
           });
           container.innerHTML = html;
-        } else { container.innerHTML = `<p style="font-size:13px; text-align:center; color:#718096; padding:10px;">目前尚無 any 歷史請假申請紀錄。</p>`; }
+        } else { container.innerHTML = `<p style="font-size:13px; text-align:center; color:#718096; padding:10px;">目前尚無任何歷史請假申請紀錄。</p>`; }
       });
     }
 
