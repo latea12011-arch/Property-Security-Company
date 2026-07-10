@@ -78,7 +78,7 @@ a{text-decoration:none;color:inherit}
 <div class="form-group"><label>開始時間</label><input type="datetime-local" id="leaveStart" class="control"></div><div class="form-group"><label>結束時間</label><input type="datetime-local" id="leaveEnd" class="control"></div>
 <div class="form-group"><label>證明文件</label><input type="file" id="leaveFile" class="control" accept="image/*"></div><div class="form-group"><label>請假事由</label><textarea id="leaveReason" class="control" rows="4" placeholder="請填寫具體原因"></textarea></div>
 <div class="duration" id="durationInfo"><i class="fa-solid fa-calculator"></i> 選擇起迄時間後自動估算。</div><button class="btn btn-primary" style="margin-top:12px" onclick="submitLeave()"><i class="fa-solid fa-paper-plane"></i>送出請假申請</button></section>
-<section class="card"><div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i>審核紀錄 <span style="margin-left:auto;font-size:10px;color:#4e54c8;">v2.2</span></div><div id="history">讀取中...</div></section>
+<section class="card"><div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i>審核紀錄 <span style="margin-left:auto;font-size:10px;color:#4e54c8;">v2.3</span></div><div id="history">讀取中...</div></section>
 </main><nav class="bottom-nav">
 <a class="nav-item NAV_DASH" href="dashboard.html"><i class="fa-solid fa-fingerprint"></i>打卡首頁</a>
 <a class="nav-item NAV_SCHEDULE" href="schedule.html"><i class="fa-solid fa-calendar-days"></i>我的班表</a>
@@ -140,84 +140,158 @@ function initBrandUser() {
 }
 
 </script><script>
-const session=requireSession();initBrandUser();let leaveSummary=null;
-leaveJoinDate.textContent=session.joinDate||"未填";
-leaveSummaryTitle.textContent=new Date().getFullYear()+" 年度特休使用狀況";
-function fmtDay(v){const n=Number(v||0);return Number.isInteger(n)?String(n):n.toFixed(2).replace(/0+$/,"").replace(/\.$/,"")}
-async function loadLeaveSummary(){
- try{
-  const res=await jsonp(`${BASE_GAS_URL}?action=fetchEmployeeLeaveSummary&employeeId=${session.employeeId}`,"cb_lsum_"+Date.now());
-  if(res.success){
-   leaveSummary=res;
-   leaveTotal.textContent=fmtDay(res.totalDays)+" 日";
-   leaveApproved.textContent=fmtDay(res.approvedDays);
-   leavePending.textContent=fmtDay(res.pendingDays);
-   leaveRemaining.textContent=fmtDay(res.remainingDays);
-   validateSpecialLeave();
+const session = requireSession();
+initBrandUser();
+
+const el = {
+  leaveJoinDate: document.getElementById("leaveJoinDate"),
+  leaveSummaryTitle: document.getElementById("leaveSummaryTitle"),
+  leaveTotal: document.getElementById("leaveTotal"),
+  leaveApproved: document.getElementById("leaveApproved"),
+  leavePending: document.getElementById("leavePending"),
+  leaveRemaining: document.getElementById("leaveRemaining"),
+  leaveLimitWarning: document.getElementById("leaveLimitWarning"),
+  leaveType: document.getElementById("leaveType"),
+  leaveStart: document.getElementById("leaveStart"),
+  leaveEnd: document.getElementById("leaveEnd"),
+  leaveFile: document.getElementById("leaveFile"),
+  leaveReason: document.getElementById("leaveReason"),
+  durationInfo: document.getElementById("durationInfo"),
+  history: document.getElementById("history")
+};
+
+let leaveSummary = null;
+
+el.leaveJoinDate.textContent = session.joinDate || "未填";
+el.leaveSummaryTitle.textContent = new Date().getFullYear() + " 年度特休使用狀況";
+
+function fmtDay(v) {
+  const n = Number(v || 0);
+  return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+async function loadLeaveSummary() {
+  try {
+    const res = await jsonp(
+      `${BASE_GAS_URL}?action=fetchEmployeeLeaveSummary&employeeId=${encodeURIComponent(session.employeeId)}`,
+      "cb_lsum_" + Date.now()
+    );
+    if (res && res.success) {
+      leaveSummary = res;
+      el.leaveTotal.textContent = fmtDay(res.totalDays) + " 日";
+      el.leaveApproved.textContent = fmtDay(res.approvedDays);
+      el.leavePending.textContent = fmtDay(res.pendingDays);
+      el.leaveRemaining.textContent = fmtDay(res.remainingDays);
+      validateSpecialLeave();
+    } else {
+      throw new Error((res && res.message) || "特休資料格式錯誤");
+    }
+  } catch (e) {
+    el.leaveLimitWarning.style.display = "block";
+    el.leaveLimitWarning.textContent = "特休額度讀取失敗：" + (e.message || "通訊異常");
   }
- }catch(e){leaveLimitWarning.style.display="block";leaveLimitWarning.textContent="特休額度讀取失敗，暫時無法申請特休。"}
 }
-function requestedLeaveDays(){
- const s=leaveStart.value,e=leaveEnd.value;
- if(!s||!e)return 0;
- const hours=(new Date(e)-new Date(s))/3600000;
- return hours>0?hours/8:0;
+
+function requestedLeaveDays() {
+  const start = el.leaveStart.value;
+  const end = el.leaveEnd.value;
+  if (!start || !end) return 0;
+  const hours = (new Date(end) - new Date(start)) / 3600000;
+  return hours > 0 ? hours / 8 : 0;
 }
-function validateSpecialLeave(){
- leaveLimitWarning.style.display="none";
- if(leaveType.value!=="特休")return true;
- if(!leaveSummary){leaveLimitWarning.style.display="block";leaveLimitWarning.textContent="尚未取得特休額度，請稍後再試。";return false}
- const req=requestedLeaveDays();
- if(leaveSummary.remainingDays<=0){
-  leaveLimitWarning.style.display="block";
-  leaveLimitWarning.textContent="本年度特休已用完或已被待審核假單占用，不能再申請特休。";
-  return false;
- }
- if(req>leaveSummary.remainingDays+0.0001){
-  leaveLimitWarning.style.display="block";
-  leaveLimitWarning.textContent=`此次預估申請 ${fmtDay(req)} 日，但目前只剩 ${fmtDay(leaveSummary.remainingDays)} 日，不能送出。`;
-  return false;
- }
- return true;
-}
-function updateDuration(){const s=leaveStart.value,e=leaveEnd.value;if(!s||!e){durationInfo.innerHTML='<i class="fa-solid fa-calculator"></i> 選擇起迄時間後自動估算。';return}const h=(new Date(e)-new Date(s))/3600000;if(h<=0){durationInfo.textContent="結束時間必須晚於開始時間";return}durationInfo.innerHTML=`預估請假：<b>${h.toFixed(h%1?1:0)} 小時</b>（約 <b>${(h/8).toFixed(2)} 日</b>）`;validateSpecialLeave()}
-async function requestLeaveRecords(actionName){
-  const url=`${BASE_GAS_URL}?action=${actionName}&employeeId=${encodeURIComponent(session.employeeId)}`;
-  return await jsonp(url,"cb_leave_"+actionName+"_"+Date.now());
-}
-function renderLeaveRecords(res){
-  if(!res || res.success!==true){
-    throw new Error((res&&res.message)||"後端未回傳正確資料");
+
+function validateSpecialLeave() {
+  el.leaveLimitWarning.style.display = "none";
+  if (el.leaveType.value !== "特休") return true;
+
+  if (!leaveSummary) {
+    el.leaveLimitWarning.style.display = "block";
+    el.leaveLimitWarning.textContent = "尚未取得特休額度，請稍後再試。";
+    return false;
   }
-  const records=Array.isArray(res.records)?res.records:[];
-  if(!records.length){
-    history.innerHTML='<div class="empty">目前尚無請假紀錄。</div>';
+
+  const req = requestedLeaveDays();
+  if (Number(leaveSummary.remainingDays || 0) <= 0) {
+    el.leaveLimitWarning.style.display = "block";
+    el.leaveLimitWarning.textContent = "本年度特休已用完或已被待審核假單占用，不能再申請特休。";
+    return false;
+  }
+
+  if (req > Number(leaveSummary.remainingDays || 0) + 0.0001) {
+    el.leaveLimitWarning.style.display = "block";
+    el.leaveLimitWarning.textContent =
+      `此次預估申請 ${fmtDay(req)} 日，但目前只剩 ${fmtDay(leaveSummary.remainingDays)} 日，不能送出。`;
+    return false;
+  }
+  return true;
+}
+
+function updateDuration() {
+  const start = el.leaveStart.value;
+  const end = el.leaveEnd.value;
+
+  if (!start || !end) {
+    el.durationInfo.innerHTML = '<i class="fa-solid fa-calculator"></i> 選擇起迄時間後自動估算。';
+    validateSpecialLeave();
     return;
   }
-  history.innerHTML=records.map(r=>`
-    <div class="history-card">
-      <span class="badge ${r.status==="已核准"?"badge-ok":r.status==="駁回"?"badge-no":"badge-wait"}" style="float:right">${esc(r.status||"待審核")}</span>
-      <b>${esc(r.leaveType||"未填假別")}</b>
-      <br><small>${esc(r.start||"--")} ～ ${esc(r.end||"--")}</small>
-      <br>事由：${esc(r.reason||"--")}
-      ${r.applyTime?`<br><small style="color:#718096;">申請時間：${esc(r.applyTime)}</small>`:""}
-    </div>`).join("");
+
+  const hours = (new Date(end) - new Date(start)) / 3600000;
+  if (hours <= 0) {
+    el.durationInfo.textContent = "結束時間必須晚於開始時間";
+    validateSpecialLeave();
+    return;
+  }
+
+  el.durationInfo.innerHTML =
+    `預估請假：<b>${hours.toFixed(hours % 1 ? 1 : 0)} 小時</b>（約 <b>${(hours / 8).toFixed(2)} 日</b>）`;
+  validateSpecialLeave();
 }
-async function loadHistory(){
-  history.innerHTML='<div class="empty"><i class="fa-solid fa-spinner fa-spin"></i> 正在讀取審核紀錄（v2.2）...</div>';
-  try{
+
+async function requestLeaveRecords(actionName) {
+  const url =
+    `${BASE_GAS_URL}?action=${actionName}&employeeId=${encodeURIComponent(session.employeeId)}`;
+  return await jsonp(url, "cb_leave_" + actionName + "_" + Date.now());
+}
+
+function renderLeaveRecords(res) {
+  if (!res || res.success !== true) {
+    throw new Error((res && res.message) || "後端未回傳正確資料");
+  }
+
+  const records = Array.isArray(res.records) ? res.records : [];
+  if (!records.length) {
+    el.history.innerHTML = '<div class="empty">目前尚無請假紀錄。</div>';
+    return;
+  }
+
+  el.history.innerHTML = records.map(r => `
+    <div class="history-card">
+      <span class="badge ${
+        r.status === "已核准" ? "badge-ok" :
+        r.status === "駁回" ? "badge-no" : "badge-wait"
+      }" style="float:right">${esc(r.status || "待審核")}</span>
+      <b>${esc(r.leaveType || "未填假別")}</b>
+      <br><small>${esc(r.start || "--")} ～ ${esc(r.end || "--")}</small>
+      <br>事由：${esc(r.reason || "--")}
+      ${r.applyTime ? `<br><small style="color:#718096;">申請時間：${esc(r.applyTime)}</small>` : ""}
+    </div>
+  `).join("");
+}
+
+async function loadHistory() {
+  el.history.innerHTML =
+    '<div class="empty"><i class="fa-solid fa-spinner fa-spin"></i> 正在讀取審核紀錄（v2.3）...</div>';
+
+  try {
     let res;
-    try{
-      res=await requestLeaveRecords("fetchEmployeeLeaveRecords");
-    }catch(firstError){
-      res=await requestLeaveRecords("fetchLeaveRecords");
+    try {
+      res = await requestLeaveRecords("fetchEmployeeLeaveRecords");
+    } catch (firstError) {
+      res = await requestLeaveRecords("fetchLeaveRecords");
     }
     renderLeaveRecords(res);
-  }catch(e){
-    history.innerHTML=`<div class="empty" style="color:#e53e3e;">審核紀錄讀取失敗：${esc(e.message||"通訊逾時")}<br><button class="btn btn-light" style="margin-top:12px;" onclick="loadHistory()"><i class="fa-solid fa-rotate-right"></i>重新讀取</button></div>`;
-  }
-}
-async function postPayload(payload){const r=await fetch(BASE_GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(payload)});return await r.json()}
-async function submitLeave(){const start=leaveStart.value,end=leaveEnd.value,reason=leaveReason.value.trim();if(!start||!end||!reason){alert("請完整填寫請假時間與事由");return}if(leaveType.value==="特休"&&!validateSpecialLeave()){alert(leaveLimitWarning.textContent);return}const loc=session.allLocations?.[0]||session.assignedLocation||"未知案場";showLoading("正在送出請假單...");const file=leaveFile.files[0];const send=async(fileData="",fileName="",fileType="")=>{try{const res=await postPayload({action:"leaveSubmit",employeeId:session.employeeId,employeeName:session.employeeName,location:loc,leaveType:leaveType.value,start:start.replace("T"," "),end:end.replace("T"," "),reason,fileData,fileName,fileType});hideLoading();alert(res.message||"送出完成");if(res.success){leaveStart.value=leaveEnd.value=leaveReason.value=leaveFile.value="";updateDuration();loadHistory();loadLeaveSummary()}}catch(e){hideLoading();alert("請假單送出失敗，請稍後再試")}};if(file){const reader=new FileReader();reader.onload=e=>send(e.target.result,file.name,file.type);reader.readAsDataURL(file)}else send()}
-leaveStart.addEventListener("change",updateDuration);leaveEnd.addEventListener("change",updateDuration);leaveType.addEventListener("change",validateSpecialLeave);loadHistory();loadLeaveSummary();
-</script></body></html>
+  } catch (e) {
+    el.history.innerHTML = `
+      <div class="empty" style="color:#e53e3e;">
+        審核紀錄讀取失敗：${esc(e.messag
