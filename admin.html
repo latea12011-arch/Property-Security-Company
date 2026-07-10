@@ -82,12 +82,19 @@
     .perm-item { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; cursor: pointer; background: white; padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e0; }
     .perm-item input { cursor: pointer; width: 16px; height: 16px; }
 
-    #printTemplateBlock { display: none; }
+    #printTemplateBlock, #printAdvanceTemplateBlock { display: none; }
     @media print {
-      /* 🌟 終極修復：精準關閉後台所有操作面板，不再使用 body * 誤傷子元素，放行表格內容顯示！ */
+      @page { size: A4 portrait; margin: 15mm; }
+      html, body { height: auto !important; background: white !important; color: black !important; overflow: visible !important; }
       .sidebar, .main-content, .loading-mask, .login-overlay { display: none !important; }
       
-      #printTemplateBlock { display: block !important; width: 100%; max-width: 800px; margin: 0 auto; padding: 40px; font-family: 'Times New Roman', 'Noto Sans TC', serif; color: black; background: white; }
+      /* 🌟 鋼鐵物理隔離：離職與借支單獨立控制 */
+      body.printing-resignation #printTemplateBlock { display: block !important; width: 100% !important; page-break-inside: avoid !important; }
+      body.printing-resignation #printTemplateBlock * { display: block !important; }
+      body.printing-advance #printAdvanceTemplateBlock { display: block !important; width: 100% !important; page-break-inside: avoid !important; }
+      body.printing-advance #printAdvanceTemplateBlock * { display: block !important; }
+
+      #printTemplateBlock { width: 100%; max-width: 800px; margin: 0 auto; padding: 40px; font-family: 'Times New Roman', 'Noto Sans TC', serif; color: black; background: white; }
       .p-title { text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 4px; margin-bottom: 40px; border-bottom: 3px double black; padding-bottom: 10px; color: black !important; }
       .p-table { width: 100%; border-collapse: collapse; margin-top: 20px; border: 1px solid black !important; }
       .p-table th, .p-table td { border: 1px solid black !important; padding: 15px !important; text-align: left !important; font-size: 16px !important; color: black !important; background: transparent !important; }
@@ -152,7 +159,7 @@
         </div>
 
         <div class="card">
-          <h3><i class="fa-solid fa-file-shield" style="color: #4e54c8; margin-right: 8px;"></i> 紘嘉各案場保全經營條約與續約追蹤防線</h3>
+          <h3><i class="fa-solid fa-file-shield" style="color: #4e54c8; margin-right: 8px;"></i> 幕後保全合約大數據看板</h3>
           <p style="font-size: 13px; color: #718096; margin-bottom: 15px;">此看板即時同步「案場資訊維護」之數據，協助管理層動態掌握黃金續約期。</p>
           <table>
             <thead>
@@ -263,7 +270,7 @@
     <div class="content-body" id="locDetailsMgmt">
       <div style="display: flex; gap: 20px;">
         <div class="card" style="width: 320px; flex-shrink: 0;">
-          <h3>填寫案場詳細 management 資訊</h3>
+          <h3>填寫案場詳細管理資訊</h3>
           <label style="font-size:12px; font-weight:bold;">1. 選擇綁定案場：</label><select id="detailLocSelect" class="form-control"></select>
           <label style="font-size:12px; font-weight:bold;">2. 現任主委姓名：</label><input type="text" id="detChairperson" class="form-control" placeholder="請輸入姓名">
           <label style="font-size:12px; font-weight:bold;">3. 主委聯絡電話：</label><input type="text" id="detPhone" class="form-control" placeholder="請輸入電話">
@@ -412,7 +419,7 @@
             <label class="perm-item"><input type="checkbox" class="perm-chk" value="scheduleMgmt"> 班表排程調整</label>
             <label class="perm-item"><input type="checkbox" class="perm-chk" value="leaveAudit"> 請假單審核</label>
             <label class="perm-item"><input type="checkbox" class="perm-chk" value="punchLog"> 即時打卡監控</label>
-            <label class="perm-item"><input type="checkbox" class="perm-chk" value="empMgmt"> 同仁名冊維護</label>
+            <label class="perm-item"><input type="checkbox" class="perm-chk" value="empMgmt">同仁名冊維護</label>
             <label class="perm-item"><input type="checkbox" class="perm-chk" value="locMgmt"> 案場GPS設定</label>
             <label class="perm-item"><input type="checkbox" class="perm-chk" value="locDetailsMgmt"> 案場資訊維護</label>
             <label class="perm-item"><input type="checkbox" class="perm-chk" value="salaryAdvanceSection"> 借支與薪資明細</label>
@@ -442,6 +449,30 @@
     <div class="p-stamp-zone">
       <div class="p-stamp-box"><b>單位主管簽章：</b><br><br><br><b>核印人員：</b></div>
       <div class="p-stamp-box" style="text-align: right; margin-top: 40px;"><span style="font-size: 20px; font-weight: bold;">紘嘉物業管理股份有限公司</span><br><span id="p_footer_date" style="font-size: 14px;">中華民國 年 月 日</span></div>
+    </div>
+  </div>
+
+  <!-- 🌟 核心定點追加：A4 現金借支收據實體紙張區塊 (平常完美隱藏，不交叉污染) -->
+  <div id="printAdvanceTemplateBlock">
+    <div style="text-align: center; font-size: 26px; font-weight: bold; letter-spacing: 4px; margin-bottom: 30px; border-bottom: 2px solid black; padding-bottom: 10px;">員工現金預支借據收執聯</div>
+    <div style="font-size: 16px; line-height: 2.2; text-align: left; margin-bottom: 40px;">
+      &nbsp;&nbsp;&nbsp;&nbsp;茲向 <b style="font-size: 18px;">紘嘉物業管理股份有限公司</b> 預支借出現金如下：<br>
+      一、借款員工姓名：<b id="p_adv_name" style="font-size: 18px; text-decoration: underline;">--</b>&nbsp;&nbsp;&nbsp;&nbsp;員工工號：<b id="p_adv_id" style="text-decoration: underline;">--</b><br>
+      二、預支所屬月份：<b id="p_adv_month" style="text-decoration: underline;">--</b><br>
+      三、本次預支金額：新台幣 <b id="p_adv_amount" style="font-size: 20px; text-decoration: underline; letter-spacing: 1px;">--</b> 元整。<br>
+      <div style="font-size: 14px; color: #333; margin-top: 15px; border: 1px dashed black; padding: 10px; line-height: 1.6;">
+        ※ 備忘條款：本筆款項由立據同仁親收現金無誤。此預支借金將由會計部自上述所得月份之次月發薪薪資明細中，全額自動直接扣除。特立此據，以昭信實。
+      </div>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 60px; padding: 0 10px;">
+      <div style="font-size: 16px; line-height: 2.5;">
+        <b>公司核發主管：</b>_______________________<br>
+        <b>經手出納簽章：</b>_______________________
+      </div>
+      <div style="font-size: 16px; line-height: 2.5; text-align: right;">
+        <b>領款同仁親筆簽名：</b>_______________________<br><br>
+        <span id="p_adv_date" style="font-size: 14px; font-weight: bold;">中華民國 年 月 日</span>
+      </div>
     </div>
   </div>
 
@@ -484,7 +515,6 @@
               document.getElementById("dynamicDashboardContractZone").style.display = "block";
             }
 
-            // 🌟 鐵血保險絲：修正黑名單拔除選單防呆配線，保證公告與反霸凌不被錯殺！
             const allFixModules = ["scheduleMgmt", "leaveAudit", "punchLog", "empMgmt", "locMgmt", "locDetailsMgmt", "salaryAdvanceSection", "announcementMgmt", "resignationSection", "bullyingSection"];
             allFixModules.forEach(modId => {
               if (!allowedArray.includes(modId)) {
@@ -627,6 +657,14 @@
       });
     }
 
+    function fillLocDetailForm(name, chair, phone, resi, term, zone, cStart, cEnd, regul) {
+      document.getElementById("detailLocSelect").value = name; document.getElementById("detChairperson").value = chair;
+      document.getElementById("detPhone").value = phone; document.getElementById("detResidents").value = resi;
+      document.getElementById("detTerm").value = term; document.getElementById("detZoneMeeting").value = zone;
+      document.getElementById("detContractStart").value = cStart === '--' ? '' : cStart; document.getElementById("detContractEnd").value = cEnd === '--' ? '' : cEnd;
+      document.getElementById("detRegularMeeting").value = regul;
+    }
+
     function saveLocationDetailData() {
       const locName = document.getElementById("detailLocSelect").value; if(!locName) { alert("❌ 請先選擇一個社區案場名稱！"); return; }
       const chairperson = document.getElementById("detChairperson").value.trim(); const phone = document.getElementById("detPhone").value.trim(); const residents = document.getElementById("detResidents").value.trim(); const term = document.getElementById("detTerm").value.trim(); const zoneMeeting = document.getElementById("detZoneMeeting").value.trim(); const contractStart = document.getElementById("detContractStart").value; const contractEnd = document.getElementById("detContractEnd").value; const regularMeeting = document.getElementById("detRegularMeeting").value.trim();
@@ -635,7 +673,6 @@
       sendJsonpRequest(url, "cb_loc_det_save_" + Math.floor(Math.random()*100000), function(res) { hideMask(); alert(res.message); if(res.success) { loadLocationDetailsHistory(); if(ALLOW_DASHBOARD_CONTRACT) { loadDashboardContractView(); } clearLocDetailInputs(); } });
     }
 
-    function clearLocDetailInputs() { document.getElementById("detailLocSelect").value = ""; document.getElementById("detChairperson").value = ""; document.getElementById("detPhone").value = ""; document.getElementById("detResidents").value = ""; document.getElementById("detTerm").value = ""; document.getElementById("detZoneMeeting").value = ""; document.getElementById("detContractStart").value = ""; document.getElementById("detContractEnd").value = ""; document.getElementById("detRegularMeeting").value = ""; }
     function saveCashAdvanceData() { const empSelect = document.getElementById("cashEmpSelect"); const empId = empSelect.value; if(!empId) { alert("❌ 請先選擇同仁！"); return; } const empName = empSelect.options[empSelect.selectedIndex].text.split(" - ")[1]; const month = document.getElementById("cashMonthSelect").value; const amount = document.getElementById("cashAmount").value; showMask("正在將同仁預支現金數據提報至雲端庫..."); const url = `${BASE_GAS_URL}?action=saveCashAdvance&id=${empId}&name=${encodeURIComponent(empName)}&month=${month}&amount=${amount}`; sendJsonpRequest(url, "cb_cash_save_" + Math.floor(Math.random()*100000), function(res) { hideMask(); alert(res.message); if(res.success) loadSalaryDataSummaryHistory(); }); }
     function saveSalaryDetailData() { const empSelect = document.getElementById("salEmpSelect"); const empId = empSelect.value; if(!empId) { alert("❌ 請先選擇同仁！"); return; } const empName = empSelect.options[empSelect.selectedIndex].text.split(" - ")[1]; const month = document.getElementById("salMonthSelect").value; const baseSalary = document.getElementById("salBaseSalary").value; const personalDays = document.getElementById("salPersonalDays").value; const sickDays = document.getElementById("salSickDays").value; const labor = document.getElementById("salLabor").value; const health = document.getElementById("salHealth").value; const groupIns = document.getElementById("salGroupIns").value; const legal = document.getElementById("salLegal").value; const extraDeduct = document.getElementById("salExtraDeduct").value; showMask("正在精算月度薪資並提報保存..."); const url = `${BASE_GAS_URL}?action=saveSalaryDetail&id=${empId}&name=${encodeURIComponent(empName)}&month=${month}&baseSalary=${baseSalary}&personalDays=${personalDays}&sickDays=${sickDays}&labor=${labor}&health=${health}&groupIns=${groupIns}&legalDeduct=${legal}&extraDeduct=${extraDeduct}`; sendJsonpRequest(url, "cb_sal_save_" + Math.floor(Math.random()*100000), function(res) { hideMask(); alert(res.message); if(res.success) loadSalaryDataSummaryHistory(); }); }
 
@@ -649,16 +686,31 @@
           currentDetailsListCache = res.details || []; let advancesList = res.advances || [];
           if(cashTbody) {
             let cHtml = "";
-            if(advancesList.length > 0) { advancesList.forEach(c => { cHtml += `<tr><td><b>${c.name}</b> (${c.id})</td><td>${c.month}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${c.amount}</td><td><button class="btn btn-primary" style="padding:2px 6px; font-size:11px;" onclick="fillCashForm('${c.id}','${c.month}','${c.amount}')">修改</button></td></tr>`; }); cashTbody.innerHTML = cHtml; } 
-            else { cashTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#718096;">本月尚無任何預支登記紀錄。</td></tr>`; }
+            if(advancesList.length > 0) { 
+              // 🌟 定點升級功能：在此處精準注入藍色的 [🖨️ 列印借據] 按鈕，滿足簽名核發流程！
+              advancesList.forEach(c => { cHtml += `<tr><td><b>${c.name}</b> (${c.id})</td><td>${c.month}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${c.amount}</td><td><button class="btn btn-primary" style="padding:2px 6px; font-size:11px;" onclick="fillCashForm('${c.id}','${c.month}','${c.amount}')">修改</button> <button class="btn btn-success" style="padding:2px 6px; font-size:11px; background:#4e54c8;" onclick="printAdvanceReceipt('${c.id}','${c.name}','${c.month}','${c.amount}')"><i class="fa-solid fa-print"></i> 列印借據</button></td></tr>`; }); cashTbody.innerHTML = cHtml; 
+            } else { cashTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#718096;">本月尚無任何預支登記紀錄。</td></tr>`; }
           }
           if(salTbody) {
             let sHtml = "";
-            if(currentDetailsListCache.length > 0) { currentDetailsListCache.forEach(s => { sHtml += `<tr><td><b>${s.name}</b> (${s.id})</td><td><span class="btn btn-primary" style="padding:3px 8px; font-size:11px; font-weight:bold;">${s.month}</span></td><td style="font-weight:bold; color:#4e54c8;">NT$ ${s.baseSalary}</td><td>${s.personalDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.personalLeave})</span></td><td>${s.sickDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.sickLeave})</span></td><td>勞:${s.labor}<br>健:${s.health}<br>團:${s.groupIns}</td><td>NT$ ${s.legalDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.extraDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.advance}</td><td style="background:#e6fffa; color:#27ae60; font-weight:bold; font-size:14px;">NT$ ${s.finalPayout}</td><td style="background:#f7fafc; color:#718096;">NT$ ${s.totalDeduct}</td><td><button class="btn btn-primary" style="padding:3px 8px; font-size:11px; font-weight:bold;" onclick="fillSalaryForm('${s.id}','s.month','${s.baseSalary}','${s.personalDays}','${s.sickDays}','${s.labor}','${s.health}','${s.groupIns}','${s.legalDeduct}','${s.extraDeduct}')">修改</button></td></tr>`; }); salTbody.innerHTML = sHtml; } 
+            if(currentDetailsListCache.length > 0) { currentDetailsListCache.forEach(s => { sHtml += `<tr><td><b>${s.name}</b> (${s.id})</td><td><span class="btn btn-primary" style="padding:3px 8px; font-size:11px; font-weight:bold;">${s.month}</span></td><td style="font-weight:bold; color:#4e54c8;">NT$ ${s.baseSalary}</td><td>${s.personalDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.personalLeave})</span></td><td>${s.sickDays}天<br><span style="color:#718096; font-size:11px;">(扣:${s.sickLeave})</span></td><td>勞:${s.labor}<br>健:${s.health}<br>團:${s.groupIns}</td><td>NT$ ${s.legalDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.extraDeduct}</td><td style="color:#e53e3e; font-weight:bold;">NT$ ${s.advance}</td><td style="background:#e6fffa; color:#27ae60; font-weight:bold; font-size:14px;">NT$ ${s.finalPayout}</td><td style="background:#f7fafc; color:#718096;">NT$ ${s.totalDeduct}</td><td><button class="btn btn-primary" style="padding:3px 8px; font-size:11px; font-weight:bold;" onclick="fillSalaryForm('${s.id}',s.month,'${s.baseSalary}','${s.personalDays}','${s.sickDays}','${s.labor}','${s.health}','${s.groupIns}','${s.legalDeduct}','${s.extraDeduct}')">修改</button></td></tr>`; }); salTbody.innerHTML = sHtml; } 
             else { salTbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:#718096;">本月尚無同仁進行月度薪資明細結算。</td></tr>`; }
           }
         }
       });
+    }
+
+    // 🌟 定點隔離控制：借支收據列印資料灌入函式
+    function printAdvanceReceipt(id, name, month, amount) {
+      document.getElementById("p_adv_name").innerText = name;
+      document.getElementById("p_adv_id").innerText = id;
+      document.getElementById("p_adv_month").innerText = month;
+      document.getElementById("p_adv_amount").innerText = Number(amount).toLocaleString();
+      const today = new Date();
+      document.getElementById("p_adv_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
+      
+      document.body.className = "printing-advance";
+      setTimeout(() => { window.print(); document.body.className = ""; }, 300);
     }
 
     function fillCashForm(id, month, amt) { document.getElementById("cashEmpSelect").value = id; document.getElementById("cashMonthSelect").value = month; document.getElementById("cashAmount").value = amt; }
@@ -676,6 +728,7 @@
     function auditLeave(rowId, statusResult) { showMask("正在提報審核狀態到雲端..."); fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); }); }
     function loadPunchLogs() { const tbody = document.getElementById("punchLogTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">打卡考勤數據同步中...</td></tr>`; sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllPunchLogs`, "cb_p_" + Math.floor(Math.random()*100000), function(res) { if(res.success && res.logs && res.logs.length > 0) { globalPunchLogs = res.logs; let html = ""; res.logs.forEach(log => { let typeTag = log.type === 'clockIn' ? '<span style="color:#27ae60;font-weight:bold;">[上班]</span>' : '<span style="color:#f39c12;font-weight:bold;">[下班]</span>'; html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td>緯度:${log.lat}<br>經度:${log.lng}</td></tr>`; }); tbody.innerHTML = html; } }); }
     function loadBullyingReports() { const tbody = document.getElementById("bullyingTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全同步密封投訴案件...</td></tr>`; sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllBullyingReports`, "cb_b_" + Math.floor(Math.random()*100000), function(res) { if(res.success && res.reports && res.reports.length > 0) { let html = ""; res.reports.forEach(r => { html += `<tr><td>${r.timestamp}</td><td><b>${r.identity}</b></td><td>${r.location}</td><td style="color:#e53e3e;"><i class="fa-solid fa-clock"></i> ${r.targetPerson}</td><td style="background:#fff5f5;">${r.content}</td></tr>`; }); tbody.innerHTML = html; } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#718096;">🎉 目前環境安全無虞，尚無 any 表單申訴紀錄。</td></tr>`; } }); }
+    document.addEventListener("DOMContentLoaded", function() { fetchCloudLocations(); });
     function loadCloudPermissionsMatrix() { sendJsonpRequest(`${BASE_GAS_URL}?action=fetchPermissionsMatrix`, "cb_mat_" + Math.floor(Math.random()*100000), function(res) { if (res.success) { cloudPermissionsCache = res.matrix || []; } }); }
     function syncSelectedAdminPermissions() { const targetId = document.getElementById("permTargetAdminSelect").value; document.querySelectorAll(".perm-chk").forEach(chk => chk.checked = false); if(!targetId) return; const config = cloudPermissionsCache.find(c => c.id === targetId); if (config && config.modules) { let currentAllowedArr = config.modules.split(","); document.querySelectorAll(".perm-chk").forEach(chk => { if (currentAllowedArr.includes(chk.value)) { chk.checked = true; } }); } }
     function submitSavePermissionsMatrix() { const select = document.getElementById("permTargetAdminSelect"); const targetId = select.value; if (!targetId) { alert("❌ 請先選擇一個要配置的管理人員！"); return; } const targetName = select.options[select.selectedIndex].text.split(" - ")[1]; let checkedModules = []; document.querySelectorAll(".perm-chk:checked").forEach(chk => { checkedModules.push(chk.value); }); showMask("最高權限正在密封配置並寫入雲端庫..."); fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "savePermissionsMatrix", targetId: targetId, targetName: targetName, modulesStr: checkedModules.join(",") }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message); loadCloudPermissionsMatrix(); }).catch(() => { hideMask(); alert("🎉 權限分發變更成功！該管理員將在下次登入時即時生效！"); loadCloudPermissionsMatrix(); }); }
@@ -720,7 +773,8 @@
       sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) {
         hideMask();
         alert(res.message || "🎉 雲端備查存檔完畢，準備啟動列印程序！");
-        setTimeout(() => { window.print(); }, 400);
+        document.body.className = "printing-resignation";
+        setTimeout(() => { window.print(); document.body.className = ""; }, 300);
       });
     }
 
