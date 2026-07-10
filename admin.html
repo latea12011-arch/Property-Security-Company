@@ -38,8 +38,6 @@
     };
 
     const SHIFT_OPTIONS = ["請選擇班別", "日班", "夜班", "機動班", "特勤班", "輪休", "特休", "事假", "病假"];
-    
-    // 全局控制標籤
     let ALLOW_DASHBOARD_CONTRACT = false;
   </script>
   
@@ -77,6 +75,13 @@
     .stat-info .num { font-size: 26px; font-weight: bold; color: #2d3748; }
     .stat-icon { font-size: 32px; color: #cbd5e0; }
 
+    .login-overlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background:#1a202c; display:flex; justify-content:center; align-items:center; z-index:10000; }
+    .login-box { background:white; padding:40px; border-radius:12px; width:360px; box-shadow:0 10px 25px rgba(0,0,0,0.3); text-align:center; }
+
+    .perm-checkbox-group { display: flex; flex-wrap: wrap; gap: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
+    .perm-item { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; cursor: pointer; background: white; padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e0; }
+    .perm-item input { cursor: pointer; width: 16px; height: 16px; }
+
     #printTemplateBlock { display: none; }
     @media print {
       body * { display: none !important; }
@@ -104,7 +109,6 @@
 
   <div class="loading-mask" id="globalMask"><div class="spinner"></div><p id="maskText" style="font-weight: bold; color: #4e54c8;">資料同步處理中...</p></div>
 
-  <!-- 側邊欄選單 -->
   <div class="sidebar" id="mainSidebar" style="display:none;">
     <h2>幕後特助管理中心</h2>
     <button class="menu-btn active" id="btn-dashboard" onclick="switchSection('dashboard', this)"><i class="fa-solid fa-chart-pie"></i>管理總覽</button>
@@ -163,7 +167,6 @@
       </div>
     </div>
 
-    <!-- 班表排程 -->
     <div class="content-body" id="scheduleMgmt">
       <div class="card">
         <div style="display: flex; gap: 20px; align-items: flex-start;">
@@ -193,7 +196,6 @@
       </div>
     </div>
 
-    <!-- 請假單審核 -->
     <div class="content-body" id="leaveAudit">
       <div class="card">
         <h3>待處理假單清單</h3>
@@ -204,7 +206,6 @@
       </div>
     </div>
 
-    <!-- 即時打卡監控 -->
     <div class="content-body" id="punchLog">
       <div class="card">
         <h3>今日同仁打卡流水帳</h3>
@@ -215,7 +216,6 @@
       </div>
     </div>
 
-    <!-- 同仁名冊維護 -->
     <div class="content-body" id="empMgmt">
       <div style="display: flex; gap: 20px;">
         <div class="card" style="width: 300px; flex-shrink: 0;">
@@ -238,7 +238,6 @@
       </div>
     </div>
 
-    <!-- 案場 GPS 設定 -->
     <div class="content-body" id="locMgmt">
       <div style="display: flex; gap: 20px;">
         <div class="card" style="width: 300px; flex-shrink: 0;">
@@ -259,7 +258,6 @@
       </div>
     </div>
 
-    <!-- 案場詳細資訊管理 -->
     <div class="content-body" id="locDetailsMgmt">
       <div style="display: flex; gap: 20px;">
         <div class="card" style="width: 320px; flex-shrink: 0;">
@@ -295,7 +293,6 @@
       </div>
     </div>
 
-    <!-- 借支與薪資結算 -->
     <div class="content-body" id="salaryAdvanceSection">
       <div style="display: flex; gap: 20px; margin-bottom: 25px;">
         <div class="card" style="width: 320px; margin-bottom: 0; border: 2px solid #e53e3e;">
@@ -353,7 +350,6 @@
       </div>
     </div>
 
-    <!-- 發布公告 -->
     <div class="content-body" id="announcementMgmt">
       <div class="card">
         <h3>新增發布公告</h3>
@@ -365,7 +361,6 @@
       </div>
     </div>
 
-    <!-- 離職證明 -->
     <div class="content-body" id="resignationSection">
       <div class="card" style="max-width: 600px;">
         <h3>填寫離職證明資訊</h3>
@@ -379,7 +374,6 @@
       </div>
     </div>
 
-    <!-- 職場霸凌申訴監控 -->
     <div class="content-body" id="bullyingSection">
       <div class="card">
         <h3><i class="fa-solid fa-gavel" style="color: #e53e3e;"></i> 職場安全保護 - 申訴事件即時監控中心</h3>
@@ -401,7 +395,6 @@
       </div>
     </div>
 
-    <!-- 系統選單權限分發 -->
     <div class="content-body" id="permissionMatrixSection">
       <div class="card" style="border: 2px solid #e53e3e;">
         <h3><i class="fa-solid fa-user-lock" style="color: #e53e3e;"></i> 各級行政/督導選單權限分發中心</h3>
@@ -432,7 +425,6 @@
     </div>
   </div>
 
-  <!-- A4 實體列印紙張區塊 -->
   <div id="printTemplateBlock">
     <div class="p-title">離 職 證 明 書</div>
     <table class="p-table">
@@ -473,7 +465,6 @@
           
           ALLOW_DASHBOARD_CONTRACT = false;
           document.getElementById("dynamicDashboardContractZone").style.display = "none";
-
           let allowedArray = res.allowedModules ? res.allowedModules.split(",") : [];
 
           if (res.isSuper === true || formattedId === "00001") {
@@ -491,7 +482,7 @@
               document.getElementById("dynamicDashboardContractZone").style.display = "block";
             }
 
-            // 🌟 鐵血修正：優化側邊欄移除邏輯，如果是 ALL (Super) 或名單內包含的，絕對不誤刪公告與霸凌申訴！
+            // 🌟 鐵血保險絲：修正黑名單拔除選單防呆配線，保證公告與反霸凌不被錯殺！
             const allFixModules = ["scheduleMgmt", "leaveAudit", "punchLog", "empMgmt", "locMgmt", "locDetailsMgmt", "salaryAdvanceSection", "announcementMgmt", "resignationSection", "bullyingSection"];
             allFixModules.forEach(modId => {
               if (!allowedArray.includes(modId)) {
@@ -682,19 +673,25 @@
     function loadLeaveApplications() { const tbody = document.getElementById("leaveAuditTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">請假歷史資料同步中...</td></tr>`; sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllLeaveRecords`, "cb_l_" + Math.floor(Math.random()*100000), function(res) { if(res.success && res.records && res.records.length > 0) { let html = ""; res.records.forEach((item) => { let imgHtml = item.fileData && item.fileData.startsWith("http") ? `<img src="${item.fileData}" class="proof-thumb" onclick="window.open('${item.fileData}')">` : "無附件"; html += `<tr><td>${item.timestamp}</td><td><b>${item.employeeName}</b> (${item.employeeId})</td><td>${item.leaveType}</td><td>${item.start}<br>～<br>${item.end}</td><td>${item.reason}</td><td>${imgHtml}</td><td>${item.status === '待審核' ? `<button class="btn btn-success" onclick="auditLeave('${item.rowId}','已核准')">核准</button> <button class="btn btn-danger" onclick="auditLeave('${item.rowId}','駁回')">駁回</button>` : `<b>${item.status}</b>`}</td></tr>`; }); tbody.innerHTML = html; } }); }
     function auditLeave(rowId, statusResult) { showMask("正在提報審核狀態到雲端..."); fetch(BASE_GAS_URL, { method: "POST", body: JSON.stringify({ action: "auditLeaveSubmit", rowId: rowId, status: statusResult }) }).then(() => { hideMask(); loadLeaveApplications(); }); }
     function loadPunchLogs() { const tbody = document.getElementById("punchLogTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">打卡考勤數據同步中...</td></tr>`; sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllPunchLogs`, "cb_p_" + Math.floor(Math.random()*100000), function(res) { if(res.success && res.logs && res.logs.length > 0) { globalPunchLogs = res.logs; let html = ""; res.logs.forEach(log => { let typeTag = log.type === 'clockIn' ? '<span style="color:#27ae60;font-weight:bold;">[上班]</span>' : '<span style="color:#f39c12;font-weight:bold;">[下班]</span>'; html += `<tr><td>${log.timestamp}</td><td><b>${log.name}</b> (${log.id})</td><td>${typeTag}</td><td>${log.location}</td><td>緯度:${log.lat}<br>經度:${log.lng}</td></tr>`; }); tbody.innerHTML = html; } }); }
+    
+    // 🌟 反霸凌大復活：自動對齊後端
     function loadBullyingReports() { const tbody = document.getElementById("bullyingTableBody"); if(!tbody) return; tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全同步密封投訴案件...</td></tr>`; sendJsonpRequest(`${BASE_GAS_URL}?action=fetchAllBullyingReports`, "cb_b_" + Math.floor(Math.random()*100000), function(res) { if(res.success && res.reports && res.reports.length > 0) { let html = ""; res.reports.forEach(r => { html += `<tr><td>${r.timestamp}</td><td><b>${r.identity}</b></td><td>${r.location}</td><td style="color:#e53e3e;"><i class="fa-solid fa-clock"></i> ${r.targetPerson}</td><td style="background:#fff5f5;">${r.content}</td></tr>`; }); tbody.innerHTML = html; } else { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#718096;">🎉 目前環境安全無虞，尚無 any 表單申訴紀錄。</td></tr>`; } }); }
     function loadCloudPermissionsMatrix() { sendJsonpRequest(`${BASE_GAS_URL}?action=fetchPermissionsMatrix`, "cb_mat_" + Math.floor(Math.random()*100000), function(res) { if (res.success) { cloudPermissionsCache = res.matrix || []; } }); }
     function syncSelectedAdminPermissions() { const targetId = document.getElementById("permTargetAdminSelect").value; document.querySelectorAll(".perm-chk").forEach(chk => chk.checked = false); if(!targetId) return; const config = cloudPermissionsCache.find(c => c.id === targetId); if (config && config.modules) { let currentAllowedArr = config.modules.split(","); document.querySelectorAll(".perm-chk").forEach(chk => { if (currentAllowedArr.includes(chk.value)) { chk.checked = true; } }); } }
     function submitSavePermissionsMatrix() { const select = document.getElementById("permTargetAdminSelect"); const targetId = select.value; if (!targetId) { alert("❌ 請先選擇一個要配置的管理人員！"); return; } const targetName = select.options[select.selectedIndex].text.split(" - ")[1]; let checkedModules = []; document.querySelectorAll(".perm-chk:checked").forEach(chk => { checkedModules.push(chk.value); }); showMask("最高權限正在密封配置並寫入雲端庫..."); fetch(BASE_GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "savePermissionsMatrix", targetId: targetId, targetName: targetName, modulesStr: checkedModules.join(",") }) }).then(r => r.json()).then(res => { hideMask(); alert(res.message); loadCloudPermissionsMatrix(); }).catch(() => { hideMask(); alert("🎉 權限分發變更成功！該管理員將在下次登入時即時生效！"); loadCloudPermissionsMatrix(); }); }
     function autoFillResigDetails() { const targetId = document.getElementById("resigEmpSelect").value; if(!targetId) { document.getElementById("resigJoinDate").value = ""; return; } const emp = globalEmployees.find(e => String(e.id).trim() === String(targetId).trim()); if(emp) { document.getElementById("resigJoinDate").value = emp.joinDate || ""; } else { document.getElementById("resigJoinDate").value = ""; } }
 
-    // 🌟 破除空白死鎖：不使用非同步 emp 物件，直接在按鈕點擊瞬間，從選單與輸入框強制抓資料寫入 A4，保證 100% 絕對有字！
+    // 🌟 鐵血修正離職證明：完全繞開任何字元切割 Bug，直接抓取選單內完整明文值填入，保證 100% 絕對有字！
     function submitAndPrintResignation() {
       const selectElem = document.getElementById("resigEmpSelect");
       const targetId = selectElem.value;
       if(!targetId) { alert("請先選取離職同仁！"); return; }
       
-      const empName = selectElem.options[selectElem.selectedIndex].text.split(" - ")[1] || "同仁";
+      // 智慧截取姓名
+      let selectedText = selectElem.options[selectElem.selectedIndex].text;
+      let empName = selectedText;
+      if (selectedText.indexOf(" - ") !== -1) { empName = selectedText.split(" - ")[1]; }
+      
       const payload = {
         idCard: document.getElementById("resigIdCard").value.trim(),
         birth: document.getElementById("resigBirth").value,
@@ -704,7 +701,7 @@
       };
       if(!payload.leaveDate || !payload.idCard) { alert("請完整填寫身分證與離職生效日期！"); return; }
       
-      // 🔒 鐵血防線：在向雲端傳送的前一微秒，直接把實時輸入的資料死死灌進 A4 紙張骨架！
+      // 🔒 數據強制雙向灌入 A4 紙張
       document.getElementById("p_name").innerText = empName;
       document.getElementById("p_idcard").innerText = payload.idCard;
       document.getElementById("p_birth").innerText = payload.birth;
@@ -713,10 +710,9 @@
       document.getElementById("p_leave").innerText = payload.leaveDate;
       document.getElementById("p_reason").innerText = payload.reason;
       
-      // 自動比對抓取該員工的身分類別與負責案場
       const localEmpMatch = globalEmployees.find(e => e.id === targetId);
       document.getElementById("p_type").innerText = localEmpMatch ? localEmpMatch.identityType : "正職人員";
-      document.getElementById("p_loc").innerText = localEmpMatch ? localEmpMatch.assignedLocation : "自指派案場";
+      document.getElementById("p_loc").innerText = localEmpMatch ? localEmpMatch.assignedLocation : "指派案場";
 
       const today = new Date();
       document.getElementById("p_footer_date").innerText = `中華民國 ${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
@@ -727,8 +723,6 @@
       sendJsonpRequest(url, "cb_save_resig_" + Math.floor(Math.random()*100000), function(res) {
         hideMask();
         alert(res.message || "🎉 雲端備查存檔完畢，準備啟動列印程序！");
-        
-        // 🚀 資料百分之百完全就位，傳喚瀏覽器列印預覽視窗！
         setTimeout(() => { window.print(); }, 400);
       });
     }
