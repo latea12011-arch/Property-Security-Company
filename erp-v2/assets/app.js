@@ -270,6 +270,7 @@
 
   async function saveRecord(event) {
     event.preventDefault(); const {table,id}=state.editing; const form=new FormData(event.currentTarget); const record=Object.fromEntries(form.entries());
+    Object.keys(record).forEach(key=>{if(record[key]==='')record[key]=null});
     const assignedSites=table==='employees'?form.getAll('assigned_sites'):[]; delete record.assigned_sites;
     const initialPassword=record.initial_password; delete record.initial_password;
     if(table==='announcements') record.is_active=record.is_active==='true';
