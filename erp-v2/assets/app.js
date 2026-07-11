@@ -45,11 +45,11 @@
     ],
     supervisor_inspections: [
       ['inspection_date','巡查日期','date',true],['inspection_time','巡查時間','time',true],['site_id','巡查案場','relation:sites',true],['employee_id','督導人員','relation:employees',true],
-      ['inspection_type','巡查類型','select',true,[['routine','例行巡查'],['night','夜間巡查'],['special','專案巡查'],['complaint','客訴複查']]],['overall_result','整體結果','select',true,[['pass','合格'],['improvement_required','限期改善'],['critical','重大缺失']]],
+      ['inspection_type','巡查類型','select',true,[['routine','例行巡查'],['night','夜間巡查'],['payroll_delivery','薪資發放']]],['overall_result','整體結果','select',true,[['pass','合格'],['improvement_required','限期改善'],['critical','重大缺失']]],
       ['staff_discipline','人員服儀與勤務紀律','select',true,[['good','良好'],['needs_improvement','待改善'],['not_applicable','不適用']]],['post_records','哨所簿冊與交接紀錄','select',true,[['good','良好'],['needs_improvement','待改善'],['not_applicable','不適用']]],
       ['equipment_status','裝備器材與門禁設備','select',true,[['good','良好'],['needs_improvement','待改善'],['not_applicable','不適用']]],['environment_safety','環境與消防安全','select',true,[['good','良好'],['needs_improvement','待改善'],['not_applicable','不適用']]],
       ['findings','巡查紀要／缺失內容','textarea'],['corrective_action','改善要求','textarea'],['due_date','改善期限','date'],['follow_up_status','改善追蹤','select',true,[['none','無須改善'],['pending','待改善'],['in_progress','改善中'],['verified','已複查完成']]],
-      ['resolved_at','完成改善日期','date'],['site_contact','案場陪同／簽認人','text'],['photo_url','現場照片網址','url'],['latitude','GPS 緯度','number'],['longitude','GPS 經度','number'],['note','備註','textarea']
+      ['resolved_at','完成改善日期','date'],['site_contact','案場陪同／簽認人','text'],['note','備註','textarea']
     ],
     leave_requests: [
       ['employee_id','員工','relation:employees',true],['leave_type','假別','select',true,[['annual','特休'],['personal','事假'],['sick','病假'],['official','公假'],['marriage','婚假'],['bereavement','喪假'],['maternity','產假'],['paternity','陪產檢及陪產假'],['menstrual','生理假'],['occupational','公傷病假'],['compensatory','補休'],['unpaid','無薪假'],['other','其他']]],
@@ -171,7 +171,7 @@
 
   const esc = value => String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
   const labels = {guard:'保全人員',site_manager:'案場主管',hr:'人事',admin:'管理員',active:'啟用／在職',inactive:'停用',full_time:'正職人員',mobile:'機動人員',day:'日班',night:'夜班',custom:'自訂',normal:'正常',late:'遲到',missing:'缺卡',annual:'特休',personal:'事假',sick:'病假',official:'公假',marriage:'婚假',bereavement:'喪假',maternity:'產假',paternity:'陪產檢及陪產假',menstrual:'生理假',occupational:'公傷病假',compensatory:'補休',unpaid:'無薪假',other:'其他',uniform:'服裝配件',equipment:'保全設備',traffic:'交通／拒馬設備',office:'辦公用品',cleaning:'清潔用品',purchase:'採購入庫',issue:'領用出庫',return:'退回入庫',adjust_in:'盤點增加',adjust_out:'盤點減少',pending:'待審核',approved:'已核准',rejected:'已退回',cancelled:'已取消',deducted:'已扣回',draft:'草稿',confirmed:'已確認',paid:'已發薪',submitted:'已送出',processing:'處理中',resolved:'已處理',closed:'已結案',not_started:'尚未洽談',contacting:'聯絡中',negotiating:'議約中',renewed:'已續約',not_renewing:'不續約',true:'是',false:'否'};
-  Object.assign(labels,{routine:'例行巡查',night:'夜間巡查',special:'專案巡查',complaint:'客訴複查',pass:'合格',improvement_required:'限期改善',critical:'重大缺失',good:'良好',needs_improvement:'待改善',not_applicable:'不適用',none:'無須改善',in_progress:'改善中',verified:'已複查完成'});
+  Object.assign(labels,{routine:'例行巡查',night:'夜間巡查',payroll_delivery:'薪資發放',pass:'合格',improvement_required:'限期改善',critical:'重大缺失',good:'良好',needs_improvement:'待改善',not_applicable:'不適用',none:'無須改善',in_progress:'改善中',verified:'已複查完成'});
   const format = (key,value) => {
     if ((key==='employee_id'||key==='site_id') && value) {
       const list=key==='employee_id'?state.relations.employees:state.relations.sites;
@@ -185,7 +185,7 @@
   };
   const badge = value => `<span class="badge ${['pending','late'].includes(value)?'warning':''} ${['inactive','missing','rejected'].includes(value)?'danger':''}">${esc(format('',value))}</span>`;
   const isBadge = key => ['status','role','shift_type','leave_type','renewal_status','transaction_type','category','is_active','is_manager','inspection_type','overall_result','follow_up_status'].includes(key);
-  const cellHtml = (key,value) => key==='photo_url' ? (value?`<a class="mini-button" href="${esc(value)}" target="_blank" rel="noopener noreferrer">查看照片</a>`:'—') : key==='proof_path'||key==='evidence_path' ? (value?`<button class="mini-button" data-private-file="${esc(value)}">開啟附件</button>`:'—') : isBadge(key)?badge(value):esc(format(key,value));
+  const cellHtml = (key,value) => key==='proof_path'||key==='evidence_path' ? (value?`<button class="mini-button" data-private-file="${esc(value)}">開啟附件</button>`:'—') : isBadge(key)?badge(value):esc(format(key,value));
 
   async function loadRelations() {
     const canInventory=state.user?.role==='admin'||state.user?.permissions?.some(x=>['inventoryItems','inventoryTransactions'].includes(x));

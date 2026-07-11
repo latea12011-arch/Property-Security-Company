@@ -5,7 +5,7 @@ create table if not exists public.supervisor_inspections (
   inspection_time time not null default localtime,
   site_id uuid not null references public.sites(id) on delete restrict,
   employee_id uuid not null references public.employees(id) on delete restrict,
-  inspection_type text not null default 'routine' check (inspection_type in ('routine','night','special','complaint')),
+  inspection_type text not null default 'routine' check (inspection_type in ('routine','night','payroll_delivery')),
   overall_result text not null default 'pass' check (overall_result in ('pass','improvement_required','critical')),
   staff_discipline text not null default 'good' check (staff_discipline in ('good','needs_improvement','not_applicable')),
   post_records text not null default 'good' check (post_records in ('good','needs_improvement','not_applicable')),
@@ -17,9 +17,6 @@ create table if not exists public.supervisor_inspections (
   follow_up_status text not null default 'none' check (follow_up_status in ('none','pending','in_progress','verified')),
   resolved_at date,
   site_contact text,
-  photo_url text,
-  latitude numeric(9,6),
-  longitude numeric(9,6),
   note text,
   created_by uuid references auth.users(id) on delete set null default auth.uid(),
   created_at timestamptz not null default now(),
@@ -28,6 +25,15 @@ create table if not exists public.supervisor_inspections (
   check (follow_up_status <> 'verified' or resolved_at is not null),
   check (overall_result = 'pass' or follow_up_status <> 'none')
 );
+
+-- 若曾執行舊版巡查 migration，同步移除不再使用的欄位與類型。
+alter table public.supervisor_inspections drop column if exists photo_url;
+alter table public.supervisor_inspections drop column if exists latitude;
+alter table public.supervisor_inspections drop column if exists longitude;
+alter table public.supervisor_inspections drop constraint if exists supervisor_inspections_inspection_type_check;
+update public.supervisor_inspections set inspection_type='routine' where inspection_type not in ('routine','night','payroll_delivery');
+alter table public.supervisor_inspections add constraint supervisor_inspections_inspection_type_check
+  check (inspection_type in ('routine','night','payroll_delivery'));
 
 create index if not exists supervisor_inspections_site_date_idx on public.supervisor_inspections(site_id,inspection_date desc);
 create index if not exists supervisor_inspections_follow_up_idx on public.supervisor_inspections(follow_up_status,due_date);
