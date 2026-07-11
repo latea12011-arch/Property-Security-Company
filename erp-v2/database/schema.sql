@@ -123,10 +123,29 @@ returns trigger language plpgsql security definer set search_path = public as $$
 begin
   insert into public.profiles(id,full_name)
   values(new.id,coalesce(new.raw_user_meta_data->>'full_name',''));
+  update public.employees
+  set user_id = new.id
+  where user_id is null
+    and lower(employee_no) = split_part(lower(new.email), '@', 1)
+    and lower(new.email) like '%@employee.hongjia.local';
   return new;
 end;
 $$;
 create trigger on_auth_user_created after insert on auth.users for each row execute function public.handle_new_user();
+
+create or replace function public.link_employee_auth_user()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.user_id is null then
+    select id into new.user_id
+    from auth.users
+    where lower(email) = lower(new.employee_no) || '@employee.hongjia.local'
+    limit 1;
+  end if;
+  return new;
+end;
+$$;
+create trigger auto_link_employee_user before insert or update of employee_no on public.employees for each row execute function public.link_employee_auth_user();
 
 create or replace function public.current_user_role()
 returns public.app_role language sql stable security definer set search_path = public as $$

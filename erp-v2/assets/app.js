@@ -15,7 +15,7 @@
 
   const fields = {
     employees: [
-      ['employee_no','員工編號','text',true],['full_name','姓名','text',true],['phone','電話','tel'],['user_id','登入帳號 UID','text'],
+      ['employee_no','員工編號','text',true],['full_name','姓名','text',true],['phone','電話','tel'],['initial_password','初始登入密碼','password'],
       ['role','角色','select',true,[['guard','保全人員'],['site_manager','案場主管'],['hr','人事'],['admin','系統管理員']]],
       ['status','狀態','select',true,[['active','在職'],['inactive','離職／停用']]]
     ],
@@ -81,10 +81,10 @@
         const data=demoData(); const clean={...record};
         if (id) data[table]=data[table].map(row=>row.id===id?{...row,...clean}:row);
         else data[table].unshift({id:crypto.randomUUID(),...clean});
-        localStorage.setItem(demoKey,JSON.stringify(data)); return;
+        localStorage.setItem(demoKey,JSON.stringify(data)); return id?data[table].find(row=>row.id===id):data[table][0];
       }
-      const query=id?client.from(table).update(record).eq('id',id):client.from(table).insert(record);
-      const {error}=await query; if(error) throw error;
+      const query=(id?client.from(table).update(record).eq('id',id):client.from(table).insert(record)).select().single();
+      const {data,error}=await query; if(error) throw error; return data;
     },
     async remove(table,id) {
       if (!cloudEnabled) { const data=demoData(); data[table]=data[table].filter(row=>row.id!==id); localStorage.setItem(demoKey,JSON.stringify(data)); return; }
@@ -167,9 +167,17 @@
 
   async function saveRecord(event) {
     event.preventDefault(); const {table,id}=state.editing; const form=new FormData(event.currentTarget); const record=Object.fromEntries(form.entries());
-    if (table==='employees' && !record.user_id) record.user_id=null;
+    const initialPassword=record.initial_password; delete record.initial_password;
     $('#saveButton').disabled=true; $('#formMessage').textContent='';
-    try { await db.save(table,record,id); $('#recordDialog').close(); await renderCurrent(); showNotice('資料已儲存。','success'); }
+    try {
+      const saved=await db.save(table,record,id);
+      if(table==='employees' && initialPassword && cloudEnabled){
+        const {data,error}=await client.functions.invoke('create-employee-account',{body:{employee_id:saved.id,password:initialPassword}});
+        if(error) throw error;
+        if(!data?.ok) throw new Error(data?.error||'登入帳號建立失敗');
+      }
+      $('#recordDialog').close(); await renderCurrent(); showNotice(table==='employees'&&initialPassword?'員工與登入帳號已建立。':'資料已儲存。','success');
+    }
     catch(error) { $('#formMessage').textContent=`儲存失敗：${error.message}`; }
     finally { $('#saveButton').disabled=false; }
   }
