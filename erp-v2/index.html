@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#16324f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="紘嘉 ERP">
+  <title>紘嘉物業 ERP</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icon.svg">
+  <link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+  <div id="loginView" class="login-view">
+    <section class="login-card">
+      <img src="assets/icon.svg" alt="紘嘉物業" class="login-logo">
+      <p class="eyebrow">PROPERTY MANAGEMENT</p>
+      <h1>紘嘉物業 ERP</h1>
+      <p class="muted">勤務、人事與案場管理整合系統</p>
+      <form id="loginForm" class="stack">
+        <label>電子郵件<input id="email" type="email" autocomplete="username" placeholder="admin@example.com" required></label>
+        <label>密碼<input id="password" type="password" autocomplete="current-password" placeholder="至少 6 個字元" required></label>
+        <button class="btn primary" type="submit">登入系統</button>
+      </form>
+      <button id="demoButton" class="btn ghost" type="button">使用示範模式</button>
+      <p id="loginMessage" class="form-message" aria-live="polite"></p>
+    </section>
+  </div>
+
+  <div id="appView" class="app" hidden>
+    <aside class="sidebar">
+      <div class="brand"><img src="assets/icon.svg" alt=""><div><strong>紘嘉物業</strong><small>ERP 管理系統</small></div></div>
+      <nav id="nav">
+        <button data-view="dashboard" class="active">總覽</button>
+        <button data-view="employees">員工管理</button>
+        <button data-view="sites">案場管理</button>
+        <button data-view="schedules">勤務排班</button>
+        <button data-view="attendance">出勤紀錄</button>
+        <button data-view="leaves">請假審核</button>
+      </nav>
+      <div class="sidebar-footer"><small id="modeLabel"></small><button id="logoutButton" class="text-button">登出</button></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><p class="eyebrow">HONG JIA PROPERTY</p><h2 id="pageTitle">營運總覽</h2></div>
+        <div class="user-chip"><span id="userName">管理員</span><b id="userInitial">管</b></div>
+      </header>
+      <div id="notice" class="notice" hidden></div>
+      <section id="content" class="content" aria-live="polite"></section>
+    </main>
+
+    <nav id="mobileNav" class="mobile-nav">
+      <button data-view="dashboard" class="active">總覽</button>
+      <button data-view="schedules">排班</button>
+      <button data-view="attendance">出勤</button>
+      <button data-view="leaves">請假</button>
+    </nav>
+  </div>
+
+  <dialog id="recordDialog">
+    <form id="recordForm" method="dialog">
+      <div class="dialog-head"><div><p class="eyebrow">資料維護</p><h3 id="dialogTitle">新增資料</h3></div><button type="button" data-close-dialog class="icon-button" aria-label="關閉">×</button></div>
+      <div id="formFields" class="form-grid"></div>
+      <p id="formMessage" class="form-message"></p>
+      <div class="dialog-actions"><button type="button" data-close-dialog class="btn ghost">取消</button><button id="saveButton" type="submit" class="btn primary">儲存</button></div>
+    </form>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
