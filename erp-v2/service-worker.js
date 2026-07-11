@@ -1,5 +1,5 @@
-const CACHE = 'hongjia-erp-v2-31';
-const SHELL = ['./','index.html','mobile.html','config.js','manifest.json','mobile-manifest.json','assets/app.css','assets/app.js','assets/mobile.css','assets/mobile.js','assets/company-logo.png','assets/company-icon.svg'];
+const CACHE = 'hongjia-erp-v2-32';
+const SHELL = ['./','index.html','mobile.html','config.js','manifest.json','mobile-manifest.json','assets/app.css','assets/app.js','assets/mobile.css','assets/mobile-enhancements.css','assets/mobile.js','assets/company-logo.png','assets/company-icon.svg'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));
