@@ -10,18 +10,19 @@
 
   const viewInfo = {
     dashboard: ['營運總覽', 'dashboard'], employees: ['員工管理', 'employees'], sites: ['案場管理', 'sites'],
-    schedules: ['勤務排班', 'schedules'], attendance: ['出勤紀錄', 'attendance'], leaves: ['請假審核', 'leave_requests']
+    schedules: ['勤務排班', 'schedules'], attendance: ['出勤紀錄', 'attendance'], leaves: ['請假審核', 'leave_requests'], announcements: ['公告管理','announcements']
   };
 
   const fields = {
     employees: [
       ['employee_no','員工編號','text',true],['full_name','姓名','text',true],['phone','電話','tel'],['initial_password','初始登入密碼','password'],
+      ['emergency_contact_name','緊急聯絡人','text'],['emergency_contact_phone','緊急聯絡電話','tel'],['hire_date','入職日期','date'],['employment_type','身分類別','select',true,[['full_time','正職人員'],['mobile','機動人員']]],
       ['role','角色','select',true,[['guard','保全人員'],['site_manager','案場主管'],['hr','人事'],['admin','系統管理員']]],
       ['status','狀態','select',true,[['active','在職'],['inactive','離職／停用']]]
     ],
     sites: [
       ['code','案場代碼','text',true],['name','案場名稱','text',true],['address','地址','text',true],
-      ['contact_name','聯絡人','text'],['contact_phone','聯絡電話','tel'],['status','狀態','select',true,[['active','啟用'],['inactive','停用']]]
+      ['contact_name','聯絡人','text'],['contact_phone','聯絡電話','tel'],['latitude','GPS 緯度','number'],['longitude','GPS 經度','number'],['punch_radius_m','打卡半徑（公尺）','number'],['status','狀態','select',true,[['active','啟用'],['inactive','停用']]]
     ],
     schedules: [
       ['employee_id','員工','relation:employees',true],['site_id','案場','relation:sites',true],['work_date','勤務日期','date',true],
@@ -32,10 +33,11 @@
       ['clock_in','上班時間','datetime-local'],['clock_out','下班時間','datetime-local'],['status','狀態','select',true,[['normal','正常'],['late','遲到'],['missing','缺卡']]]
     ],
     leave_requests: [
-      ['employee_id','員工','relation:employees',true],['leave_type','假別','select',true,[['annual','特休'],['personal','事假'],['sick','病假'],['official','公假']]],
+      ['employee_id','員工','relation:employees',true],['leave_type','假別','select',true,[['annual','特休'],['personal','事假'],['sick','病假'],['official','公假'],['marriage','婚假'],['bereavement','喪假']]],
       ['start_date','開始日期','date',true],['end_date','結束日期','date',true],['reason','原因','textarea',true],
       ['status','審核狀態','select',true,[['pending','待審核'],['approved','已核准'],['rejected','已退回']]]
-    ]
+    ],
+    announcements:[['publisher','發布單位','text',true],['content','公告內容','textarea',true],['published_at','發布時間','datetime-local',true],['is_active','狀態','select',true,[['true','上架'],['false','下架']]]]
   };
 
   const columns = {
@@ -43,7 +45,8 @@
     sites: [['code','代碼'],['name','案場'],['address','地址'],['contact_name','聯絡人'],['status','狀態']],
     schedules: [['work_date','日期'],['employee_id','員工'],['site_id','案場'],['shift_type','班別'],['start_time','時間']],
     attendance: [['work_date','日期'],['employee_id','員工'],['site_id','案場'],['clock_in','上班'],['clock_out','下班'],['status','狀態']],
-    leave_requests: [['employee_id','員工'],['leave_type','假別'],['start_date','開始'],['end_date','結束'],['status','狀態']]
+    leave_requests: [['employee_id','員工'],['leave_type','假別'],['start_date','開始'],['end_date','結束'],['status','狀態']],
+    announcements:[['published_at','發布時間'],['publisher','發布單位'],['content','內容'],['is_active','狀態']]
   };
 
   let state = { view: 'dashboard', user: null, editing: null, relations: {employees:[],sites:[]} };
@@ -93,7 +96,7 @@
   };
 
   const esc = value => String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-  const labels = {guard:'保全人員',site_manager:'案場主管',hr:'人事',admin:'管理員',active:'啟用／在職',inactive:'停用',day:'日班',night:'夜班',custom:'自訂',normal:'正常',late:'遲到',missing:'缺卡',annual:'特休',personal:'事假',sick:'病假',official:'公假',pending:'待審核',approved:'已核准',rejected:'已退回'};
+  const labels = {guard:'保全人員',site_manager:'案場主管',hr:'人事',admin:'管理員',active:'啟用／在職',inactive:'停用',full_time:'正職人員',mobile:'機動人員',day:'日班',night:'夜班',custom:'自訂',normal:'正常',late:'遲到',missing:'缺卡',annual:'特休',personal:'事假',sick:'病假',official:'公假',marriage:'婚假',bereavement:'喪假',pending:'待審核',approved:'已核准',rejected:'已退回',true:'上架',false:'下架'};
   const format = (key,value) => {
     if ((key==='employee_id'||key==='site_id') && value) {
       const list=key==='employee_id'?state.relations.employees:state.relations.sites;
@@ -104,7 +107,7 @@
     return labels[value] || value || '—';
   };
   const badge = value => `<span class="badge ${['pending','late'].includes(value)?'warning':''} ${['inactive','missing','rejected'].includes(value)?'danger':''}">${esc(format('',value))}</span>`;
-  const isBadge = key => ['status','role','shift_type','leave_type'].includes(key);
+  const isBadge = key => ['status','role','shift_type','leave_type','is_active'].includes(key);
 
   async function loadRelations() {
     [state.relations.employees,state.relations.sites]=await Promise.all([db.list('employees'),db.list('sites')]);
@@ -168,6 +171,7 @@
   async function saveRecord(event) {
     event.preventDefault(); const {table,id}=state.editing; const form=new FormData(event.currentTarget); const record=Object.fromEntries(form.entries());
     const initialPassword=record.initial_password; delete record.initial_password;
+    if(table==='announcements') record.is_active=record.is_active==='true';
     $('#saveButton').disabled=true; $('#formMessage').textContent='';
     try {
       const saved=await db.save(table,record,id);

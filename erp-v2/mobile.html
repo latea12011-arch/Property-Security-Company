@@ -4,10 +4,10 @@
 <div id="mobileApp" hidden>
   <header><div><small>紘嘉物業保全</small><h1 id="employeeGreeting">您好</h1></div><button id="mobileLogout">登出</button></header>
   <main>
-    <section id="homeTab" class="tab active"><article class="hero"><small>今日勤務</small><h2 id="todaySite">尚無排班</h2><p id="todayShift">—</p></article><article class="card"><h3>GPS 出勤打卡</h3><p id="locationStatus">打卡時會請求定位權限</p><div class="punch"><button id="clockIn">上班打卡</button><button id="clockOut" class="outline">下班打卡</button></div><p id="punchResult"></p></article><article class="card"><h3>今日出勤</h3><div id="todayAttendance" class="empty">尚無打卡紀錄</div></article></section>
+    <section id="homeTab" class="tab active"><article class="hero"><small>今日勤務</small><h2 id="todaySite">尚無排班</h2><p id="todayShift">—</p></article><article class="card"><h3>最新公告</h3><div id="announcementList"></div></article><article class="card"><h3>GPS 出勤打卡</h3><p id="locationStatus">打卡時會請求定位權限</p><div class="punch"><button id="clockIn">上班打卡</button><button id="clockOut" class="outline">下班打卡</button></div><p id="punchResult"></p></article><article class="card"><h3>今日出勤</h3><div id="todayAttendance" class="empty">尚無打卡紀錄</div></article></section>
     <section id="scheduleTab" class="tab"><article class="card"><h3>近期班表</h3><div id="scheduleList"></div></article></section>
     <section id="leaveTab" class="tab"><article class="card"><h3>請假申請</h3><form id="leaveForm"><label>假別<select name="leave_type" required><option value="annual">特休</option><option value="personal">事假</option><option value="sick">病假</option><option value="official">公假</option></select></label><div class="dates"><label>開始日期<input name="start_date" type="date" required></label><label>結束日期<input name="end_date" type="date" required></label></div><label>原因<textarea name="reason" required></textarea></label><button>送出申請</button></form><p id="leaveMessage"></p></article><article class="card"><h3>申請紀錄</h3><div id="leaveList"></div></article></section>
   </main>
   <nav><button data-tab="homeTab" class="active">今日</button><button data-tab="scheduleTab">班表</button><button data-tab="leaveTab">請假</button></nav>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js?v=7"></script><script src="assets/mobile.js?v=2"></script></body></html>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js?v=11"></script><script src="assets/mobile.js?v=3"></script></body></html>
