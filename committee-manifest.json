@@ -1,13 +1,13 @@
 {
-  "name": "紘嘉物業行動考勤系統",
-  "short_name": "紘嘉物業",
-  "description": "紘嘉物業內部同仁專用行動考勤、打卡與請假管理系統",
-  "id": "./index.html",
-  "start_url": "index.html",
+  "name": "紘嘉物業主委行動系統",
+  "short_name": "紘嘉主委",
+  "description": "紘嘉物業提供主委使用的行動管理系統。",
+  "id": "./committee.html",
+  "start_url": "committee.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f4f6f9",
-  "theme_color": "#4e54c8",
+  "background_color": "#f3f4f6",
+  "theme_color": "#4f46e5",
   "orientation": "portrait-primary",
   "icons": [
     {
