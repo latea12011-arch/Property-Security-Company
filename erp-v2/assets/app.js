@@ -10,7 +10,7 @@
 
   const viewInfo = {
     dashboard: ['營運總覽', 'dashboard'], employees: ['員工管理', 'employees'], sites: ['案場管理', 'sites'],
-    schedules: ['勤務排班', 'schedules'], attendance: ['打卡紀錄', 'attendance'], leaves: ['請假審核', 'leave_requests'], announcements: ['公告管理','announcements']
+    schedules: ['勤務排班', 'schedules'], attendance: ['打卡紀錄', 'attendance'], leaves: ['請假審核', 'leave_requests'], complaints: ['反霸凌申訴', 'bullying_complaints'], announcements: ['公告管理','announcements']
   };
 
   const fields = {
@@ -19,6 +19,7 @@
       ['emergency_contact_name','緊急聯絡人','text'],['emergency_contact_phone','緊急聯絡電話','tel'],['hire_date','入職日期','date'],['employment_type','身分類別','select',true,[['full_time','正職人員'],['mobile','機動人員']]],
       ['assigned_sites','可排班案場','site-picker'],
       ['job_title','職稱','select',true,[['保全員','保全員'],['機動保全員','機動保全員'],['案場主任','案場主任'],['勤務督導','勤務督導'],['行政專員','行政專員'],['人事專員','人事專員'],['會計專員','會計專員'],['部門主管','部門主管'],['總經理','總經理']]],
+      ['annual_leave_hours','特休剩餘時數','number',true],
       ['role','系統權限','select',true,[['guard','一般員工'],['site_manager','案場主管'],['hr','人事／行政'],['admin','系統管理員']]],
       ['status','狀態','select',true,[['active','在職'],['inactive','離職／停用']]]
     ],
@@ -35,19 +36,25 @@
       ['clock_in','上班時間','datetime-local'],['clock_out','下班時間','datetime-local'],['status','狀態','select',true,[['normal','正常'],['late','遲到'],['missing','缺卡']]]
     ],
     leave_requests: [
-      ['employee_id','員工','relation:employees',true],['leave_type','假別','select',true,[['annual','特休'],['personal','事假'],['sick','病假'],['official','公假'],['marriage','婚假'],['bereavement','喪假']]],
-      ['start_date','開始日期','date',true],['end_date','結束日期','date',true],['reason','原因','textarea',true],
-      ['status','審核狀態','select',true,[['pending','待審核'],['approved','已核准'],['rejected','已退回']]]
+      ['employee_id','員工','relation:employees',true],['leave_type','假別','select',true,[['annual','特休'],['personal','事假'],['sick','病假'],['official','公假'],['marriage','婚假'],['bereavement','喪假'],['maternity','產假'],['paternity','陪產檢及陪產假'],['menstrual','生理假'],['occupational','公傷病假'],['compensatory','補休'],['unpaid','無薪假'],['other','其他']]],
+      ['start_date','開始日期','date',true],['end_date','結束日期','date',true],['leave_hours','請假時數','number',true],['reason','原因','textarea',true],['proof_path','證明文件路徑','text'],
+      ['status','審核狀態','select',true,[['pending','待審核'],['approved','已核准'],['rejected','已退回']]],['review_note','審核備註','textarea']
+    ],
+    bullying_complaints: [
+      ['employee_id','申訴員工','relation:employees',true],['incident_date','事件日期','date',true],['incident_location','事件地點','text'],['accused_name','被申訴人','text'],
+      ['description','事件說明','textarea',true],['requested_action','希望處理方式','textarea'],['evidence_path','證明文件路徑','text'],
+      ['status','處理狀態','select',true,[['submitted','已送出'],['processing','處理中'],['resolved','已處理'],['closed','已結案']]],['handler_note','處理紀錄（保密）','textarea']
     ],
     announcements:[['publisher','發布單位','text',true],['content','公告內容','textarea',true],['published_at','發布時間','datetime-local',true],['is_active','狀態','select',true,[['true','上架'],['false','下架']]]]
   };
 
   const columns = {
-    employees: [['employee_no','編號'],['full_name','姓名'],['job_title','職稱'],['phone','電話'],['status','狀態']],
+    employees: [['employee_no','編號'],['full_name','姓名'],['job_title','職稱'],['annual_leave_hours','特休時數'],['phone','電話'],['status','狀態']],
     sites: [['code','代碼'],['name','案場'],['address','地址'],['contact_name','聯絡人'],['status','狀態']],
     schedules: [['work_date','日期'],['employee_id','員工'],['site_id','案場'],['shift_type','班別'],['start_time','時間']],
     attendance: [['work_date','日期'],['employee_id','員工'],['site_id','案場'],['clock_in','上班'],['clock_out','下班'],['status','狀態']],
-    leave_requests: [['employee_id','員工'],['leave_type','假別'],['start_date','開始'],['end_date','結束'],['status','狀態']],
+    leave_requests: [['employee_id','員工'],['leave_type','假別'],['start_date','開始'],['end_date','結束'],['leave_hours','時數'],['proof_path','證明文件'],['status','狀態']],
+    bullying_complaints: [['created_at','提出時間'],['employee_id','申訴員工'],['incident_date','事件日期'],['accused_name','被申訴人'],['evidence_path','證明文件'],['status','狀態']],
     announcements:[['published_at','發布時間'],['publisher','發布單位'],['content','內容'],['is_active','狀態']]
   };
 
@@ -98,7 +105,7 @@
   };
 
   const esc = value => String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-  const labels = {guard:'保全人員',site_manager:'案場主管',hr:'人事',admin:'管理員',active:'啟用／在職',inactive:'停用',full_time:'正職人員',mobile:'機動人員',day:'日班',night:'夜班',custom:'自訂',normal:'正常',late:'遲到',missing:'缺卡',annual:'特休',personal:'事假',sick:'病假',official:'公假',marriage:'婚假',bereavement:'喪假',pending:'待審核',approved:'已核准',rejected:'已退回',true:'是',false:'否'};
+  const labels = {guard:'保全人員',site_manager:'案場主管',hr:'人事',admin:'管理員',active:'啟用／在職',inactive:'停用',full_time:'正職人員',mobile:'機動人員',day:'日班',night:'夜班',custom:'自訂',normal:'正常',late:'遲到',missing:'缺卡',annual:'特休',personal:'事假',sick:'病假',official:'公假',marriage:'婚假',bereavement:'喪假',maternity:'產假',paternity:'陪產檢及陪產假',menstrual:'生理假',occupational:'公傷病假',compensatory:'補休',unpaid:'無薪假',other:'其他',pending:'待審核',approved:'已核准',rejected:'已退回',submitted:'已送出',processing:'處理中',resolved:'已處理',closed:'已結案',true:'是',false:'否'};
   const format = (key,value) => {
     if ((key==='employee_id'||key==='site_id') && value) {
       const list=key==='employee_id'?state.relations.employees:state.relations.sites;
@@ -110,6 +117,7 @@
   };
   const badge = value => `<span class="badge ${['pending','late'].includes(value)?'warning':''} ${['inactive','missing','rejected'].includes(value)?'danger':''}">${esc(format('',value))}</span>`;
   const isBadge = key => ['status','role','shift_type','leave_type','is_active','is_manager'].includes(key);
+  const cellHtml = (key,value) => key==='proof_path'||key==='evidence_path' ? (value?`<button class="mini-button" data-private-file="${esc(value)}">開啟附件</button>`:'—') : isBadge(key)?badge(value):esc(format(key,value));
 
   async function loadRelations() {
     [state.relations.employees,state.relations.sites]=await Promise.all([db.list('employees'),db.list('sites')]);
@@ -144,11 +152,13 @@
 
   async function renderTable(view) {
     await loadRelations(); const table=viewInfo[view][1]; const rows=await db.list(table); const cols=columns[table];
-    $('#content').innerHTML=`<article class="panel"><div class="panel-head"><div><h3>${viewInfo[view][0]}</h3><span class="muted">共 ${rows.length} 筆</span></div><button class="btn primary" id="addRecord">＋ 新增</button></div>
-      <div class="table-wrap"><table><thead><tr>${cols.map(x=>`<th>${x[1]}</th>`).join('')}<th>操作</th></tr></thead><tbody>${rows.length?rows.map(row=>`<tr>${cols.map(([key])=>`<td>${isBadge(key)?badge(row[key]):esc(format(key,row[key]))}</td>`).join('')}<td><div class="action-row"><button class="mini-button" data-edit="${esc(row.id)}">編輯</button><button class="mini-button danger" data-delete="${esc(row.id)}">刪除</button></div></td></tr>`).join(''):`<tr><td colspan="${cols.length+1}" class="empty">尚無資料，請按「新增」建立第一筆。</td></tr>`}</tbody></table></div></article>`;
-    $('#addRecord').onclick=()=>openDialog(table,null);
+    const canAdd=table!=='bullying_complaints';
+    $('#content').innerHTML=`<article class="panel"><div class="panel-head"><div><h3>${viewInfo[view][0]}</h3><span class="muted">共 ${rows.length} 筆${table==='bullying_complaints'?'（保密資料）':''}</span></div>${canAdd?'<button class="btn primary" id="addRecord">＋ 新增</button>':''}</div>
+      <div class="table-wrap"><table><thead><tr>${cols.map(x=>`<th>${x[1]}</th>`).join('')}<th>操作</th></tr></thead><tbody>${rows.length?rows.map(row=>`<tr>${cols.map(([key])=>`<td>${cellHtml(key,row[key])}</td>`).join('')}<td><div class="action-row"><button class="mini-button" data-edit="${esc(row.id)}">編輯</button>${table==='bullying_complaints'?'':`<button class="mini-button danger" data-delete="${esc(row.id)}">刪除</button>`}</div></td></tr>`).join(''):`<tr><td colspan="${cols.length+1}" class="empty">尚無資料。</td></tr>`}</tbody></table></div></article>`;
+    if(canAdd) $('#addRecord').onclick=()=>openDialog(table,null);
     $$('[data-edit]').forEach(button=>button.onclick=()=>openDialog(table,rows.find(x=>x.id===button.dataset.edit)));
     $$('[data-delete]').forEach(button=>button.onclick=()=>deleteRecord(table,button.dataset.delete));
+    $$('[data-private-file]').forEach(button=>button.onclick=async()=>{const{data,error}=await client.storage.from('hr-private').createSignedUrl(button.dataset.privateFile,300);if(error)return showNotice(`附件開啟失敗：${error.message}`,'error');window.open(data.signedUrl,'_blank','noopener');});
   }
 
   function inputFor([name,label,type,required,options],record={}) {
