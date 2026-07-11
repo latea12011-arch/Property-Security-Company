@@ -17,8 +17,9 @@
     employees: [
       ['employee_no','員工編號','text',true],['full_name','姓名','text',true],['phone','電話','tel'],['initial_password','初始登入密碼','password'],
       ['emergency_contact_name','緊急聯絡人','text'],['emergency_contact_phone','緊急聯絡電話','tel'],['hire_date','入職日期','date'],['employment_type','身分類別','select',true,[['full_time','正職人員'],['mobile','機動人員']]],
-      ['assigned_sites','可排班案場','multi:sites'],
-      ['role','角色','select',true,[['guard','保全人員'],['site_manager','案場主管'],['hr','人事'],['admin','系統管理員']]],
+      ['assigned_sites','可排班案場','site-picker'],
+      ['job_title','職稱','select',true,[['保全員','保全員'],['機動保全員','機動保全員'],['案場主任','案場主任'],['勤務督導','勤務督導'],['行政專員','行政專員'],['人事專員','人事專員'],['會計專員','會計專員'],['部門主管','部門主管'],['總經理','總經理']]],
+      ['role','系統權限','select',true,[['guard','一般員工'],['site_manager','案場主管'],['hr','人事／行政'],['admin','系統管理員']]],
       ['status','狀態','select',true,[['active','在職'],['inactive','離職／停用']]]
     ],
     sites: [
@@ -42,7 +43,7 @@
   };
 
   const columns = {
-    employees: [['employee_no','編號'],['full_name','姓名'],['role','角色'],['phone','電話'],['status','狀態']],
+    employees: [['employee_no','編號'],['full_name','姓名'],['job_title','職稱'],['phone','電話'],['status','狀態']],
     sites: [['code','代碼'],['name','案場'],['address','地址'],['contact_name','聯絡人'],['status','狀態']],
     schedules: [['work_date','日期'],['employee_id','員工'],['site_id','案場'],['shift_type','班別'],['start_time','時間']],
     attendance: [['work_date','日期'],['employee_id','員工'],['site_id','案場'],['clock_in','上班'],['clock_out','下班'],['status','狀態']],
@@ -154,6 +155,10 @@
     record = record || {};
     const value=record[name] ?? '';
     if(type==='textarea') return `<label class="wide">${label}<textarea name="${name}" ${required?'required':''}>${esc(value)}</textarea></label>`;
+    if(type==='site-picker') {
+      const selected=new Set(Array.isArray(value)?value:[]);
+      return `<fieldset class="wide site-picker"><legend>${label}</legend><div class="site-picker-toolbar"><input type="search" class="site-search" placeholder="輸入案場名稱或代碼搜尋"><button type="button" class="mini-button select-visible-sites">選取搜尋結果</button><button type="button" class="mini-button clear-sites">清除全部</button></div><div class="site-picker-summary">已選 <strong class="selected-site-count">${selected.size}</strong> 個案場<div class="selected-site-chips"></div></div><div class="site-picker-options">${state.relations.sites.map(site=>`<label class="site-picker-option" data-search="${esc(`${site.code||''} ${site.name}`.toLowerCase())}"><input type="checkbox" name="${name}" value="${esc(site.id)}" data-label="${esc(site.name)}" ${selected.has(site.id)?'checked':''}><span><b>${esc(site.name)}</b><small>${esc(site.code||'')}</small></span></label>`).join('')||'<span class="muted">請先建立案場</span>'}</div></fieldset>`;
+    }
     if(type.startsWith('multi:')) {
       const relation=type.split(':')[1],selected=new Set(Array.isArray(value)?value:[]);
       return `<fieldset class="wide check-field"><legend>${label}</legend><div class="check-grid">${state.relations[relation].map(row=>`<label class="check-option"><input type="checkbox" name="${name}" value="${esc(row.id)}" ${selected.has(row.id)?'checked':''}><span>${esc(row.name||row.full_name)}</span></label>`).join('')||'<span class="muted">請先建立案場</span>'}</div></fieldset>`;
@@ -175,7 +180,14 @@
     }
     $('#dialogTitle').textContent=`${record?'編輯':'新增'}${viewInfo[Object.keys(viewInfo).find(k=>viewInfo[k][1]===table)]?.[0]||'資料'}`;
     $('#formFields').innerHTML=fields[table].map(field=>inputFor(field,record)).join('');
+    initSitePicker();
     $('#formMessage').textContent=''; $('#recordDialog').showModal();
+  }
+
+  function initSitePicker(){
+    const picker=$('.site-picker');if(!picker)return;const search=picker.querySelector('.site-search'),options=[...picker.querySelectorAll('.site-picker-option')],count=picker.querySelector('.selected-site-count'),chips=picker.querySelector('.selected-site-chips');
+    const refresh=()=>{const checked=options.map(x=>x.querySelector('input')).filter(x=>x.checked);count.textContent=checked.length;chips.innerHTML=checked.slice(0,8).map(x=>`<span>${esc(x.dataset.label)}</span>`).join('')+(checked.length>8?`<em>＋${checked.length-8}</em>`:'');};
+    search.oninput=()=>{const q=search.value.trim().toLowerCase();options.forEach(x=>x.hidden=q&&!x.dataset.search.includes(q));};options.forEach(x=>x.querySelector('input').onchange=refresh);picker.querySelector('.select-visible-sites').onclick=()=>{options.filter(x=>!x.hidden).forEach(x=>x.querySelector('input').checked=true);refresh();};picker.querySelector('.clear-sites').onclick=()=>{options.forEach(x=>x.querySelector('input').checked=false);refresh();};refresh();
   }
 
   async function saveRecord(event) {

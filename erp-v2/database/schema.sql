@@ -20,6 +20,7 @@ create table public.employees (
   user_id uuid unique references auth.users(id) on delete set null,
   employee_no text not null unique,
   full_name text not null,
+  job_title text not null default '保全員',
   phone text,
   role public.app_role not null default 'guard',
   status public.record_status not null default 'active',
