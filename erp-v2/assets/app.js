@@ -25,7 +25,11 @@
     ],
     sites: [
       ['code','案場代碼','text',true],['name','案場名稱','text',true],['address','地址','text',true],
-      ['contact_name','聯絡人','text'],['contact_phone','聯絡電話','tel'],['latitude','GPS 緯度','number'],['longitude','GPS 經度','number'],['punch_radius_m','打卡半徑（公尺）','number'],['status','狀態','select',true,[['active','啟用'],['inactive','停用']]]
+      ['chairman_name','主委姓名','text'],['chairman_phone','主委電話','tel'],['household_count','社區戶數','number'],['committee_term_no','管理委員會屆數','number'],
+      ['owners_meeting_date','區分所有權人會議日期','date'],['regular_meeting_schedule','固定例會時間','text'],
+      ['contract_start_date','合約開始日期','date'],['contract_end_date','合約到期日期','date'],['renewal_reminder_days','到期前提醒天數','number',true],
+      ['renewal_status','續約進度','select',true,[['not_started','尚未洽談'],['contacting','聯絡中'],['negotiating','議約中'],['renewed','已續約'],['not_renewing','不續約']]],['contract_note','合約／續約備註','textarea'],
+      ['latitude','GPS 緯度','number'],['longitude','GPS 經度','number'],['punch_radius_m','打卡半徑（公尺）','number'],['status','狀態','select',true,[['active','啟用'],['inactive','停用']]]
     ],
     schedules: [
       ['employee_id','員工','relation:employees',true],['site_id','案場','relation:sites',true],['work_date','勤務日期','date',true],
@@ -50,7 +54,7 @@
 
   const columns = {
     employees: [['employee_no','編號'],['full_name','姓名'],['job_title','職稱'],['annual_leave_hours','特休時數'],['phone','電話'],['status','狀態']],
-    sites: [['code','代碼'],['name','案場'],['address','地址'],['contact_name','聯絡人'],['status','狀態']],
+    sites: [['code','代碼'],['name','案場'],['chairman_name','主委'],['household_count','戶數'],['committee_term_no','屆數'],['contract_end_date','合約到期'],['renewal_status','續約進度'],['status','狀態']],
     schedules: [['work_date','日期'],['employee_id','員工'],['site_id','案場'],['shift_type','班別'],['start_time','時間']],
     attendance: [['work_date','日期'],['employee_id','員工'],['site_id','案場'],['clock_in','上班'],['clock_out','下班'],['status','狀態']],
     leave_requests: [['employee_id','員工'],['leave_type','假別'],['start_date','開始'],['end_date','結束'],['leave_hours','時數'],['proof_path','證明文件'],['status','狀態']],
@@ -105,7 +109,7 @@
   };
 
   const esc = value => String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-  const labels = {guard:'保全人員',site_manager:'案場主管',hr:'人事',admin:'管理員',active:'啟用／在職',inactive:'停用',full_time:'正職人員',mobile:'機動人員',day:'日班',night:'夜班',custom:'自訂',normal:'正常',late:'遲到',missing:'缺卡',annual:'特休',personal:'事假',sick:'病假',official:'公假',marriage:'婚假',bereavement:'喪假',maternity:'產假',paternity:'陪產檢及陪產假',menstrual:'生理假',occupational:'公傷病假',compensatory:'補休',unpaid:'無薪假',other:'其他',pending:'待審核',approved:'已核准',rejected:'已退回',submitted:'已送出',processing:'處理中',resolved:'已處理',closed:'已結案',true:'是',false:'否'};
+  const labels = {guard:'保全人員',site_manager:'案場主管',hr:'人事',admin:'管理員',active:'啟用／在職',inactive:'停用',full_time:'正職人員',mobile:'機動人員',day:'日班',night:'夜班',custom:'自訂',normal:'正常',late:'遲到',missing:'缺卡',annual:'特休',personal:'事假',sick:'病假',official:'公假',marriage:'婚假',bereavement:'喪假',maternity:'產假',paternity:'陪產檢及陪產假',menstrual:'生理假',occupational:'公傷病假',compensatory:'補休',unpaid:'無薪假',other:'其他',pending:'待審核',approved:'已核准',rejected:'已退回',submitted:'已送出',processing:'處理中',resolved:'已處理',closed:'已結案',not_started:'尚未洽談',contacting:'聯絡中',negotiating:'議約中',renewed:'已續約',not_renewing:'不續約',true:'是',false:'否'};
   const format = (key,value) => {
     if ((key==='employee_id'||key==='site_id') && value) {
       const list=key==='employee_id'?state.relations.employees:state.relations.sites;
@@ -116,7 +120,7 @@
     return labels[value] || value || '—';
   };
   const badge = value => `<span class="badge ${['pending','late'].includes(value)?'warning':''} ${['inactive','missing','rejected'].includes(value)?'danger':''}">${esc(format('',value))}</span>`;
-  const isBadge = key => ['status','role','shift_type','leave_type','is_active','is_manager'].includes(key);
+  const isBadge = key => ['status','role','shift_type','leave_type','renewal_status','is_active','is_manager'].includes(key);
   const cellHtml = (key,value) => key==='proof_path'||key==='evidence_path' ? (value?`<button class="mini-button" data-private-file="${esc(value)}">開啟附件</button>`:'—') : isBadge(key)?badge(value):esc(format(key,value));
 
   async function loadRelations() {
@@ -129,6 +133,7 @@
     const today=new Date().toISOString().slice(0,10);
     const todaySchedules=schedules.filter(x=>x.work_date===today);
     const pending=leaves.filter(x=>x.status==='pending');
+    const todayDate=new Date(`${today}T00:00:00`),contractAlerts=sites.filter(site=>{if(!site.contract_end_date||site.renewal_status==='renewed')return false;const days=Math.ceil((new Date(`${site.contract_end_date}T00:00:00`)-todayDate)/86400000);return days<=Number(site.renewal_reminder_days??90);}).sort((a,b)=>String(a.contract_end_date).localeCompare(String(b.contract_end_date)));
     $('#content').innerHTML=`
       <div class="stats">
         <article class="stat-card"><small>在職員工</small><strong>${employees.filter(x=>x.status==='active').length}</strong><em>人員帳冊</em></article>
@@ -139,7 +144,8 @@
       <div class="grid-2">
         <article class="panel"><div class="panel-head"><h3>今日勤務</h3><button class="mini-button" data-go="schedules">查看全部</button></div>${quickList(todaySchedules,'schedule')}</article>
         <article class="panel"><div class="panel-head"><h3>待辦事項</h3><button class="mini-button" data-go="leaves">前往審核</button></div>${quickList(pending,'leave')}</article>
-      </div>`;
+      </div>
+      <article class="panel contract-alerts"><div class="panel-head"><div><h3>合約續約提醒</h3><span class="muted">依各案場設定的提醒天數顯示</span></div><button class="mini-button" data-go="sites">案場管理</button></div><div class="quick-list">${contractAlerts.length?contractAlerts.map(site=>{const days=Math.ceil((new Date(`${site.contract_end_date}T00:00:00`)-todayDate)/86400000),text=days<0?`已逾期 ${Math.abs(days)} 天`:days===0?'今天到期':`剩餘 ${days} 天`;return`<div class="quick-item contract-alert ${days<0?'overdue':''}"><div><strong>${esc(site.name)}</strong><small>合約到期：${esc(site.contract_end_date)} · ${esc(labels[site.renewal_status]||site.renewal_status)}</small></div><span class="badge ${days<=30?'danger':'warning'}">${text}</span></div>`}).join(''):'<div class="empty">目前沒有即將到期的合約</div>'}</div></article>`;
     $$('[data-go]').forEach(button=>button.onclick=()=>switchView(button.dataset.go));
   }
 
