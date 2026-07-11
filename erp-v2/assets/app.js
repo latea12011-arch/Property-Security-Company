@@ -10,7 +10,7 @@
 
   const viewInfo = {
     dashboard: ['營運總覽', 'dashboard'], employees: ['員工管理', 'employees'], sites: ['案場管理', 'sites'],
-    schedules: ['勤務排班', 'schedules'], attendance: ['打卡紀錄', 'attendance'], leaves: ['請假審核', 'leave_requests'], complaints: ['反霸凌申訴', 'bullying_complaints'], payrollProfiles: ['薪資設定', 'employee_payroll_profiles'], advances: ['員工借支', 'salary_advances'], payroll: ['薪資明細', 'payroll_records'], terminations: ['離職證明', 'termination_certificates'], inventoryItems: ['庫存物品', 'inventory_items'], inventoryTransactions: ['入庫／領用紀錄', 'inventory_transactions'], announcements: ['公告管理','announcements']
+    schedules: ['勤務排班', 'schedules'], attendance: ['打卡紀錄', 'attendance'], leaves: ['請假審核', 'leave_requests'], complaints: ['反霸凌申訴', 'bullying_complaints'], payrollProfiles: ['薪資設定', 'employee_payroll_profiles'], advances: ['員工借支', 'salary_advances'], payroll: ['薪資明細', 'payroll_records'], terminations: ['離職證明', 'termination_certificates'], inventoryItems: ['庫存物品', 'inventory_items'], inventoryTransactions: ['入庫／領用紀錄', 'inventory_transactions'], auditLogs: ['操作紀錄', 'audit_logs'], announcements: ['公告管理','announcements']
   };
   const featureOptions=[['employees','員工管理'],['sites','案場管理'],['schedules','勤務排班'],['attendance','打卡紀錄'],['leaves','請假審核'],['complaints','反霸凌申訴'],['payrollProfiles','薪資設定'],['advances','員工借支'],['payroll','薪資明細'],['terminations','離職證明'],['inventoryItems','庫存物品'],['inventoryTransactions','入庫／領用紀錄'],['announcements','公告管理']];
 
@@ -107,6 +107,7 @@
     termination_certificates: [['certificate_no','證明編號'],['employee_id','員工'],['separation_date','離職日期'],['issue_date','開立日期']],
     inventory_items: [['item_code','編號'],['item_name','物品'],['category','分類'],['specification','規格'],['size','尺寸'],['current_stock','現有庫存'],['unit','單位'],['minimum_stock','安全庫存']],
     inventory_transactions: [['transaction_date','日期'],['transaction_type','類型'],['item_id','物品'],['quantity','數量'],['employee_id','員工'],['site_id','案場'],['receiver_name','領取人']],
+    audit_logs: [['created_at','操作時間'],['actor_name','操作者'],['action','動作'],['table_name','資料表'],['record_id','資料編號']],
     announcements:[['published_at','發布時間'],['publisher','發布單位'],['content','內容'],['is_active','狀態']]
   };
 
@@ -164,6 +165,7 @@
       return list.find(row=>row.id===value)?.[key==='employee_id'?'full_name':'name'] || value;
     }
     if(key==='item_id'&&value)return state.relations.inventory_items.find(row=>row.id===value)?.item_name||value;
+    if(key==='action')return({INSERT:'新增',UPDATE:'修改',DELETE:'刪除'})[value]||value;
     if (key==='start_time' && value) return value;
     if ((key==='clock_in'||key==='clock_out') && value) return value.replace('T',' ');
     return labels[value] || value || '—';
@@ -173,10 +175,12 @@
   const cellHtml = (key,value) => key==='proof_path'||key==='evidence_path' ? (value?`<button class="mini-button" data-private-file="${esc(value)}">開啟附件</button>`:'—') : isBadge(key)?badge(value):esc(format(key,value));
 
   async function loadRelations() {
-    [state.relations.employees,state.relations.sites,state.relations.inventory_items]=await Promise.all([db.list('employees'),db.list('sites'),db.list('inventory_items')]);
+    const canInventory=state.user?.role==='admin'||state.user?.permissions?.some(x=>['inventoryItems','inventoryTransactions'].includes(x));
+    [state.relations.employees,state.relations.sites,state.relations.inventory_items]=await Promise.all([db.list('employees'),db.list('sites'),canInventory?db.list('inventory_items'):Promise.resolve([])]);
   }
 
   async function renderDashboard() {
+    if(state.user?.role!=='admin'){const allowed=featureOptions.filter(([key])=>state.user?.permissions?.includes(key));$('#content').innerHTML=`<article class="panel"><div class="panel-head"><div><h3>${esc(state.user?.name)}，歡迎登入</h3><span class="muted">您目前可使用 ${allowed.length} 項後台功能</span></div></div><div class="check-grid permission-shortcuts">${allowed.map(([key,text])=>`<button class="quick-item" data-go="${key}"><strong>${text}</strong><small>進入功能</small></button>`).join('')||'<div class="empty">目前尚未授權任何後台功能，請聯絡系統管理員。</div>'}</div></article>`;$$('[data-go]').forEach(button=>button.onclick=()=>switchView(button.dataset.go));return}
     const [employees,sites,schedules,attendance,leaves]=await Promise.all(['employees','sites','schedules','attendance','leave_requests'].map(db.list));
     state.relations={employees,sites};
     const today=new Date().toISOString().slice(0,10);
@@ -219,9 +223,10 @@
 
   async function renderTable(view) {
     await loadRelations(); const table=viewInfo[view][1]; const rows=await db.list(table); const cols=columns[table];
-    const canAdd=table!=='bullying_complaints';
+    const canAdd=!['bullying_complaints','audit_logs'].includes(table);
     $('#content').innerHTML=`<article class="panel"><div class="panel-head"><div><h3>${viewInfo[view][0]}</h3><span class="muted">共 ${rows.length} 筆${table==='bullying_complaints'?'（保密資料）':''}</span></div>${canAdd?'<button class="btn primary" id="addRecord">＋ 新增</button>':''}</div>
       <div class="table-wrap"><table><thead><tr>${cols.map(x=>`<th>${x[1]}</th>`).join('')}<th>操作</th></tr></thead><tbody>${rows.length?rows.map(row=>`<tr>${cols.map(([key])=>`<td>${cellHtml(key,row[key])}</td>`).join('')}<td><div class="action-row"><button class="mini-button" data-edit="${esc(row.id)}">編輯</button>${['payroll_records','termination_certificates','salary_advances','inventory_transactions'].includes(table)?`<button class="mini-button" data-print="${esc(row.id)}">列印</button>`:''}${table==='bullying_complaints'?'':`<button class="mini-button danger" data-delete="${esc(row.id)}">刪除</button>`}</div></td></tr>`).join(''):`<tr><td colspan="${cols.length+1}" class="empty">尚無資料。</td></tr>`}</tbody></table></div></article>`;
+    if(table==='audit_logs')$$('.action-row').forEach(row=>row.innerHTML='<span class="muted">唯讀</span>');
     if(canAdd) $('#addRecord').onclick=()=>openDialog(table,null);
     if(table==='inventory_transactions'){const batch=document.createElement('button');batch.className='btn primary';batch.textContent='＋ 批次領用';batch.onclick=openBatchIssueDialog;$('.panel-head').appendChild(batch);}
     $$('[data-edit]').forEach(button=>button.onclick=()=>openDialog(table,rows.find(x=>x.id===button.dataset.edit)));
