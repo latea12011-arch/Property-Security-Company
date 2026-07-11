@@ -147,6 +147,7 @@
   }
 
   function inputFor([name,label,type,required,options],record={}) {
+    record = record || {};
     const value=record[name] ?? '';
     if(type==='textarea') return `<label class="wide">${label}<textarea name="${name}" ${required?'required':''}>${esc(value)}</textarea></label>`;
     if(type==='select'||type.startsWith('relation:')) {

@@ -1,4 +1,4 @@
-const CACHE = 'hongjia-erp-v2-4';
+const CACHE = 'hongjia-erp-v2-5';
 const SHELL = ['./','index.html','config.js','manifest.json','assets/app.css','assets/app.js','assets/company-logo.png','assets/company-icon.svg'];
 
 self.addEventListener('install', event => {
