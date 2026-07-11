@@ -1,5 +1,5 @@
-const CACHE = 'hongjia-erp-v2-36';
-const SHELL = ['./','index.html','mobile.html','favicon.ico','config.js','manifest.json','mobile-manifest.json','assets/app.css','assets/app.js','assets/mobile.css','assets/mobile-enhancements.css','assets/mobile.js','assets/company-logo.png','assets/app-icon-192.png','assets/app-icon-512.png','assets/app-icon-maskable-512.png'];
+const CACHE = 'hongjia-erp-v2-37';
+const SHELL = ['./','index.html','mobile.html','favicon-v2.ico','config.js','manifest-v2.json','mobile-manifest-v2.json','assets/app.css','assets/app.js','assets/mobile.css','assets/mobile-enhancements.css','assets/mobile.js','assets/company-logo.png','assets/erp-icon-v2-192.png','assets/erp-icon-v2-512.png','assets/erp-icon-v2-maskable.png','assets/employee-icon-v2-192.png','assets/employee-icon-v2-512.png','assets/employee-icon-v2-maskable.png'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));
