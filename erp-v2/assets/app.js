@@ -22,7 +22,8 @@
       ['assigned_sites','可排班案場','site-picker'],
       ['job_title','職稱','select',true,[['保全員','保全員'],['機動保全員','機動保全員'],['案場主任','案場主任'],['總幹事','總幹事'],['社區秘書','社區秘書'],['勤務督導','勤務督導'],['行政專員','行政專員'],['人事專員','人事專員'],['會計專員','會計專員'],['部門主管','部門主管'],['總經理','總經理']]],
       ['standard_daily_hours','標準每日工時','number',true],
-      ['annual_leave_hours','特休剩餘時數','number',true],
+      ['annual_leave_entitlement_hours','本期特休總時數（自動）','readonly'],['annual_leave_used_hours','本期已休時數（自動）','readonly'],['annual_leave_hours','本期剩餘時數（自動）','readonly'],
+      ['annual_leave_period_start','特休期間開始（自動）','readonly'],['annual_leave_period_end','特休期間結束（自動）','readonly'],
       ['role','系統權限','select',true,[['guard','一般員工'],['site_manager','案場主管'],['hr','人事／行政'],['admin','系統管理員']]],
       ['feature_permissions','可使用的後台功能','feature-picker'],
       ['status','狀態','select',true,[['active','在職'],['inactive','離職／停用']]]
@@ -105,7 +106,7 @@
   };
 
   const columns = {
-    employees: [['employee_no','編號'],['full_name','姓名'],['job_title','職稱'],['annual_leave_hours','特休時數'],['phone','電話'],['status','狀態']],
+    employees: [['employee_no','編號'],['full_name','姓名'],['job_title','職稱'],['hire_date','到職日'],['annual_leave_entitlement_hours','本期特休'],['annual_leave_used_hours','已休'],['annual_leave_hours','剩餘'],['annual_leave_period_end','本期截止'],['status','狀態']],
     sites: [['code','代碼'],['name','案場'],['chairman_name','主委'],['household_count','戶數'],['committee_term_no','屆數'],['contract_end_date','合約到期'],['renewal_status','續約進度'],['status','狀態']],
     schedules: [['work_date','日期'],['employee_id','員工'],['site_id','案場'],['shift_type','班別'],['start_time','時間']],
     attendance: [['work_date','日期'],['employee_id','員工'],['site_id','案場'],['clock_in','上班'],['clock_out','下班'],['status','狀態']],
@@ -235,7 +236,9 @@
   async function saveBatchIssue(event){event.preventDefault();const form=new FormData(event.currentTarget),employeeId=form.get('employee_id'),siteId=form.get('site_id'),message=$('#batchMessage'),lines=$$('.batch-line');if(Boolean(employeeId)===Boolean(siteId)){message.textContent='請選擇一位領用員工或一個領用案場，兩者只能擇一。';return}if(!lines.length){message.textContent='請至少新增一項物品。';return}const common={transaction_type:'issue',transaction_date:form.get('transaction_date'),document_no:form.get('document_no'),employee_id:employeeId||null,site_id:siteId||null,receiver_name:form.get('receiver_name')||null,purpose:form.get('purpose')||null,note:form.get('note')||null},records=lines.map(line=>({...common,item_id:line.querySelector('.batch-item').value,quantity:Number(line.querySelector('.batch-quantity').value)}));if(records.some(x=>!x.item_id||!x.quantity)){message.textContent='請完整選擇每項物品與數量。';return}message.textContent='正在儲存並扣除庫存…';const{error}=await client.from('inventory_transactions').insert(records);if(error){message.textContent=`儲存失敗：${error.message}`;return}$('#batchIssueDialog').close();showNotice(`領取單 ${common.document_no} 已建立，共 ${records.length} 項物品。`,'success');await renderCurrent();}
 
   async function renderTable(view) {
-    await loadRelations(); const table=viewInfo[view][1]; const rows=await db.list(table); const cols=columns[table];
+    await loadRelations(); const table=viewInfo[view][1];
+    if(cloudEnabled&&table==='employees'){const{error}=await client.rpc('refresh_all_annual_leave_balances');if(error)throw error;await loadRelations();}
+    const rows=await db.list(table); const cols=columns[table];
     const canAdd=!['bullying_complaints','audit_logs'].includes(table);
     $('#content').innerHTML=`<article class="panel"><div class="panel-head"><div><h3>${viewInfo[view][0]}</h3><span class="muted">共 ${rows.length} 筆${table==='bullying_complaints'?'（保密資料）':''}</span></div>${canAdd?'<button class="btn primary" id="addRecord">＋ 新增</button>':''}</div>
       <div class="table-wrap"><table><thead><tr>${cols.map(x=>`<th>${x[1]}</th>`).join('')}<th>操作</th></tr></thead><tbody>${rows.length?rows.map(row=>`<tr>${cols.map(([key])=>`<td>${cellHtml(key,row[key])}</td>`).join('')}<td><div class="action-row"><button class="mini-button" data-edit="${esc(row.id)}">編輯</button>${['payroll_records','termination_certificates','salary_advances','inventory_transactions'].includes(table)?`<button class="mini-button" data-print="${esc(row.id)}">列印</button>`:''}${table==='bullying_complaints'?'':`<button class="mini-button danger" data-delete="${esc(row.id)}">刪除</button>`}</div></td></tr>`).join(''):`<tr><td colspan="${cols.length+1}" class="empty">尚無資料。</td></tr>`}</tbody></table></div></article>`;
@@ -266,6 +269,7 @@
       if(type.startsWith('relation:')) { const relation=type.split(':')[1]; choices=state.relations[relation].map(row=>[row.id,row.full_name||row.name||row.item_name]); }
       return `<label>${label}<select name="${name}" ${required?'required':''}><option value="">請選擇</option>${(choices||[]).map(([v,t])=>`<option value="${esc(v)}" ${String(v)===String(value)?'selected':''}>${esc(t)}</option>`).join('')}</select></label>`;
     }
+    if(type==='readonly') return `<label>${label}<input name="${name}" type="text" value="${esc(value)}" readonly tabindex="-1"><small class="muted">依到職日、標準每日工時與已核准特休自動計算</small></label>`;
     return `<label>${label}<input name="${name}" type="${type}" value="${esc(value)}" ${type==='number'?'step="any"':''} ${required?'required':''}></label>`;
   }
 
@@ -284,6 +288,7 @@
     $('#formFields').innerHTML=fields[table].map(field=>inputFor(field,record)).join('');
     initSitePicker();
     if(table==='payroll_records'&&!state.editing.id) initPayrollAutoFill();
+    if(table==='leave_requests') initLeaveBalanceInfo();
     $('#formMessage').textContent=''; $('#recordDialog').showModal();
   }
 
@@ -295,12 +300,15 @@
 
   function initPayrollAutoFill(){const employeeInput=$('[name="employee_id"]'),monthInput=$('[name="payroll_month"]');if(!employeeInput||!monthInput)return;const fill=async()=>{const employeeId=employeeInput.value,month=monthInput.value;if(!employeeId||!month)return;$('#formMessage').textContent='正在帶入薪資設定與已核准借支…';const[{data:profile,error:profileError},{data:advances,error:advanceError}]=await Promise.all([client.from('employee_payroll_profiles').select('*').eq('employee_id',employeeId).maybeSingle(),client.from('salary_advances').select('amount').eq('employee_id',employeeId).eq('repayment_month',month).eq('status','approved')]);if(profileError||advanceError){$('#formMessage').textContent=`自動帶入失敗：${(profileError||advanceError).message}`;return}if(!profile){$('#formMessage').textContent='此員工尚未建立薪資設定，請先到「薪資設定」新增。';return}const values={basic_salary:profile.basic_salary,labor_insurance:profile.labor_insurance,health_insurance:profile.health_insurance,group_insurance:profile.group_insurance,advance_deduction:(advances||[]).reduce((sum,row)=>sum+Number(row.amount||0),0)};Object.entries(values).forEach(([name,value])=>{const input=$(`[name="${name}"]`);if(input)input.value=value});$('#formMessage').textContent=`已帶入薪資設定；本月核准借支 ${(advances||[]).length} 筆，共 ${Number(values.advance_deduction).toLocaleString('zh-TW')} 元。`;};employeeInput.onchange=fill;monthInput.onchange=fill;}
 
+  function initLeaveBalanceInfo(){const employeeInput=$('[name="employee_id"]'),typeInput=$('[name="leave_type"]');if(!employeeInput||!typeInput)return;const info=document.createElement('div');info.className='wide muted';info.id='leaveBalanceInfo';$('#formFields').prepend(info);const refresh=async()=>{if(typeInput.value!=='annual'){info.textContent='非特休假別不會扣除特休餘額。';return}if(!employeeInput.value){info.textContent='選擇員工後顯示特休額度。';return}if(!cloudEnabled){const row=state.relations.employees.find(x=>x.id===employeeInput.value);info.textContent=`目前剩餘 ${Number(row?.annual_leave_hours||0)} 小時`;return}info.textContent='正在計算特休額度…';const{error}=await client.rpc('refresh_employee_annual_leave',{target_employee_id:employeeInput.value});if(error){info.textContent=`特休計算失敗：${error.message}`;return}const{data,error:readError}=await client.from('employees').select('annual_leave_entitlement_hours,annual_leave_used_hours,annual_leave_hours,annual_leave_period_start,annual_leave_period_end').eq('id',employeeInput.value).single();info.textContent=readError?`特休讀取失敗：${readError.message}`:`本期 ${Number(data.annual_leave_entitlement_hours||0)} 小時・已休 ${Number(data.annual_leave_used_hours||0)} 小時・剩餘 ${Number(data.annual_leave_hours||0)} 小時（${data.annual_leave_period_start||'—'} 至 ${data.annual_leave_period_end||'—'}）`;};employeeInput.onchange=refresh;typeInput.onchange=refresh;refresh();}
+
   async function saveRecord(event) {
     event.preventDefault(); const {table,id}=state.editing; const form=new FormData(event.currentTarget); const record=Object.fromEntries(form.entries());
     Object.keys(record).forEach(key=>{if(record[key]==='')record[key]=null});
     const assignedSites=table==='employees'?form.getAll('assigned_sites'):[]; delete record.assigned_sites;
     const featurePermissions=table==='employees'?form.getAll('feature_permissions'):[];delete record.feature_permissions;
     const initialPassword=record.initial_password; delete record.initial_password;
+    if(table==='employees'){delete record.annual_leave_entitlement_hours;delete record.annual_leave_used_hours;delete record.annual_leave_hours;delete record.annual_leave_period_start;delete record.annual_leave_period_end;}
     if(table==='announcements') record.is_active=record.is_active==='true';
     if(table==='site_assignments') record.is_manager=record.is_manager==='true';
     if(table==='inventory_transactions'&&record.employee_id&&record.site_id){$('#formMessage').textContent='領用員工與領用案場只能選擇其中一項。';return}
