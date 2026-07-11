@@ -53,7 +53,7 @@
       ['resolved_at','完成改善日期','date'],['site_contact','案場陪同／簽認人','text'],['note','備註','textarea']
     ],
     leave_requests: [
-      ['employee_id','員工','relation:employees',true],['leave_type','假別','select',true,[['annual','特休'],['personal','事假'],['sick','病假'],['official','公假'],['marriage','婚假'],['bereavement','喪假'],['maternity','產假'],['paternity','陪產檢及陪產假'],['menstrual','生理假'],['occupational','公傷病假'],['compensatory','補休'],['unpaid','無薪假'],['other','其他']]],
+      ['employee_id','員工','relation:employees',true],['leave_type','假別','select',true,[['annual','特休'],['personal','事假'],['sick','病假'],['official','公假'],['marriage','婚假'],['bereavement','喪假'],['maternity','產假'],['paternity','陪產檢及陪產假'],['menstrual','生理假'],['occupational','公傷病假'],['compensatory','補休'],['unpaid','無薪假'],['typhoon_unpaid','天然災害未出勤（不支薪）'],['other','其他']]],
       ['start_date','開始日期','date',true],['end_date','結束日期','date',true],['leave_hours','請假時數','number',true],['reason','原因','textarea',true],['proof_path','證明文件路徑','text'],
       ['status','審核狀態','select',true,[['pending','待審核'],['approved','已核准'],['rejected','已退回']]],['review_note','審核備註','textarea']
     ],
@@ -63,7 +63,7 @@
       ['status','處理狀態','select',true,[['submitted','已送出'],['processing','處理中'],['resolved','已處理'],['closed','已結案']]],['handler_note','處理紀錄（保密）','textarea']
     ],
     employee_payroll_profiles: [
-      ['employee_id','員工','relation:employees',true],['basic_salary','基本薪資','number',true],['personal_leave_hour_rate','事假每小時扣款','number',true],['sick_leave_hour_rate','病假每小時扣款','number',true],
+      ['employee_id','員工','relation:employees',true],['basic_salary','月薪總額','number',true],['personal_leave_day_rate','事假一天扣款（自動）','readonly'],['sick_leave_day_rate','病假一天扣款（自動）','readonly'],
       ['labor_insurance','勞保自付額','number',true],['health_insurance','健保自付額','number',true],['group_insurance','團保自付額','number',true],['effective_date','生效日期','date',true],['note','備註','textarea']
     ],
     salary_advances: [
@@ -72,7 +72,7 @@
     ],
     payroll_records: [
       ['employee_id','員工','relation:employees',true],['payroll_month','薪資月份','month',true],['basic_salary','基本薪資','number',true],['overtime_pay','加班費','number',true],['allowances','津貼／加給','number',true],
-      ['personal_leave_hours','事假時數','number',true],['sick_leave_hours','病假時數','number',true],['labor_insurance','勞保','number',true],['health_insurance','健保','number',true],['group_insurance','團保','number',true],
+      ['personal_leave_hours','事假時數（全額扣薪）','number',true],['sick_leave_hours','病假時數（半薪扣款）','number',true],['unpaid_leave_hours','無薪／天然災害不支薪時數','number',true],['labor_insurance','勞保','number',true],['health_insurance','健保','number',true],['group_insurance','團保','number',true],
       ['court_deduction','法院扣薪','number',true],['advance_deduction','借支扣回','number',true],['other_deduction','其他扣款','number',true],['other_deduction_note','其他扣款說明','textarea'],
       ['status','薪資單狀態','select',true,[['draft','草稿'],['confirmed','已確認'],['paid','已發薪']]],['paid_date','發薪日期','date'],['note','備註','textarea']
     ],
@@ -113,7 +113,7 @@
     supervisor_inspections: [['inspection_date','日期'],['inspection_time','時間'],['site_id','案場'],['employee_id','督導'],['inspection_type','類型'],['overall_result','結果'],['follow_up_status','改善追蹤'],['due_date','期限']],
     leave_requests: [['employee_id','員工'],['leave_type','假別'],['start_date','開始'],['end_date','結束'],['leave_hours','時數'],['proof_path','證明文件'],['status','狀態']],
     bullying_complaints: [['created_at','提出時間'],['employee_id','申訴員工'],['incident_date','事件日期'],['accused_name','被申訴人'],['evidence_path','證明文件'],['status','狀態']],
-    employee_payroll_profiles: [['employee_id','員工'],['basic_salary','基本薪資'],['labor_insurance','勞保'],['health_insurance','健保'],['group_insurance','團保'],['effective_date','生效日期']],
+    employee_payroll_profiles: [['employee_id','員工'],['basic_salary','月薪總額'],['personal_leave_day_rate','事假／日'],['sick_leave_day_rate','病假／日'],['labor_insurance','勞保'],['health_insurance','健保'],['group_insurance','團保'],['effective_date','生效日期']],
     salary_advances: [['advance_date','日期'],['employee_id','員工'],['amount','金額'],['repayment_month','扣回月份'],['status','狀態']],
     payroll_records: [['payroll_month','月份'],['employee_id','員工'],['gross_pay','應發'],['total_deduction','總扣款'],['net_pay','實發'],['status','狀態']],
     termination_certificates: [['certificate_no','證明編號'],['employee_id','員工'],['separation_date','離職日期'],['issue_date','開立日期']],
@@ -171,7 +171,7 @@
   };
 
   const esc = value => String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-  const labels = {guard:'保全人員',site_manager:'案場主管',hr:'人事',admin:'管理員',active:'啟用／在職',inactive:'停用',full_time:'正職人員',mobile:'機動人員',day:'日班',night:'夜班',custom:'自訂',normal:'正常',late:'遲到',missing:'缺卡',annual:'特休',personal:'事假',sick:'病假',official:'公假',marriage:'婚假',bereavement:'喪假',maternity:'產假',paternity:'陪產檢及陪產假',menstrual:'生理假',occupational:'公傷病假',compensatory:'補休',unpaid:'無薪假',other:'其他',uniform:'服裝配件',equipment:'保全設備',traffic:'交通／拒馬設備',office:'辦公用品',cleaning:'清潔用品',purchase:'採購入庫',issue:'領用出庫',return:'退回入庫',adjust_in:'盤點增加',adjust_out:'盤點減少',pending:'待審核',approved:'已核准',rejected:'已退回',cancelled:'已取消',deducted:'已扣回',draft:'草稿',confirmed:'已確認',paid:'已發薪',submitted:'已送出',processing:'處理中',resolved:'已處理',closed:'已結案',not_started:'尚未洽談',contacting:'聯絡中',negotiating:'議約中',renewed:'已續約',not_renewing:'不續約',true:'是',false:'否'};
+  const labels = {guard:'保全人員',site_manager:'案場主管',hr:'人事',admin:'管理員',active:'啟用／在職',inactive:'停用',full_time:'正職人員',mobile:'機動人員',day:'日班',night:'夜班',custom:'自訂',normal:'正常',late:'遲到',missing:'缺卡',annual:'特休',personal:'事假',sick:'病假',official:'公假',marriage:'婚假',bereavement:'喪假',maternity:'產假',paternity:'陪產檢及陪產假',menstrual:'生理假',occupational:'公傷病假',compensatory:'補休',unpaid:'無薪假',typhoon_unpaid:'天然災害未出勤（不支薪）',other:'其他',uniform:'服裝配件',equipment:'保全設備',traffic:'交通／拒馬設備',office:'辦公用品',cleaning:'清潔用品',purchase:'採購入庫',issue:'領用出庫',return:'退回入庫',adjust_in:'盤點增加',adjust_out:'盤點減少',pending:'待審核',approved:'已核准',rejected:'已退回',cancelled:'已取消',deducted:'已扣回',draft:'草稿',confirmed:'已確認',paid:'已發薪',submitted:'已送出',processing:'處理中',resolved:'已處理',closed:'已結案',not_started:'尚未洽談',contacting:'聯絡中',negotiating:'議約中',renewed:'已續約',not_renewing:'不續約',true:'是',false:'否'};
   Object.assign(labels,{routine:'例行巡查',night:'夜間巡查',payroll_delivery:'薪資發放',pass:'合格',improvement_required:'限期改善',critical:'重大缺失',good:'良好',needs_improvement:'待改善',not_applicable:'不適用',none:'無須改善',in_progress:'改善中',verified:'已複查完成'});
   const format = (key,value) => {
     if ((key==='employee_id'||key==='site_id') && value) {
@@ -275,7 +275,7 @@
 
   async function openDialog(table,record) {
     state.editing={table,id:record?.id||null};
-    if(table==='payroll_records'&&!record) record={payroll_month:new Date().toISOString().slice(0,7),basic_salary:0,overtime_pay:0,allowances:0,personal_leave_hours:0,sick_leave_hours:0,labor_insurance:0,health_insurance:0,group_insurance:0,court_deduction:0,advance_deduction:0,other_deduction:0,status:'draft'};
+    if(table==='payroll_records'&&!record) record={payroll_month:new Date().toISOString().slice(0,7),basic_salary:0,overtime_pay:0,allowances:0,personal_leave_hours:0,sick_leave_hours:0,unpaid_leave_hours:0,labor_insurance:0,health_insurance:0,group_insurance:0,court_deduction:0,advance_deduction:0,other_deduction:0,status:'draft'};
     if(table==='inventory_items'&&!record)record={unit:'個',minimum_stock:0,status:'active',category:'other'};
     if(table==='inventory_transactions'&&!record)record={transaction_date:new Date().toISOString().slice(0,10),transaction_type:'issue',quantity:1};
     if(table==='supervisor_inspections'&&!record){const now=new Date();record={inspection_date:now.toISOString().slice(0,10),inspection_time:now.toTimeString().slice(0,5),employee_id:state.user?.employeeId||'',inspection_type:'routine',overall_result:'pass',staff_discipline:'good',post_records:'good',equipment_status:'good',environment_safety:'good',follow_up_status:'none'};}
@@ -289,6 +289,7 @@
     initSitePicker();
     if(table==='payroll_records'&&!state.editing.id) initPayrollAutoFill();
     if(table==='leave_requests') initLeaveBalanceInfo();
+    if(table==='employee_payroll_profiles') initAutomaticLeaveRates();
     $('#formMessage').textContent=''; $('#recordDialog').showModal();
   }
 
@@ -302,6 +303,8 @@
 
   function initLeaveBalanceInfo(){const employeeInput=$('[name="employee_id"]'),typeInput=$('[name="leave_type"]');if(!employeeInput||!typeInput)return;const info=document.createElement('div');info.className='wide muted';info.id='leaveBalanceInfo';$('#formFields').prepend(info);const refresh=async()=>{if(typeInput.value!=='annual'){info.textContent='非特休假別不會扣除特休餘額。';return}if(!employeeInput.value){info.textContent='選擇員工後顯示特休額度。';return}if(!cloudEnabled){const row=state.relations.employees.find(x=>x.id===employeeInput.value);info.textContent=`目前剩餘 ${Number(row?.annual_leave_hours||0)} 小時`;return}info.textContent='正在計算特休額度…';const{error}=await client.rpc('refresh_employee_annual_leave',{target_employee_id:employeeInput.value});if(error){info.textContent=`特休計算失敗：${error.message}`;return}const{data,error:readError}=await client.from('employees').select('annual_leave_entitlement_hours,annual_leave_used_hours,annual_leave_hours,annual_leave_period_start,annual_leave_period_end').eq('id',employeeInput.value).single();info.textContent=readError?`特休讀取失敗：${readError.message}`:`本期 ${Number(data.annual_leave_entitlement_hours||0)} 小時・已休 ${Number(data.annual_leave_used_hours||0)} 小時・剩餘 ${Number(data.annual_leave_hours||0)} 小時（${data.annual_leave_period_start||'—'} 至 ${data.annual_leave_period_end||'—'}）`;};employeeInput.onchange=refresh;typeInput.onchange=refresh;refresh();}
 
+  function initAutomaticLeaveRates(){const salary=$('[name="basic_salary"]'),personal=$('[name="personal_leave_day_rate"]'),sick=$('[name="sick_leave_day_rate"]');if(!salary||!personal||!sick)return;const calculate=()=>{const monthly=Number(salary.value||0);personal.value=(monthly/30).toFixed(2);sick.value=(monthly/60).toFixed(2);$('#formMessage').textContent=monthly?`自動換算：事假每小時 ${(monthly/30/8).toFixed(2)} 元；病假每小時 ${(monthly/30/8/2).toFixed(2)} 元。薪資明細將依實際請假時數計算。`:'';};salary.oninput=calculate;calculate();}
+
   async function saveRecord(event) {
     event.preventDefault(); const {table,id}=state.editing; const form=new FormData(event.currentTarget); const record=Object.fromEntries(form.entries());
     Object.keys(record).forEach(key=>{if(record[key]==='')record[key]=null});
@@ -309,6 +312,7 @@
     const featurePermissions=table==='employees'?form.getAll('feature_permissions'):[];delete record.feature_permissions;
     const initialPassword=record.initial_password; delete record.initial_password;
     if(table==='employees'){delete record.annual_leave_entitlement_hours;delete record.annual_leave_used_hours;delete record.annual_leave_hours;delete record.annual_leave_period_start;delete record.annual_leave_period_end;}
+    if(table==='employee_payroll_profiles'&&cloudEnabled){delete record.personal_leave_day_rate;delete record.sick_leave_day_rate;}
     if(table==='announcements') record.is_active=record.is_active==='true';
     if(table==='site_assignments') record.is_manager=record.is_manager==='true';
     if(table==='inventory_transactions'&&record.employee_id&&record.site_id){$('#formMessage').textContent='領用員工與領用案場只能選擇其中一項。';return}
