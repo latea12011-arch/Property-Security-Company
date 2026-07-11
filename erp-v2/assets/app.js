@@ -320,7 +320,7 @@
     $('#attendanceSite').onchange=e=>{state.attendanceSite=e.target.value;renderAttendanceRecords()};$('#attendancePrev').onclick=()=>moveAttendanceMonth(-1);$('#attendanceNext').onclick=()=>moveAttendanceMonth(1);downloadButton.onclick=()=>downloadAttendanceCsv(rows,summaries,sites.find(x=>x.id===state.attendanceSite),range);
   }
   async function renderCurrent() { try { state.view==='dashboard'?await renderDashboard():state.view==='schedules'?await renderEmployeeMonthlySchedule():state.view==='attendance'?await renderAttendanceRecords():await renderTable(state.view); } catch(error) { $('#content').innerHTML=`<article class="panel empty">載入失敗：${esc(error.message)}</article>`; } }
-  function switchView(view) { state.view=view; $('#pageTitle').textContent=viewInfo[view][0]; $$('[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===view)); renderCurrent(); }
+  function switchView(view) { state.view=view; $('#pageTitle').textContent=viewInfo[view][0]; $$('[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===view));const active=$(`[data-view="${view}"]`),group=active?.closest('.nav-group');if(group){group.dataset.open='true';group.querySelector('.nav-group-toggle')?.setAttribute('aria-expanded','true')}renderCurrent(); }
 
   async function login(email,password) {
     if (!cloudEnabled) throw new Error('尚未連接 Supabase，請改用示範模式。');
@@ -341,6 +341,7 @@
   $('#demoButton').onclick=()=>enterApp(true); $('#logoutButton').onclick=logout; $('#recordForm').addEventListener('submit',saveRecord);
   $$('[data-close-dialog]').forEach(button=>button.onclick=()=>$('#recordDialog').close());
   $$('[data-view]').forEach(button=>button.onclick=()=>switchView(button.dataset.view));
+  $$('.nav-group-toggle').forEach(button=>button.onclick=()=>{const group=button.closest('.nav-group'),open=group.dataset.open==='true';group.dataset.open=String(!open);button.setAttribute('aria-expanded',String(!open));});
   if('serviceWorker' in navigator && location.protocol!=='file:') window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(console.warn));
   if(cloudEnabled) client.auth.getSession().then(({data})=>{if(data.session){state.user={name:data.session.user.email,email:data.session.user.email,role:'guard'};enterApp();}});
 })();
