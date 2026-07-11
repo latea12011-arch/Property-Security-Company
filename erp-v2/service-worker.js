@@ -1,4 +1,4 @@
-const CACHE = 'hongjia-erp-v2-2';
+const CACHE = 'hongjia-erp-v2-3';
 const SHELL = ['./','index.html','config.js','manifest.json','assets/app.css','assets/app.js','assets/company-logo.png','assets/company-icon.svg'];
 
 self.addEventListener('install', event => {
@@ -12,8 +12,20 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
-  if (event.request.mode === 'navigate') {
-    event.respondWith(fetch(event.request).catch(() => caches.match('index.html')));
+  const url = new URL(event.request.url);
+
+  if (event.request.mode === 'navigate' || url.pathname.endsWith('/config.js') || url.pathname.endsWith('/assets/app.js')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          if (response.ok && url.origin === self.location.origin) {
+            const copy = response.clone();
+            caches.open(CACHE).then(cache => cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request).then(cached => cached || caches.match('index.html')))
+    );
     return;
   }
   event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request)));
