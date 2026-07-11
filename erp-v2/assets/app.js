@@ -15,7 +15,7 @@
 
   const fields = {
     employees: [
-      ['employee_no','員工編號','text',true],['full_name','姓名','text',true],['phone','電話','tel'],
+      ['employee_no','員工編號','text',true],['full_name','姓名','text',true],['phone','電話','tel'],['user_id','登入帳號 UID','text'],
       ['role','角色','select',true,[['guard','保全人員'],['site_manager','案場主管'],['hr','人事'],['admin','系統管理員']]],
       ['status','狀態','select',true,[['active','在職'],['inactive','離職／停用']]]
     ],
@@ -167,6 +167,7 @@
 
   async function saveRecord(event) {
     event.preventDefault(); const {table,id}=state.editing; const form=new FormData(event.currentTarget); const record=Object.fromEntries(form.entries());
+    if (table==='employees' && !record.user_id) record.user_id=null;
     $('#saveButton').disabled=true; $('#formMessage').textContent='';
     try { await db.save(table,record,id); $('#recordDialog').close(); await renderCurrent(); showNotice('資料已儲存。','success'); }
     catch(error) { $('#formMessage').textContent=`儲存失敗：${error.message}`; }
