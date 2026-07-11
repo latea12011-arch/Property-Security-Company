@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hongjia-property-app-v3';
+const CACHE_NAME = 'hongjia-property-app-v4';
 const ASSETS = [
   './',
   'index.html',
@@ -8,6 +8,8 @@ const ASSETS = [
   'committee.html',
   'manifest.json',
   'committee-manifest.json',
+  'assets/company-logo.png',
+  'assets/company-icon.svg',
   'assets/pwa.js'
 ];
 
