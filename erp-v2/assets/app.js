@@ -10,7 +10,7 @@
 
   const viewInfo = {
     dashboard: ['營運總覽', 'dashboard'], employees: ['員工管理', 'employees'], sites: ['案場管理', 'sites'],
-    schedules: ['勤務排班', 'schedules'], attendance: ['打卡紀錄', 'attendance'], leaves: ['請假審核', 'leave_requests'], complaints: ['反霸凌申訴', 'bullying_complaints'], announcements: ['公告管理','announcements']
+    schedules: ['勤務排班', 'schedules'], attendance: ['打卡紀錄', 'attendance'], leaves: ['請假審核', 'leave_requests'], complaints: ['反霸凌申訴', 'bullying_complaints'], payrollProfiles: ['薪資設定', 'employee_payroll_profiles'], advances: ['員工借支', 'salary_advances'], payroll: ['薪資明細', 'payroll_records'], terminations: ['離職證明', 'termination_certificates'], announcements: ['公告管理','announcements']
   };
 
   const fields = {
@@ -49,6 +49,23 @@
       ['description','事件說明','textarea',true],['requested_action','希望處理方式','textarea'],['evidence_path','證明文件路徑','text'],
       ['status','處理狀態','select',true,[['submitted','已送出'],['processing','處理中'],['resolved','已處理'],['closed','已結案']]],['handler_note','處理紀錄（保密）','textarea']
     ],
+    employee_payroll_profiles: [
+      ['employee_id','員工','relation:employees',true],['basic_salary','基本薪資','number',true],['personal_leave_hour_rate','事假每小時扣款','number',true],['sick_leave_hour_rate','病假每小時扣款','number',true],
+      ['labor_insurance','勞保自付額','number',true],['health_insurance','健保自付額','number',true],['group_insurance','團保自付額','number',true],['effective_date','生效日期','date',true],['note','備註','textarea']
+    ],
+    salary_advances: [
+      ['employee_id','員工','relation:employees',true],['advance_date','借支日期','date',true],['amount','借支金額','number',true],['repayment_month','預計扣回月份','month'],
+      ['status','狀態','select',true,[['pending','待審核'],['approved','已核准'],['deducted','已扣回'],['rejected','已退回'],['cancelled','已取消']]],['note','說明','textarea']
+    ],
+    payroll_records: [
+      ['employee_id','員工','relation:employees',true],['payroll_month','薪資月份','month',true],['basic_salary','基本薪資','number',true],['overtime_pay','加班費','number',true],['allowances','津貼／加給','number',true],
+      ['personal_leave_hours','事假時數','number',true],['sick_leave_hours','病假時數','number',true],['labor_insurance','勞保','number',true],['health_insurance','健保','number',true],['group_insurance','團保','number',true],
+      ['court_deduction','法院扣薪','number',true],['advance_deduction','借支扣回','number',true],['other_deduction','其他扣款','number',true],['other_deduction_note','其他扣款說明','textarea'],
+      ['status','薪資單狀態','select',true,[['draft','草稿'],['confirmed','已確認'],['paid','已發薪']]],['paid_date','發薪日期','date'],['note','備註','textarea']
+    ],
+    termination_certificates: [
+      ['employee_id','員工','relation:employees',true],['separation_date','離職日期','date',true],['separation_reason','離職原因','textarea',true],['job_description','工作職務內容','textarea'],['issue_date','開立日期','date',true],['certificate_no','證明書編號','text'],['note','備註','textarea']
+    ],
     announcements:[['publisher','發布單位','text',true],['content','公告內容','textarea',true],['published_at','發布時間','datetime-local',true],['is_active','狀態','select',true,[['true','上架'],['false','下架']]]]
   };
 
@@ -59,6 +76,10 @@
     attendance: [['work_date','日期'],['employee_id','員工'],['site_id','案場'],['clock_in','上班'],['clock_out','下班'],['status','狀態']],
     leave_requests: [['employee_id','員工'],['leave_type','假別'],['start_date','開始'],['end_date','結束'],['leave_hours','時數'],['proof_path','證明文件'],['status','狀態']],
     bullying_complaints: [['created_at','提出時間'],['employee_id','申訴員工'],['incident_date','事件日期'],['accused_name','被申訴人'],['evidence_path','證明文件'],['status','狀態']],
+    employee_payroll_profiles: [['employee_id','員工'],['basic_salary','基本薪資'],['labor_insurance','勞保'],['health_insurance','健保'],['group_insurance','團保'],['effective_date','生效日期']],
+    salary_advances: [['advance_date','日期'],['employee_id','員工'],['amount','金額'],['repayment_month','扣回月份'],['status','狀態']],
+    payroll_records: [['payroll_month','月份'],['employee_id','員工'],['gross_pay','應發'],['total_deduction','總扣款'],['net_pay','實發'],['status','狀態']],
+    termination_certificates: [['certificate_no','證明編號'],['employee_id','員工'],['separation_date','離職日期'],['issue_date','開立日期']],
     announcements:[['published_at','發布時間'],['publisher','發布單位'],['content','內容'],['is_active','狀態']]
   };
 
@@ -109,7 +130,7 @@
   };
 
   const esc = value => String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-  const labels = {guard:'保全人員',site_manager:'案場主管',hr:'人事',admin:'管理員',active:'啟用／在職',inactive:'停用',full_time:'正職人員',mobile:'機動人員',day:'日班',night:'夜班',custom:'自訂',normal:'正常',late:'遲到',missing:'缺卡',annual:'特休',personal:'事假',sick:'病假',official:'公假',marriage:'婚假',bereavement:'喪假',maternity:'產假',paternity:'陪產檢及陪產假',menstrual:'生理假',occupational:'公傷病假',compensatory:'補休',unpaid:'無薪假',other:'其他',pending:'待審核',approved:'已核准',rejected:'已退回',submitted:'已送出',processing:'處理中',resolved:'已處理',closed:'已結案',not_started:'尚未洽談',contacting:'聯絡中',negotiating:'議約中',renewed:'已續約',not_renewing:'不續約',true:'是',false:'否'};
+  const labels = {guard:'保全人員',site_manager:'案場主管',hr:'人事',admin:'管理員',active:'啟用／在職',inactive:'停用',full_time:'正職人員',mobile:'機動人員',day:'日班',night:'夜班',custom:'自訂',normal:'正常',late:'遲到',missing:'缺卡',annual:'特休',personal:'事假',sick:'病假',official:'公假',marriage:'婚假',bereavement:'喪假',maternity:'產假',paternity:'陪產檢及陪產假',menstrual:'生理假',occupational:'公傷病假',compensatory:'補休',unpaid:'無薪假',other:'其他',pending:'待審核',approved:'已核准',rejected:'已退回',cancelled:'已取消',deducted:'已扣回',draft:'草稿',confirmed:'已確認',paid:'已發薪',submitted:'已送出',processing:'處理中',resolved:'已處理',closed:'已結案',not_started:'尚未洽談',contacting:'聯絡中',negotiating:'議約中',renewed:'已續約',not_renewing:'不續約',true:'是',false:'否'};
   const format = (key,value) => {
     if ((key==='employee_id'||key==='site_id') && value) {
       const list=key==='employee_id'?state.relations.employees:state.relations.sites;
@@ -156,14 +177,19 @@
       :`<div class="quick-item"><div><strong>${esc(format('employee_id',row.employee_id))}</strong><small>${esc(format('leave_type',row.leave_type))} · ${esc(row.start_date)} 至 ${esc(row.end_date)}</small></div>${badge(row.status)}</div>`).join('')}</div>`;
   }
 
+  function printDocument(title,body){const win=window.open('','_blank','noopener,noreferrer');if(!win)return showNotice('瀏覽器阻擋列印視窗，請允許彈出式視窗。','error');win.document.write(`<!doctype html><html lang="zh-TW"><head><meta charset="utf-8"><title>${esc(title)}</title><style>body{font-family:"Microsoft JhengHei",sans-serif;color:#162b3d;max-width:820px;margin:40px auto;padding:0 28px}header{text-align:center;border-bottom:2px solid #16324f;padding-bottom:18px;margin-bottom:24px}h1{margin:0 0 8px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #bdc9d3;padding:10px;text-align:left}.amount{text-align:right}.sign{margin-top:70px;display:flex;justify-content:space-between}@media print{button{display:none}body{margin:0}}</style></head><body><header><h1>紘嘉物業保全股份有限公司</h1><strong>${esc(title)}</strong></header>${body}<div class="sign"><span>公司用印：________________</span><span>員工簽收：________________</span></div><p><button onclick="window.print()">列印／另存 PDF</button></p></body></html>`);win.document.close();}
+  function printPayroll(row){const employee=state.relations.employees.find(x=>x.id===row.employee_id),money=v=>Number(v||0).toLocaleString('zh-TW');printDocument(`${row.payroll_month} 薪資單`,`<p>員工：${esc(employee?.employee_no||'')}　${esc(employee?.full_name||'')}</p><table><tr><th>應發項目</th><th class="amount">金額</th><th>扣款項目</th><th class="amount">金額</th></tr><tr><td>基本薪資</td><td class="amount">${money(row.basic_salary)}</td><td>事假扣款</td><td class="amount">${money(row.personal_leave_deduction)}</td></tr><tr><td>加班費</td><td class="amount">${money(row.overtime_pay)}</td><td>病假扣款</td><td class="amount">${money(row.sick_leave_deduction)}</td></tr><tr><td>津貼／加給</td><td class="amount">${money(row.allowances)}</td><td>勞健團保</td><td class="amount">${money(Number(row.labor_insurance||0)+Number(row.health_insurance||0)+Number(row.group_insurance||0))}</td></tr><tr><td><strong>應發合計</strong></td><td class="amount"><strong>${money(row.gross_pay)}</strong></td><td>法院／借支／其他</td><td class="amount">${money(Number(row.court_deduction||0)+Number(row.advance_deduction||0)+Number(row.other_deduction||0))}</td></tr><tr><th colspan="3">實發金額</th><th class="amount">NT$ ${money(row.net_pay)}</th></tr></table><p>備註：${esc(row.note||'無')}</p>`);}
+  function printTermination(row){const employee=state.relations.employees.find(x=>x.id===row.employee_id);printDocument('離職證明書',`<p>證明書編號：${esc(row.certificate_no||'')}</p><p>茲證明 <strong>${esc(employee?.full_name||'')}</strong>（員工編號：${esc(employee?.employee_no||'')}）曾任職於本公司。</p><table><tr><th>職稱</th><td>${esc(employee?.job_title||'')}</td></tr><tr><th>到職日期</th><td>${esc(employee?.hire_date||'')}</td></tr><tr><th>離職日期</th><td>${esc(row.separation_date)}</td></tr><tr><th>工作內容</th><td>${esc(row.job_description||'')}</td></tr><tr><th>離職原因</th><td>${esc(row.separation_reason)}</td></tr><tr><th>開立日期</th><td>${esc(row.issue_date)}</td></tr></table><p>特此證明。</p>`);}
+
   async function renderTable(view) {
     await loadRelations(); const table=viewInfo[view][1]; const rows=await db.list(table); const cols=columns[table];
     const canAdd=table!=='bullying_complaints';
     $('#content').innerHTML=`<article class="panel"><div class="panel-head"><div><h3>${viewInfo[view][0]}</h3><span class="muted">共 ${rows.length} 筆${table==='bullying_complaints'?'（保密資料）':''}</span></div>${canAdd?'<button class="btn primary" id="addRecord">＋ 新增</button>':''}</div>
-      <div class="table-wrap"><table><thead><tr>${cols.map(x=>`<th>${x[1]}</th>`).join('')}<th>操作</th></tr></thead><tbody>${rows.length?rows.map(row=>`<tr>${cols.map(([key])=>`<td>${cellHtml(key,row[key])}</td>`).join('')}<td><div class="action-row"><button class="mini-button" data-edit="${esc(row.id)}">編輯</button>${table==='bullying_complaints'?'':`<button class="mini-button danger" data-delete="${esc(row.id)}">刪除</button>`}</div></td></tr>`).join(''):`<tr><td colspan="${cols.length+1}" class="empty">尚無資料。</td></tr>`}</tbody></table></div></article>`;
+      <div class="table-wrap"><table><thead><tr>${cols.map(x=>`<th>${x[1]}</th>`).join('')}<th>操作</th></tr></thead><tbody>${rows.length?rows.map(row=>`<tr>${cols.map(([key])=>`<td>${cellHtml(key,row[key])}</td>`).join('')}<td><div class="action-row"><button class="mini-button" data-edit="${esc(row.id)}">編輯</button>${['payroll_records','termination_certificates'].includes(table)?`<button class="mini-button" data-print="${esc(row.id)}">列印</button>`:''}${table==='bullying_complaints'?'':`<button class="mini-button danger" data-delete="${esc(row.id)}">刪除</button>`}</div></td></tr>`).join(''):`<tr><td colspan="${cols.length+1}" class="empty">尚無資料。</td></tr>`}</tbody></table></div></article>`;
     if(canAdd) $('#addRecord').onclick=()=>openDialog(table,null);
     $$('[data-edit]').forEach(button=>button.onclick=()=>openDialog(table,rows.find(x=>x.id===button.dataset.edit)));
     $$('[data-delete]').forEach(button=>button.onclick=()=>deleteRecord(table,button.dataset.delete));
+    $$('[data-print]').forEach(button=>button.onclick=()=>{const row=rows.find(x=>x.id===button.dataset.print);table==='payroll_records'?printPayroll(row):printTermination(row);});
     $$('[data-private-file]').forEach(button=>button.onclick=async()=>{const{data,error}=await client.storage.from('hr-private').createSignedUrl(button.dataset.privateFile,300);if(error)return showNotice(`附件開啟失敗：${error.message}`,'error');window.open(data.signedUrl,'_blank','noopener');});
   }
 
