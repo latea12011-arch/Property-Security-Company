@@ -13,6 +13,7 @@
     schedules: ['勤務排班', 'schedules'], attendance: ['打卡紀錄', 'attendance'], leaves: ['請假審核', 'leave_requests'], complaints: ['反霸凌申訴', 'bullying_complaints'], payrollProfiles: ['薪資設定', 'employee_payroll_profiles'], advances: ['員工借支', 'salary_advances'], payroll: ['薪資明細', 'payroll_records'], terminations: ['離職證明', 'termination_certificates'], inventoryItems: ['庫存物品', 'inventory_items'], inventoryTransactions: ['入庫／領用紀錄', 'inventory_transactions'], auditLogs: ['操作紀錄', 'audit_logs'], announcements: ['公告管理','announcements']
   };
   const featureOptions=[['employees','員工管理'],['sites','案場管理'],['schedules','勤務排班'],['attendance','打卡紀錄'],['leaves','請假審核'],['complaints','反霸凌申訴'],['payrollProfiles','薪資設定'],['advances','員工借支'],['payroll','薪資明細'],['terminations','離職證明'],['inventoryItems','庫存物品'],['inventoryTransactions','入庫／領用紀錄'],['announcements','公告管理']];
+  const featurePresentation={employees:['人','人事管理'],sites:['場','營運管理'],schedules:['班','營運管理'],attendance:['卡','營運管理'],leaves:['假','人事管理'],complaints:['申','人事管理'],payrollProfiles:['薪','薪資行政'],advances:['借','薪資行政'],payroll:['單','薪資行政'],terminations:['離','薪資行政'],inventoryItems:['庫','庫存管理'],inventoryTransactions:['領','庫存管理'],announcements:['告','公告管理']};
 
   const fields = {
     employees: [
@@ -180,7 +181,7 @@
   }
 
   async function renderDashboard() {
-    if(state.user?.role!=='admin'){const allowed=featureOptions.filter(([key])=>state.user?.permissions?.includes(key));$('#content').innerHTML=`<article class="panel"><div class="panel-head"><div><h3>${esc(state.user?.name)}，歡迎登入</h3><span class="muted">您目前可使用 ${allowed.length} 項後台功能</span></div></div><div class="check-grid permission-shortcuts">${allowed.map(([key,text])=>`<button class="quick-item" data-go="${key}"><strong>${text}</strong><small>進入功能</small></button>`).join('')||'<div class="empty">目前尚未授權任何後台功能，請聯絡系統管理員。</div>'}</div></article>`;$$('[data-go]').forEach(button=>button.onclick=()=>switchView(button.dataset.go));return}
+    if(state.user?.role!=='admin'){const allowed=featureOptions.filter(([key])=>state.user?.permissions?.includes(key));$('#content').innerHTML=`<section class="staff-welcome"><div><p class="eyebrow">WORKSPACE</p><h3>${esc(state.user?.name)}，歡迎回來</h3><p>從下方選擇今天要處理的工作。</p></div><div class="access-count"><strong>${allowed.length}</strong><span>項可用功能</span></div></section><section class="permission-section"><div class="permission-title"><div><h3>我的工作區</h3><p>依管理員授權顯示</p></div></div><div class="permission-grid">${allowed.map(([key,text])=>{const meta=featurePresentation[key]||['功','工作功能'];return`<button class="permission-card" data-go="${key}"><span class="permission-icon">${meta[0]}</span><span class="permission-copy"><small>${meta[1]}</small><strong>${text}</strong></span><span class="permission-arrow">→</span></button>`}).join('')||'<div class="empty permission-empty">目前尚未授權任何後台功能，請聯絡系統管理員。</div>'}</div></section>`;$$('[data-go]').forEach(button=>button.onclick=()=>switchView(button.dataset.go));return}
     const [employees,sites,schedules,attendance,leaves]=await Promise.all(['employees','sites','schedules','attendance','leave_requests'].map(db.list));
     state.relations={employees,sites};
     const today=new Date().toISOString().slice(0,10);
