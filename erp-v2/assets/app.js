@@ -10,7 +10,7 @@
 
   const viewInfo = {
     dashboard: ['營運總覽', 'dashboard'], employees: ['員工管理', 'employees'], sites: ['案場管理', 'sites'],
-    schedules: ['勤務排班', 'schedules'], attendance: ['打卡紀錄', 'attendance'], leaves: ['請假審核', 'leave_requests'], complaints: ['反霸凌申訴', 'bullying_complaints'], payrollProfiles: ['薪資設定', 'employee_payroll_profiles'], advances: ['員工借支', 'salary_advances'], payroll: ['薪資明細', 'payroll_records'], terminations: ['離職證明', 'termination_certificates'], announcements: ['公告管理','announcements']
+    schedules: ['勤務排班', 'schedules'], attendance: ['打卡紀錄', 'attendance'], leaves: ['請假審核', 'leave_requests'], complaints: ['反霸凌申訴', 'bullying_complaints'], payrollProfiles: ['薪資設定', 'employee_payroll_profiles'], advances: ['員工借支', 'salary_advances'], payroll: ['薪資明細', 'payroll_records'], terminations: ['離職證明', 'termination_certificates'], inventoryItems: ['庫存物品', 'inventory_items'], inventoryTransactions: ['入庫／領用紀錄', 'inventory_transactions'], announcements: ['公告管理','announcements']
   };
 
   const fields = {
@@ -81,6 +81,14 @@
       ]],
       ['issue_date','開立日期','date',true],['certificate_no','證明書編號','text'],['note','補充說明','textarea']
     ],
+    inventory_items: [
+      ['item_code','物品編號','text',true],['item_name','物品名稱','text',true],['category','分類','select',true,[['uniform','服裝配件'],['equipment','保全設備'],['traffic','交通／拒馬設備'],['office','辦公用品'],['cleaning','清潔用品'],['other','其他']]],
+      ['specification','規格／型號','text'],['size','尺寸','text'],['unit','單位','text',true],['minimum_stock','安全庫存量','number',true],['storage_location','存放位置','text'],['status','狀態','select',true,[['active','啟用'],['inactive','停用']]],['note','備註','textarea']
+    ],
+    inventory_transactions: [
+      ['item_id','物品','relation:inventory_items',true],['transaction_type','異動類型','select',true,[['purchase','採購入庫'],['issue','領用出庫'],['return','退回入庫'],['adjust_in','盤點增加'],['adjust_out','盤點減少']]],['quantity','數量','number',true],['transaction_date','日期','date',true],
+      ['employee_id','領用員工（與案場擇一）','relation:employees'],['site_id','領用案場（與員工擇一）','relation:sites'],['receiver_name','實際領取人','text'],['purpose','用途','text'],['document_no','單據編號','text'],['note','備註','textarea']
+    ],
     announcements:[['publisher','發布單位','text',true],['content','公告內容','textarea',true],['published_at','發布時間','datetime-local',true],['is_active','狀態','select',true,[['true','上架'],['false','下架']]]]
   };
 
@@ -95,10 +103,12 @@
     salary_advances: [['advance_date','日期'],['employee_id','員工'],['amount','金額'],['repayment_month','扣回月份'],['status','狀態']],
     payroll_records: [['payroll_month','月份'],['employee_id','員工'],['gross_pay','應發'],['total_deduction','總扣款'],['net_pay','實發'],['status','狀態']],
     termination_certificates: [['certificate_no','證明編號'],['employee_id','員工'],['separation_date','離職日期'],['issue_date','開立日期']],
+    inventory_items: [['item_code','編號'],['item_name','物品'],['category','分類'],['specification','規格'],['size','尺寸'],['current_stock','現有庫存'],['unit','單位'],['minimum_stock','安全庫存']],
+    inventory_transactions: [['transaction_date','日期'],['transaction_type','類型'],['item_id','物品'],['quantity','數量'],['employee_id','員工'],['site_id','案場'],['receiver_name','領取人']],
     announcements:[['published_at','發布時間'],['publisher','發布單位'],['content','內容'],['is_active','狀態']]
   };
 
-  let state = { view: 'dashboard', user: null, editing: null, relations: {employees:[],sites:[]}, scheduleMonth: new Date().toISOString().slice(0,7), scheduleEmployee: '', attendanceMonth: new Date().toISOString().slice(0,7), attendanceSite: '' };
+  let state = { view: 'dashboard', user: null, editing: null, relations: {employees:[],sites:[],inventory_items:[]}, scheduleMonth: new Date().toISOString().slice(0,7), scheduleEmployee: '', attendanceMonth: new Date().toISOString().slice(0,7), attendanceSite: '' };
 
   function seedDemo() {
     const today = new Date().toISOString().slice(0,10);
@@ -145,22 +155,23 @@
   };
 
   const esc = value => String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-  const labels = {guard:'保全人員',site_manager:'案場主管',hr:'人事',admin:'管理員',active:'啟用／在職',inactive:'停用',full_time:'正職人員',mobile:'機動人員',day:'日班',night:'夜班',custom:'自訂',normal:'正常',late:'遲到',missing:'缺卡',annual:'特休',personal:'事假',sick:'病假',official:'公假',marriage:'婚假',bereavement:'喪假',maternity:'產假',paternity:'陪產檢及陪產假',menstrual:'生理假',occupational:'公傷病假',compensatory:'補休',unpaid:'無薪假',other:'其他',pending:'待審核',approved:'已核准',rejected:'已退回',cancelled:'已取消',deducted:'已扣回',draft:'草稿',confirmed:'已確認',paid:'已發薪',submitted:'已送出',processing:'處理中',resolved:'已處理',closed:'已結案',not_started:'尚未洽談',contacting:'聯絡中',negotiating:'議約中',renewed:'已續約',not_renewing:'不續約',true:'是',false:'否'};
+  const labels = {guard:'保全人員',site_manager:'案場主管',hr:'人事',admin:'管理員',active:'啟用／在職',inactive:'停用',full_time:'正職人員',mobile:'機動人員',day:'日班',night:'夜班',custom:'自訂',normal:'正常',late:'遲到',missing:'缺卡',annual:'特休',personal:'事假',sick:'病假',official:'公假',marriage:'婚假',bereavement:'喪假',maternity:'產假',paternity:'陪產檢及陪產假',menstrual:'生理假',occupational:'公傷病假',compensatory:'補休',unpaid:'無薪假',other:'其他',uniform:'服裝配件',equipment:'保全設備',traffic:'交通／拒馬設備',office:'辦公用品',cleaning:'清潔用品',purchase:'採購入庫',issue:'領用出庫',return:'退回入庫',adjust_in:'盤點增加',adjust_out:'盤點減少',pending:'待審核',approved:'已核准',rejected:'已退回',cancelled:'已取消',deducted:'已扣回',draft:'草稿',confirmed:'已確認',paid:'已發薪',submitted:'已送出',processing:'處理中',resolved:'已處理',closed:'已結案',not_started:'尚未洽談',contacting:'聯絡中',negotiating:'議約中',renewed:'已續約',not_renewing:'不續約',true:'是',false:'否'};
   const format = (key,value) => {
     if ((key==='employee_id'||key==='site_id') && value) {
       const list=key==='employee_id'?state.relations.employees:state.relations.sites;
       return list.find(row=>row.id===value)?.[key==='employee_id'?'full_name':'name'] || value;
     }
+    if(key==='item_id'&&value)return state.relations.inventory_items.find(row=>row.id===value)?.item_name||value;
     if (key==='start_time' && value) return value;
     if ((key==='clock_in'||key==='clock_out') && value) return value.replace('T',' ');
     return labels[value] || value || '—';
   };
   const badge = value => `<span class="badge ${['pending','late'].includes(value)?'warning':''} ${['inactive','missing','rejected'].includes(value)?'danger':''}">${esc(format('',value))}</span>`;
-  const isBadge = key => ['status','role','shift_type','leave_type','renewal_status','is_active','is_manager'].includes(key);
+  const isBadge = key => ['status','role','shift_type','leave_type','renewal_status','transaction_type','category','is_active','is_manager'].includes(key);
   const cellHtml = (key,value) => key==='proof_path'||key==='evidence_path' ? (value?`<button class="mini-button" data-private-file="${esc(value)}">開啟附件</button>`:'—') : isBadge(key)?badge(value):esc(format(key,value));
 
   async function loadRelations() {
-    [state.relations.employees,state.relations.sites]=await Promise.all([db.list('employees'),db.list('sites')]);
+    [state.relations.employees,state.relations.sites,state.relations.inventory_items]=await Promise.all([db.list('employees'),db.list('sites'),db.list('inventory_items')]);
   }
 
   async function renderDashboard() {
@@ -196,6 +207,7 @@
   function printPayroll(row){const employee=state.relations.employees.find(x=>x.id===row.employee_id),money=v=>Number(v||0).toLocaleString('zh-TW');printDocument(`${row.payroll_month} 薪資單`,`<p>員工：${esc(employee?.employee_no||'')}　${esc(employee?.full_name||'')}</p><table><tr><th>應發項目</th><th class="amount">金額</th><th>扣款項目</th><th class="amount">金額</th></tr><tr><td>基本薪資</td><td class="amount">${money(row.basic_salary)}</td><td>事假扣款</td><td class="amount">${money(row.personal_leave_deduction)}</td></tr><tr><td>加班費</td><td class="amount">${money(row.overtime_pay)}</td><td>病假扣款</td><td class="amount">${money(row.sick_leave_deduction)}</td></tr><tr><td>津貼／加給</td><td class="amount">${money(row.allowances)}</td><td>勞健團保</td><td class="amount">${money(Number(row.labor_insurance||0)+Number(row.health_insurance||0)+Number(row.group_insurance||0))}</td></tr><tr><td><strong>應發合計</strong></td><td class="amount"><strong>${money(row.gross_pay)}</strong></td><td>法院／借支／其他</td><td class="amount">${money(Number(row.court_deduction||0)+Number(row.advance_deduction||0)+Number(row.other_deduction||0))}</td></tr><tr><th colspan="3">實發金額</th><th class="amount">NT$ ${money(row.net_pay)}</th></tr></table><p>備註：${esc(row.note||'無')}</p>`);}
   function printTermination(row){const employee=state.relations.employees.find(x=>x.id===row.employee_id);printDocument('離職證明書',`<p>證明書編號：${esc(row.certificate_no||'')}</p><p>茲證明 <strong>${esc(employee?.full_name||'')}</strong>（員工編號：${esc(employee?.employee_no||'')}）曾任職於本公司。</p><table><tr><th>職稱</th><td>${esc(employee?.job_title||'')}</td></tr><tr><th>到職日期</th><td>${esc(employee?.hire_date||'')}</td></tr><tr><th>離職日期</th><td>${esc(row.separation_date)}</td></tr><tr><th>工作內容</th><td>${esc(row.job_description||'')}</td></tr><tr><th>離職原因</th><td>${esc(row.separation_reason)}</td></tr><tr><th>開立日期</th><td>${esc(row.issue_date)}</td></tr></table><p>特此證明。</p>`);}
   function printAdvance(row){const employee=state.relations.employees.find(x=>x.id===row.employee_id),money=Number(row.amount||0).toLocaleString('zh-TW');printDocument('員工薪資借支申請暨同意書',`<p>申請人：${esc(employee?.employee_no||'')}　<strong>${esc(employee?.full_name||'')}</strong></p><table><tr><th>借支日期</th><td>${esc(row.advance_date)}</td></tr><tr><th>借支金額</th><td>新臺幣 ${money} 元整</td></tr><tr><th>預計薪資扣回月份</th><td>${esc(row.repayment_month||'另行約定')}</td></tr><tr><th>借支說明</th><td>${esc(row.note||'')}</td></tr></table><p>本人確認上述借支內容無誤，並同意公司於約定月份之薪資中扣回核准借支金額；實際核准及扣回方式以公司確認為準。</p>`);}
+  function printInventoryTransaction(row){const item=state.relations.inventory_items.find(x=>x.id===row.item_id),employee=state.relations.employees.find(x=>x.id===row.employee_id),site=state.relations.sites.find(x=>x.id===row.site_id),recipient=employee?`${employee.employee_no} ${employee.full_name}`:site?.name||row.receiver_name||'未指定';printDocument('物品領取／庫存異動單',`<p>單據編號：${esc(row.document_no||row.id.slice(0,8).toUpperCase())}</p><table><tr><th>異動日期</th><td>${esc(row.transaction_date)}</td></tr><tr><th>異動類型</th><td>${esc(labels[row.transaction_type]||row.transaction_type)}</td></tr><tr><th>物品</th><td>${esc(item?.item_code||'')}　<strong>${esc(item?.item_name||'')}</strong></td></tr><tr><th>規格／尺寸</th><td>${esc(item?.specification||'—')}／${esc(item?.size||'—')}</td></tr><tr><th>數量</th><td>${esc(row.quantity)} ${esc(item?.unit||'')}</td></tr><tr><th>領用員工／案場</th><td>${esc(recipient)}</td></tr><tr><th>實際領取人</th><td>${esc(row.receiver_name||employee?.full_name||'')}</td></tr><tr><th>用途</th><td>${esc(row.purpose||'')}</td></tr><tr><th>備註</th><td>${esc(row.note||'')}</td></tr></table><p>領取人確認上述物品、規格及數量無誤，並依公司規定妥善保管及使用。</p>`);}
 
   function printDocument(title,body){const old=$('#printFrame');if(old)old.remove();const frame=document.createElement('iframe');frame.id='printFrame';frame.title='列印文件';frame.style.cssText='position:fixed;width:1px;height:1px;right:0;bottom:0;border:0;opacity:0;pointer-events:none';document.body.appendChild(frame);frame.onload=()=>setTimeout(()=>{frame.contentWindow.focus();frame.contentWindow.print()},150);frame.srcdoc=`<!doctype html><html lang="zh-TW"><head><meta charset="utf-8"><title>${esc(title)}</title><style>@page{size:A4;margin:16mm}body{font-family:"Microsoft JhengHei",sans-serif;color:#162b3d;margin:0}header{text-align:center;border-bottom:2px solid #16324f;padding-bottom:18px;margin-bottom:24px}h1{margin:0 0 8px;font-size:24px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #bdc9d3;padding:10px;text-align:left}.amount{text-align:right}.sign{margin-top:70px;display:flex;justify-content:space-between}</style></head><body><header><h1>紘嘉物業保全股份有限公司</h1><strong>${esc(title)}</strong></header>${body}<div class="sign"><span>公司用印：________________</span><span>員工簽收：________________</span></div></body></html>`;}
 
@@ -203,11 +215,11 @@
     await loadRelations(); const table=viewInfo[view][1]; const rows=await db.list(table); const cols=columns[table];
     const canAdd=table!=='bullying_complaints';
     $('#content').innerHTML=`<article class="panel"><div class="panel-head"><div><h3>${viewInfo[view][0]}</h3><span class="muted">共 ${rows.length} 筆${table==='bullying_complaints'?'（保密資料）':''}</span></div>${canAdd?'<button class="btn primary" id="addRecord">＋ 新增</button>':''}</div>
-      <div class="table-wrap"><table><thead><tr>${cols.map(x=>`<th>${x[1]}</th>`).join('')}<th>操作</th></tr></thead><tbody>${rows.length?rows.map(row=>`<tr>${cols.map(([key])=>`<td>${cellHtml(key,row[key])}</td>`).join('')}<td><div class="action-row"><button class="mini-button" data-edit="${esc(row.id)}">編輯</button>${['payroll_records','termination_certificates','salary_advances'].includes(table)?`<button class="mini-button" data-print="${esc(row.id)}">列印</button>`:''}${table==='bullying_complaints'?'':`<button class="mini-button danger" data-delete="${esc(row.id)}">刪除</button>`}</div></td></tr>`).join(''):`<tr><td colspan="${cols.length+1}" class="empty">尚無資料。</td></tr>`}</tbody></table></div></article>`;
+      <div class="table-wrap"><table><thead><tr>${cols.map(x=>`<th>${x[1]}</th>`).join('')}<th>操作</th></tr></thead><tbody>${rows.length?rows.map(row=>`<tr>${cols.map(([key])=>`<td>${cellHtml(key,row[key])}</td>`).join('')}<td><div class="action-row"><button class="mini-button" data-edit="${esc(row.id)}">編輯</button>${['payroll_records','termination_certificates','salary_advances','inventory_transactions'].includes(table)?`<button class="mini-button" data-print="${esc(row.id)}">列印</button>`:''}${table==='bullying_complaints'?'':`<button class="mini-button danger" data-delete="${esc(row.id)}">刪除</button>`}</div></td></tr>`).join(''):`<tr><td colspan="${cols.length+1}" class="empty">尚無資料。</td></tr>`}</tbody></table></div></article>`;
     if(canAdd) $('#addRecord').onclick=()=>openDialog(table,null);
     $$('[data-edit]').forEach(button=>button.onclick=()=>openDialog(table,rows.find(x=>x.id===button.dataset.edit)));
     $$('[data-delete]').forEach(button=>button.onclick=()=>deleteRecord(table,button.dataset.delete));
-    $$('[data-print]').forEach(button=>button.onclick=()=>{const row=rows.find(x=>x.id===button.dataset.print);table==='payroll_records'?printPayroll(row):table==='salary_advances'?printAdvance(row):printTermination(row);});
+    $$('[data-print]').forEach(button=>button.onclick=()=>{const row=rows.find(x=>x.id===button.dataset.print);table==='payroll_records'?printPayroll(row):table==='salary_advances'?printAdvance(row):table==='inventory_transactions'?printInventoryTransaction(row):printTermination(row);});
     $$('[data-private-file]').forEach(button=>button.onclick=async()=>{const{data,error}=await client.storage.from('hr-private').createSignedUrl(button.dataset.privateFile,300);if(error)return showNotice(`附件開啟失敗：${error.message}`,'error');window.open(data.signedUrl,'_blank','noopener');});
   }
 
@@ -225,7 +237,7 @@
     }
     if(type==='select'||type.startsWith('relation:')) {
       let choices=options;
-      if(type.startsWith('relation:')) { const relation=type.split(':')[1]; choices=state.relations[relation].map(row=>[row.id,row.full_name||row.name]); }
+      if(type.startsWith('relation:')) { const relation=type.split(':')[1]; choices=state.relations[relation].map(row=>[row.id,row.full_name||row.name||row.item_name]); }
       return `<label>${label}<select name="${name}" ${required?'required':''}><option value="">請選擇</option>${(choices||[]).map(([v,t])=>`<option value="${esc(v)}" ${String(v)===String(value)?'selected':''}>${esc(t)}</option>`).join('')}</select></label>`;
     }
     return `<label>${label}<input name="${name}" type="${type}" value="${esc(value)}" ${type==='number'?'step="any"':''} ${required?'required':''}></label>`;
@@ -234,6 +246,8 @@
   async function openDialog(table,record) {
     state.editing={table,id:record?.id||null};
     if(table==='payroll_records'&&!record) record={payroll_month:new Date().toISOString().slice(0,7),basic_salary:0,overtime_pay:0,allowances:0,personal_leave_hours:0,sick_leave_hours:0,labor_insurance:0,health_insurance:0,group_insurance:0,court_deduction:0,advance_deduction:0,other_deduction:0,status:'draft'};
+    if(table==='inventory_items'&&!record)record={unit:'個',minimum_stock:0,status:'active',category:'other'};
+    if(table==='inventory_transactions'&&!record)record={transaction_date:new Date().toISOString().slice(0,10),transaction_type:'issue',quantity:1};
     if(table==='employees') {
       const assigned=[];
       if(record?.id&&cloudEnabled){const{data}=await client.from('site_assignments').select('site_id').eq('employee_id',record.id);(data||[]).forEach(x=>assigned.push(x.site_id));}
@@ -260,6 +274,8 @@
     const initialPassword=record.initial_password; delete record.initial_password;
     if(table==='announcements') record.is_active=record.is_active==='true';
     if(table==='site_assignments') record.is_manager=record.is_manager==='true';
+    if(table==='inventory_transactions'&&record.employee_id&&record.site_id){$('#formMessage').textContent='領用員工與領用案場只能選擇其中一項。';return}
+    if(table==='inventory_transactions'&&record.transaction_type==='issue'&&!record.employee_id&&!record.site_id){$('#formMessage').textContent='領用出庫時，請選擇領用員工或領用案場。';return}
     $('#saveButton').disabled=true; $('#formMessage').textContent='';
     try {
       const saved=await db.save(table,record,id);
