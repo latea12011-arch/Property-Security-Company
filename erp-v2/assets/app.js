@@ -172,7 +172,7 @@
     try {
       const saved=await db.save(table,record,id);
       if(table==='employees' && initialPassword && cloudEnabled){
-        const {data,error}=await client.functions.invoke('create-employee-account',{body:{employee_id:saved.id,password:initialPassword}});
+        const {data,error}=await client.functions.invoke('quick-worker',{body:{employee_id:saved.id,password:initialPassword}});
         if(error) throw error;
         if(!data?.ok) throw new Error(data?.error||'登入帳號建立失敗');
       }
