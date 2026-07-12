@@ -10,10 +10,10 @@
 
   const viewInfo = {
     dashboard: ['營運總覽', 'dashboard'], employees: ['員工管理', 'employees'], sites: ['案場管理', 'sites'],
-    schedules: ['勤務排班', 'schedules'], attendance: ['打卡紀錄', 'attendance'], supervisorInspections: ['督導巡查', 'supervisor_inspections'], leaves: ['請假審核', 'leave_requests'], complaints: ['反霸凌申訴', 'bullying_complaints'], payrollProfiles: ['薪資設定', 'employee_payroll_profiles'], advances: ['員工借支', 'salary_advances'], payroll: ['薪資明細', 'payroll_records'], terminations: ['離職證明', 'termination_certificates'], inventoryItems: ['庫存物品', 'inventory_items'], inventoryTransactions: ['入庫／領用紀錄', 'inventory_transactions'], auditLogs: ['操作紀錄', 'audit_logs'], announcements: ['公告管理','announcements']
+    schedules: ['勤務排班', 'schedules'], attendance: ['打卡紀錄', 'attendance'], supervisorInspections: ['督導巡查', 'supervisor_inspections'], leaves: ['請假審核', 'leave_requests'], complaints: ['反霸凌申訴', 'bullying_complaints'], payrollProfiles: ['薪資設定', 'employee_payroll_profiles'], advances: ['員工借支', 'salary_advances'], payroll: ['薪資明細', 'payroll_records'], terminations: ['離職證明', 'termination_certificates'], vendors: ['合作廠商', 'vendors'], inventoryItems: ['庫存物品', 'inventory_items'], inventoryTransactions: ['入庫／領用紀錄', 'inventory_transactions'], auditLogs: ['操作紀錄', 'audit_logs'], announcements: ['公告管理','announcements']
   };
-  const featureOptions=[['employees','員工管理'],['sites','案場管理'],['schedules','勤務排班'],['attendance','打卡紀錄'],['supervisorInspections','督導巡查'],['leaves','請假審核'],['complaints','反霸凌申訴'],['payrollProfiles','薪資設定'],['advances','員工借支'],['payroll','薪資明細'],['terminations','離職證明'],['inventoryItems','庫存物品'],['inventoryTransactions','入庫／領用紀錄'],['announcements','公告管理']];
-  const featurePresentation={employees:['人','人事管理'],sites:['場','營運管理'],schedules:['班','營運管理'],attendance:['卡','營運管理'],supervisorInspections:['巡','營運管理'],leaves:['假','人事管理'],complaints:['申','人事管理'],payrollProfiles:['薪','薪資行政'],advances:['借','薪資行政'],payroll:['單','薪資行政'],terminations:['離','薪資行政'],inventoryItems:['庫','庫存管理'],inventoryTransactions:['領','庫存管理'],announcements:['告','公告管理']};
+  const featureOptions=[['employees','員工管理'],['sites','案場管理'],['schedules','勤務排班'],['attendance','打卡紀錄'],['supervisorInspections','督導巡查'],['leaves','請假審核'],['complaints','反霸凌申訴'],['payrollProfiles','薪資設定'],['advances','員工借支'],['payroll','薪資明細'],['terminations','離職證明'],['vendors','合作廠商'],['inventoryItems','庫存物品'],['inventoryTransactions','入庫／領用紀錄'],['announcements','公告管理']];
+  const featurePresentation={employees:['人','人事管理'],sites:['場','營運管理'],schedules:['班','營運管理'],attendance:['卡','營運管理'],supervisorInspections:['巡','營運管理'],leaves:['假','人事管理'],complaints:['申','人事管理'],payrollProfiles:['薪','薪資行政'],advances:['借','薪資行政'],payroll:['單','薪資行政'],terminations:['離','薪資行政'],vendors:['商','採購庫存'],inventoryItems:['庫','採購庫存'],inventoryTransactions:['領','採購庫存'],announcements:['告','公告管理']};
 
   const fields = {
     employees: [
@@ -95,12 +95,18 @@
       ]],
       ['issue_date','開立日期','date',true],['certificate_no','證明書編號','text'],['note','補充說明','textarea']
     ],
+    vendors: [
+      ['vendor_code','廠商編號','text',true],['name','廠商名稱','text',true],['category','廠商類別','select',true,[['security_equipment','保全設備'],['uniform','制服／配件'],['cleaning','清潔用品'],['repair','修繕工程'],['fire_safety','消防設備'],['electromechanical','機電維護'],['staffing','人力支援'],['office','辦公用品'],['other','其他']]],
+      ['tax_id','統一編號','text'],['contact_name','主要聯絡人','text'],['contact_phone','聯絡電話','tel'],['contact_email','電子郵件','email'],['invoice_email','發票寄送信箱','email'],['address','公司地址','text'],
+      ['payment_terms','付款條件','select',true,[['cash_payment','現金'],['cod','貨到付款'],['net_30','月結30天'],['net_45','月結45天'],['net_60','月結60天'],['other','其他']]],['bank_name','往來銀行','text'],['bank_account_name','戶名','text'],['bank_account_last5','帳號末五碼','text'],
+      ['contract_start_date','合作開始日','date'],['contract_end_date','合約到期日','date'],['status','合作狀態','select',true,[['active','合作中'],['inactive','暫停／終止']]],['service_scope','服務／供應內容','textarea'],['note','備註','textarea']
+    ],
     inventory_items: [
       ['item_code','物品編號','text',true],['item_name','物品名稱','text',true],['category','分類','select',true,[['uniform','服裝配件'],['equipment','保全設備'],['traffic','交通／拒馬設備'],['office','辦公用品'],['cleaning','清潔用品'],['other','其他']]],
       ['specification','規格／型號','text'],['size','尺寸','text'],['unit','單位','text',true],['minimum_stock','安全庫存量','number',true],['storage_location','存放位置','text'],['status','狀態','select',true,[['active','啟用'],['inactive','停用']]],['note','備註','textarea']
     ],
     inventory_transactions: [
-      ['item_id','物品','relation:inventory_items',true],['transaction_type','異動類型','select',true,[['purchase','採購入庫'],['issue','領用出庫'],['return','退回入庫'],['adjust_in','盤點增加'],['adjust_out','盤點減少']]],['quantity','數量','number',true],['transaction_date','日期','date',true],
+      ['item_id','物品','relation:inventory_items',true],['transaction_type','異動類型','select',true,[['purchase','採購入庫'],['issue','領用出庫'],['return','退回入庫'],['adjust_in','盤點增加'],['adjust_out','盤點減少']]],['quantity','數量','number',true],['transaction_date','日期','date',true],['vendor_id','採購廠商','relation:vendors'],
       ['employee_id','領用員工（與案場擇一）','relation:employees'],['site_id','領用案場（與員工擇一）','relation:sites'],['receiver_name','實際領取人','text'],['purpose','用途','text'],['document_no','單據編號','text'],['note','備註','textarea']
     ],
     announcements:[['publisher','發布單位','text',true],['content','公告內容','textarea',true],['published_at','發布時間','datetime-local',true],['is_active','狀態','select',true,[['true','上架'],['false','下架']]]]
@@ -118,13 +124,14 @@
     salary_advances: [['advance_date','日期'],['employee_id','員工'],['amount','金額'],['repayment_month','扣回月份'],['status','狀態']],
     payroll_records: [['payroll_month','月份'],['employee_id','員工'],['gross_pay','應發'],['total_deduction','總扣款'],['net_pay','實發'],['status','狀態']],
     termination_certificates: [['certificate_no','證明編號'],['employee_id','員工'],['separation_date','離職日期'],['issue_date','開立日期']],
+    vendors: [['vendor_code','編號'],['name','廠商名稱'],['category','類別'],['tax_id','統編'],['contact_name','聯絡人'],['contact_phone','電話'],['payment_terms','付款條件'],['contract_end_date','合約到期'],['status','狀態']],
     inventory_items: [['item_code','編號'],['item_name','物品'],['category','分類'],['specification','規格'],['size','尺寸'],['current_stock','現有庫存'],['unit','單位'],['minimum_stock','安全庫存']],
-    inventory_transactions: [['transaction_date','日期'],['transaction_type','類型'],['item_id','物品'],['quantity','數量'],['employee_id','員工'],['site_id','案場'],['receiver_name','領取人']],
+    inventory_transactions: [['transaction_date','日期'],['transaction_type','類型'],['item_id','物品'],['quantity','數量'],['vendor_id','廠商'],['employee_id','員工'],['site_id','案場'],['receiver_name','領取人']],
     audit_logs: [['created_at','操作時間'],['actor_name','操作者'],['action','動作'],['table_name','資料表'],['record_id','資料編號']],
     announcements:[['published_at','發布時間'],['publisher','發布單位'],['content','內容'],['is_active','狀態']]
   };
 
-  let state = { view: 'dashboard', user: null, editing: null, relations: {employees:[],sites:[],inventory_items:[]}, scheduleMonth: new Date().toISOString().slice(0,7), scheduleEmployee: '', attendanceMonth: new Date().toISOString().slice(0,7), attendanceSite: '' };
+  let state = { view: 'dashboard', user: null, editing: null, relations: {employees:[],sites:[],inventory_items:[],vendors:[]}, scheduleMonth: new Date().toISOString().slice(0,7), scheduleEmployee: '', attendanceMonth: new Date().toISOString().slice(0,7), attendanceSite: '' };
 
   function seedDemo() {
     const today = new Date().toISOString().slice(0,10);
@@ -138,7 +145,8 @@
       schedules:[{id:'sc1',employee_id:'e2',site_id:'s1',work_date:today,shift_type:'day',start_time:'07:00',end_time:'19:00'}],
       attendance:[{id:'a1',employee_id:'e2',site_id:'s1',work_date:today,clock_in:`${today}T06:55`,clock_out:'',status:'normal'}],
       leave_requests:[{id:'l1',employee_id:'e2',leave_type:'annual',start_date:today,end_date:today,reason:'家庭事務',status:'pending'}],
-      supervisor_inspections:[{id:'si1',inspection_date:today,inspection_time:'10:30',site_id:'s1',employee_id:'e1',inspection_type:'routine',overall_result:'improvement_required',staff_discipline:'good',post_records:'needs_improvement',equipment_status:'good',environment_safety:'good',findings:'值勤簿冊部分欄位未完整填寫。',corrective_action:'請案場主管於期限前完成補正並拍照回報。',due_date:today,follow_up_status:'pending',site_contact:'陳志宏'}]
+      supervisor_inspections:[{id:'si1',inspection_date:today,inspection_time:'10:30',site_id:'s1',employee_id:'e1',inspection_type:'routine',overall_result:'improvement_required',staff_discipline:'good',post_records:'needs_improvement',equipment_status:'good',environment_safety:'good',findings:'值勤簿冊部分欄位未完整填寫。',corrective_action:'請案場主管於期限前完成補正並拍照回報。',due_date:today,follow_up_status:'pending',site_contact:'陳志宏'}],
+      vendors:[{id:'v1',vendor_code:'V001',name:'安心保全設備行',category:'security_equipment',tax_id:'12345678',contact_name:'林先生',contact_phone:'02-2345-6789',payment_terms:'net_30',status:'active'}]
     };
   }
 
@@ -173,13 +181,14 @@
 
   const esc = value => String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
   const labels = {guard:'保全人員',site_manager:'案場主管',hr:'人事',admin:'管理員',active:'啟用／在職',inactive:'停用',full_time:'正職人員',mobile:'機動人員',day:'日班',night:'夜班',custom:'自訂',normal:'正常',late:'遲到',missing:'缺卡',annual:'特休',personal:'事假',sick:'病假',official:'公假',marriage:'婚假',bereavement:'喪假',maternity:'產假',paternity:'陪產檢及陪產假',menstrual:'生理假',occupational:'公傷病假',compensatory:'補休',unpaid:'無薪假',typhoon_unpaid:'天然災害未出勤（不支薪）',other:'其他',uniform:'服裝配件',equipment:'保全設備',traffic:'交通／拒馬設備',office:'辦公用品',cleaning:'清潔用品',purchase:'採購入庫',issue:'領用出庫',return:'退回入庫',adjust_in:'盤點增加',adjust_out:'盤點減少',pending:'待審核',approved:'已核准',rejected:'已退回',cancelled:'已取消',deducted:'已扣回',draft:'草稿',confirmed:'已確認',paid:'已發薪',submitted:'已送出',processing:'處理中',resolved:'已處理',closed:'已結案',not_started:'尚未洽談',contacting:'聯絡中',negotiating:'議約中',renewed:'已續約',not_renewing:'不續約',true:'是',false:'否'};
-  Object.assign(labels,{routine:'例行巡查',night:'夜間巡查',cash:'現金班（當日領現）',payroll_delivery:'薪資發放',pass:'合格',improvement_required:'限期改善',critical:'重大缺失',good:'良好',needs_improvement:'待改善',not_applicable:'不適用',none:'無須改善',in_progress:'改善中',verified:'已複查完成'});
+  Object.assign(labels,{routine:'例行巡查',night:'夜間巡查',cash:'現金班（當日領現）',cash_payment:'現金',payroll_delivery:'薪資發放',pass:'合格',improvement_required:'限期改善',critical:'重大缺失',good:'良好',needs_improvement:'待改善',not_applicable:'不適用',none:'無須改善',in_progress:'改善中',verified:'已複查完成',security_equipment:'保全設備',repair:'修繕工程',fire_safety:'消防設備',electromechanical:'機電維護',staffing:'人力支援',net_30:'月結30天',net_45:'月結45天',net_60:'月結60天',cod:'貨到付款'});
   const format = (key,value) => {
     if ((key==='employee_id'||key==='site_id') && value) {
       const list=key==='employee_id'?state.relations.employees:state.relations.sites;
       return list.find(row=>row.id===value)?.[key==='employee_id'?'full_name':'name'] || value;
     }
     if(key==='item_id'&&value)return state.relations.inventory_items.find(row=>row.id===value)?.item_name||value;
+    if(key==='vendor_id'&&value)return state.relations.vendors.find(row=>row.id===value)?.name||value;
     if(key==='action')return({INSERT:'新增',UPDATE:'修改',DELETE:'刪除'})[value]||value;
     if (key==='start_time' && value) return value;
     if ((key==='clock_in'||key==='clock_out') && value) return value.replace('T',' ');
@@ -190,8 +199,8 @@
   const cellHtml = (key,value) => key==='proof_path'||key==='evidence_path' ? (value?`<button class="mini-button" data-private-file="${esc(value)}">開啟附件</button>`:'—') : isBadge(key)?badge(value):esc(format(key,value));
 
   async function loadRelations() {
-    const canInventory=state.user?.role==='admin'||state.user?.permissions?.some(x=>['inventoryItems','inventoryTransactions'].includes(x));
-    [state.relations.employees,state.relations.sites,state.relations.inventory_items]=await Promise.all([db.list('employees'),db.list('sites'),canInventory?db.list('inventory_items'):Promise.resolve([])]);
+    const canInventory=state.user?.role==='admin'||state.user?.permissions?.some(x=>['vendors','inventoryItems','inventoryTransactions'].includes(x));
+    [state.relations.employees,state.relations.sites,state.relations.inventory_items,state.relations.vendors]=await Promise.all([db.list('employees'),db.list('sites'),canInventory?db.list('inventory_items'):Promise.resolve([]),canInventory?db.list('vendors'):Promise.resolve([])]);
   }
 
   async function renderDashboard() {
@@ -283,6 +292,7 @@
     if(table==='payroll_records'&&!record) record={payroll_month:new Date().toISOString().slice(0,7),basic_salary:0,overtime_pay:0,allowances:0,personal_leave_hours:0,sick_leave_hours:0,unpaid_leave_hours:0,labor_insurance:0,health_insurance:0,group_insurance:0,court_deduction:0,advance_deduction:0,other_deduction:0,status:'draft'};
     if(table==='inventory_items'&&!record)record={unit:'個',minimum_stock:0,status:'active',category:'other'};
     if(table==='inventory_transactions'&&!record)record={transaction_date:new Date().toISOString().slice(0,10),transaction_type:'issue',quantity:1};
+    if(table==='vendors'&&!record)record={category:'other',payment_terms:'net_30',status:'active'};
     if(table==='supervisor_inspections'&&!record){const now=new Date();record={inspection_date:now.toISOString().slice(0,10),inspection_time:now.toTimeString().slice(0,5),employee_id:state.user?.employeeId||'',inspection_type:'routine',overall_result:'pass',staff_discipline:'good',post_records:'good',equipment_status:'good',environment_safety:'good',follow_up_status:'none'};}
     if(table==='employees') {
       const assigned=[],permissions=[];
@@ -322,6 +332,7 @@
     if(table==='site_assignments') record.is_manager=record.is_manager==='true';
     if(table==='inventory_transactions'&&record.employee_id&&record.site_id){$('#formMessage').textContent='領用員工與領用案場只能選擇其中一項。';return}
     if(table==='inventory_transactions'&&record.transaction_type==='issue'&&!record.employee_id&&!record.site_id){$('#formMessage').textContent='領用出庫時，請選擇領用員工或領用案場。';return}
+    if(table==='inventory_transactions'&&record.transaction_type==='purchase'&&!record.vendor_id){$('#formMessage').textContent='採購入庫時，請選擇採購廠商。';return}
     if(table==='supervisor_inspections'&&record.overall_result!=='pass'&&record.follow_up_status==='none'){$('#formMessage').textContent='巡查結果有缺失時，改善追蹤不可選擇「無須改善」。';return}
     if(table==='supervisor_inspections'&&record.follow_up_status==='verified'&&!record.resolved_at){$('#formMessage').textContent='已複查完成時，請填寫完成改善日期。';return}
     $('#saveButton').disabled=true; $('#formMessage').textContent='';
