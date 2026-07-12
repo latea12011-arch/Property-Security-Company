@@ -255,7 +255,7 @@
     const rows=await db.list(table); const cols=columns[table];
     const canAdd=!['bullying_complaints','audit_logs'].includes(table);
     $('#content').innerHTML=`<article class="panel"><div class="panel-head"><div><h3>${viewInfo[view][0]}</h3><span class="muted">共 ${rows.length} 筆${table==='bullying_complaints'?'（保密資料）':''}</span></div>${canAdd?'<button class="btn primary" id="addRecord">＋ 新增</button>':''}</div>
-      <div class="table-wrap"><table><thead><tr>${cols.map(x=>`<th>${x[1]}</th>`).join('')}<th>操作</th></tr></thead><tbody>${rows.length?rows.map(row=>`<tr>${cols.map(([key])=>`<td>${cellHtml(key,row[key])}</td>`).join('')}<td><div class="action-row"><button class="mini-button" data-edit="${esc(row.id)}">編輯</button>${['payroll_records','termination_certificates','salary_advances','inventory_transactions'].includes(table)?`<button class="mini-button" data-print="${esc(row.id)}">列印</button>`:''}${table==='bullying_complaints'?'':`<button class="mini-button danger" data-delete="${esc(row.id)}">刪除</button>`}</div></td></tr>`).join(''):`<tr><td colspan="${cols.length+1}" class="empty">尚無資料。</td></tr>`}</tbody></table></div></article>`;
+      <div class="table-wrap"><table><thead><tr>${cols.map(x=>`<th>${x[1]}</th>`).join('')}<th>操作</th></tr></thead><tbody>${rows.length?rows.map(row=>`<tr>${cols.map(([key])=>`<td>${cellHtml(key,row[key])}</td>`).join('')}<td><div class="action-row"><button class="mini-button" data-edit="${esc(row.id)}">編輯</button>${['payroll_records','termination_certificates','salary_advances','inventory_transactions'].includes(table)?`<button class="mini-button" data-print="${esc(row.id)}">列印</button>`:''}${table==='bullying_complaints'?'':`<button class="mini-button danger" data-delete="${esc(row.id)}">${table==='employees'?'停用':'刪除'}</button>`}</div></td></tr>`).join(''):`<tr><td colspan="${cols.length+1}" class="empty">尚無資料。</td></tr>`}</tbody></table></div></article>`;
     if(table==='audit_logs'){$$('.action-row').forEach(row=>row.innerHTML='<span class="muted">唯讀</span>');const download=document.createElement('button'),archive=document.createElement('button');download.className='btn ghost';download.textContent='下載備份';download.onclick=()=>{if(downloadAuditArchive(rows))showNotice(`已下載 ${rows.length} 筆操作紀錄。`,'success')};archive.className='btn primary';archive.textContent='下載並清除雲端';archive.onclick=()=>archiveAndClearAuditLogs(rows);$('.panel-head').append(download,archive);}
     if(canAdd) $('#addRecord').onclick=()=>openDialog(table,null);
     if(table==='inventory_transactions'){const batch=document.createElement('button');batch.className='btn primary';batch.textContent='＋ 批次領用';batch.onclick=openBatchIssueDialog;$('.panel-head').appendChild(batch);}
@@ -356,6 +356,10 @@
   }
 
   async function deleteRecord(table,id) {
+    if(table==='employees'){
+      if(!confirm('此員工的排班、打卡與薪資歷史必須保留。確定將員工設為「離職／停用」嗎？'))return;
+      try{await db.save('employees',{status:'inactive'},id);await loadRelations();await renderCurrent();showNotice('員工已停用，歷史紀錄仍完整保留。','success')}catch(error){showNotice(`停用失敗：${error.message}`,'error')}return;
+    }
     if(!confirm('確定刪除這筆資料？此動作無法復原。')) return;
     try { await db.remove(table,id); await renderCurrent(); showNotice('資料已刪除。'); } catch(error) { showNotice(`刪除失敗：${error.message}`,'error'); }
   }
