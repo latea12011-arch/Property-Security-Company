@@ -222,8 +222,9 @@
         <article class="panel"><div class="panel-head"><h3>今日勤務</h3><button class="mini-button" data-go="schedules">查看全部</button></div>${quickList(todaySchedules,'schedule')}</article>
         <article class="panel"><div class="panel-head"><h3>待辦事項</h3><button class="mini-button" data-go="leaves">前往審核</button></div>${quickList(pending,'leave')}</article>
       </div>
-      <article class="panel contract-alerts"><div class="panel-head"><div><h3>合約續約提醒</h3><span class="muted">依各案場設定的提醒天數顯示</span></div><button class="mini-button" data-go="sites">案場管理</button></div><div class="quick-list">${contractAlerts.length?contractAlerts.map(site=>{const days=Math.ceil((new Date(`${site.contract_end_date}T00:00:00`)-todayDate)/86400000),text=days<0?`已逾期 ${Math.abs(days)} 天`:days===0?'今天到期':`剩餘 ${days} 天`;return`<div class="quick-item contract-alert ${days<0?'overdue':''}"><div><strong>${esc(site.name)}</strong><small>合約到期：${esc(site.contract_end_date)} · ${esc(labels[site.renewal_status]||site.renewal_status)}</small></div><span class="badge ${days<=30?'danger':'warning'}">${text}</span></div>`}).join(''):'<div class="empty">目前沒有即將到期的合約</div>'}</div></article>`;
+      <article class="panel contract-alerts"><div class="panel-head"><div><h3>合約續約提醒</h3><span class="muted">依各案場設定的提醒天數顯示</span></div><button class="mini-button" data-go="sites">案場管理</button></div><div class="quick-list">${contractAlerts.length?contractAlerts.map(site=>{const days=Math.ceil((new Date(`${site.contract_end_date}T00:00:00`)-todayDate)/86400000),text=days<0?`已逾期 ${Math.abs(days)} 天`:days===0?'今天到期':`剩餘 ${days} 天`;return`<div class="quick-item contract-alert ${days<0?'overdue':''}"><div><strong>${esc(site.name)}</strong><small>合約到期：${esc(site.contract_end_date)} · ${esc(labels[site.renewal_status]||site.renewal_status)}</small></div><span class="badge ${days<=30?'danger':'warning'}">${text}</span></div>`}).join(''):'<div class="empty">目前沒有即將到期的合約</div>'}</div></article><section id="dashboardCalendar"></section>`;
     $$('[data-go]').forEach(button=>button.onclick=()=>switchView(button.dataset.go));
+    window.ERPCalendar?.mount();
   }
 
   function quickList(rows,type) {
@@ -416,7 +417,7 @@
   function enterApp(demo=false) {
     if(demo) state.user={name:'示範管理員',email:'demo@local',role:'admin',permissions:[]};
     $('#loginView').hidden=true; $('#appView').hidden=false; $('#userName').textContent=state.user.name; $('#userInitial').textContent=state.user.name.slice(0,1);
-    $('#modeLabel').textContent=cloudEnabled&&!demo?'雲端模式':'本機示範模式';applyNavigationPermissions();switchView('dashboard');
+    $('#modeLabel').textContent=cloudEnabled&&!demo?'雲端模式':'本機示範模式';window.ERPCalendar?.configure({client:demo?null:client,cloud:cloudEnabled&&!demo,notice:showNotice});applyNavigationPermissions();switchView('dashboard');
   }
 
   async function logout() { if(cloudEnabled) await client.auth.signOut(); state.user=null; $('#appView').hidden=true; $('#loginView').hidden=false; }
