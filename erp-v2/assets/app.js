@@ -18,7 +18,7 @@
 
   const fields = {
     employees: [
-      ['employee_no','員工編號','text',true],['full_name','姓名','text',true],['phone','電話','tel'],['initial_password','初始登入密碼','password'],
+      ['employee_no','員工編號','text',true],['full_name','姓名','text',true],['phone','電話','tel'],['initial_password','初始登入密碼（至少 8 碼）','password'],
       ['emergency_contact_name','緊急聯絡人','text'],['emergency_contact_phone','緊急聯絡電話','tel'],['hire_date','入職日期','date'],['employment_type','身分類別','select',true,[['full_time','正職人員'],['mobile','機動人員']]],
       ['assigned_sites','可排班案場','site-picker'],
       ['job_title','職稱','select',true,[['保全員','保全員'],['機動保全員','機動保全員'],['案場主任','案場主任'],['總幹事','總幹事'],['社區秘書','社區秘書'],['勤務督導','勤務督導'],['行政專員','行政專員'],['人事專員','人事專員'],['會計專員','會計專員'],['業務人員','業務人員'],['業務經理','業務經理'],['部門主管','部門主管'],['總經理','總經理']]],
@@ -326,12 +326,21 @@
 
   function initAutomaticInsuranceRates(){const salary=$('[name="basic_salary"]'),labor=$('[name="labor_insurance"]'),health=$('[name="health_insurance"]');if(!salary||!labor||!health)return;const laborGrades=[29500,30300,31800,33300,34800,36300,38200,40100,42000,43900,45800],healthGrades=[29500,30300,31800,33300,34800,36300,38200,40100,42000,43900,45800,48200,50600,53000,55400,57800,60800,63800,66800,69800,72800,76500,80200,83900,87600,92100,96600,101100,105600,110100,115500,120900,126300,131700,137100,142500,147900,150000,156400,162800,169200,175600,182000,189500,197000,204500,212000,219500],grade=(amount,list)=>list.find(x=>amount<=x)||list[list.length-1];const box=document.createElement('div');box.className='wide insurance-auto-box';box.innerHTML='<strong>115 年勞健保級距自動計算</strong><label>健保眷屬人數（不含本人）<select id="healthDependents"><option value="0">0 人</option><option value="1">1 人</option><option value="2">2 人</option><option value="3">3 人以上</option></select></label><small id="insuranceAutoInfo"></small>';$('#formFields').prepend(box);const dependents=box.querySelector('#healthDependents'),info=box.querySelector('#insuranceAutoInfo');const calculate=(apply=true)=>{const monthly=Number(salary.value||0);if(!monthly){info.textContent='輸入月薪後自動判斷投保級距。';return}const laborGrade=grade(Math.max(monthly,29500),laborGrades),healthGrade=grade(Math.max(monthly,29500),healthGrades),family=Math.min(3,Number(dependents.value||0)),laborSelf=Math.round(laborGrade*.115*.2)+Math.round(laborGrade*.01*.2),healthSelf=Math.round(healthGrade*.0517*.3*(1+family));if(apply){labor.value=String(laborSelf);health.value=String(healthSelf)}info.textContent=`月薪 ${monthly.toLocaleString('zh-TW')} 元 → 勞保級距 ${laborGrade.toLocaleString('zh-TW')} 元，自付 ${laborSelf.toLocaleString('zh-TW')} 元；健保級距 ${healthGrade.toLocaleString('zh-TW')} 元，含 ${family} 名眷屬自付 ${healthSelf.toLocaleString('zh-TW')} 元。實際金額仍可手動調整。`;};salary.addEventListener('input',()=>calculate(true));dependents.addEventListener('change',()=>calculate(true));calculate(!state.editing.id||(!Number(labor.value)&&!Number(health.value)));}
 
+  async function edgeFunctionErrorMessage(error) {
+    try {
+      const response=error?.context;
+      if(response?.clone){const payload=await response.clone().json();if(payload?.error)return payload.error;if(payload?.message)return payload.message;}
+    } catch (_) {}
+    return error?.message||'登入帳號建立失敗';
+  }
+
   async function saveRecord(event) {
     event.preventDefault(); const {table,id}=state.editing; const form=new FormData(event.currentTarget); const record=Object.fromEntries(form.entries());
     Object.keys(record).forEach(key=>{if(record[key]==='')record[key]=null});
     const assignedSites=table==='employees'?form.getAll('assigned_sites'):[]; delete record.assigned_sites;
     const featurePermissions=table==='employees'?form.getAll('feature_permissions'):[];delete record.feature_permissions;
     const initialPassword=record.initial_password; delete record.initial_password;
+    if(table==='employees'&&initialPassword&&String(initialPassword).length<8){$('#formMessage').textContent='初始登入密碼至少需要 8 個字元；若暫時不建立登入帳號，請將密碼欄留空。';return}
     if(table==='employees'){delete record.annual_leave_entitlement_hours;delete record.annual_leave_used_hours;delete record.annual_leave_hours;delete record.annual_leave_period_start;delete record.annual_leave_period_end;}
     if(table==='employee_payroll_profiles'&&cloudEnabled){delete record.personal_leave_day_rate;delete record.sick_leave_day_rate;}
     if(table==='announcements') record.is_active=record.is_active==='true';
@@ -352,8 +361,8 @@
       }
       if(table==='employees' && initialPassword && cloudEnabled){
         const {data,error}=await client.functions.invoke('quick-worker',{body:{employee_id:saved.id,password:initialPassword}});
-        if(error) throw error;
-        if(!data?.ok) throw new Error(data?.error||'登入帳號建立失敗');
+        const accountError=error?await edgeFunctionErrorMessage(error):data?.ok?'':data?.error||'登入帳號建立失敗';
+        if(accountError){$('#recordDialog').close();await renderCurrent();showNotice(`員工資料已儲存，但登入帳號建立失敗：${accountError}`,'error');return}
       }
       $('#recordDialog').close(); await renderCurrent(); showNotice(table==='employees'&&initialPassword?'員工與登入帳號已建立。':'資料已儲存。','success');
     }
