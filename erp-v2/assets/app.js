@@ -294,6 +294,7 @@
 
   async function openDialog(table,record) {
     state.editing={table,id:record?.id||null};
+    if(table==='employees'&&!record)record={employment_type:'full_time',job_title:'保全員',standard_daily_hours:8,cash_shift_default_amount:0,role:'guard',status:'active'};
     if(table==='payroll_records'&&!record) record={payroll_month:new Date().toISOString().slice(0,7),basic_salary:0,overtime_pay:0,allowances:0,personal_leave_hours:0,sick_leave_hours:0,unpaid_leave_hours:0,labor_insurance:0,health_insurance:0,group_insurance:0,court_deduction:0,advance_deduction:0,other_deduction:0,status:'draft'};
     if(table==='inventory_items'&&!record)record={unit:'個',minimum_stock:0,status:'active',category:'other'};
     if(table==='inventory_transactions'&&!record)record={transaction_date:new Date().toISOString().slice(0,10),transaction_type:'issue',quantity:1};
@@ -345,7 +346,7 @@
     const featurePermissions=table==='employees'?form.getAll('feature_permissions'):[];delete record.feature_permissions;
     const initialPassword=record.initial_password; delete record.initial_password;
     if(table==='employees'&&initialPassword&&String(initialPassword).length<8){$('#formMessage').textContent='初始登入密碼至少需要 8 個字元；若暫時不建立登入帳號，請將密碼欄留空。';return}
-    if(table==='employees'){delete record.annual_leave_entitlement_hours;delete record.annual_leave_used_hours;delete record.annual_leave_hours;delete record.annual_leave_period_start;delete record.annual_leave_period_end;}
+    if(table==='employees'){record.cash_shift_default_amount=Number(record.cash_shift_default_amount||0);record.standard_daily_hours=Number(record.standard_daily_hours||8);delete record.annual_leave_entitlement_hours;delete record.annual_leave_used_hours;delete record.annual_leave_hours;delete record.annual_leave_period_start;delete record.annual_leave_period_end;}
     if(table==='employee_payroll_profiles'&&cloudEnabled){delete record.personal_leave_day_rate;delete record.sick_leave_day_rate;}
     if(table==='announcements') record.is_active=record.is_active==='true';
     if(table==='site_assignments') record.is_manager=record.is_manager==='true';
