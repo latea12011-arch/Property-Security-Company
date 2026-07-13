@@ -34,6 +34,12 @@ declare
   allowed_m numeric;
 begin
   if punch_type not in ('in','out') then raise exception '無效的打卡類型'; end if;
+  if punch_time > now()+interval '10 minutes' or punch_time < now()-interval '48 hours' then
+    raise exception '打卡時間與伺服器時間差距過大，請開啟自動校時後重試或聯絡行政人員';
+  end if;
+  if coalesce(punch_accuracy,0)>300 then
+    raise exception 'GPS 定位精度不足（誤差 % 公尺），請移至戶外或窗邊重新定位',round(punch_accuracy);
+  end if;
   employee_uuid := public.current_employee_id();
   if employee_uuid is null then raise exception '登入帳號尚未綁定員工'; end if;
 
@@ -57,7 +63,8 @@ begin
     power(sin(radians((punch_lat-site_row.latitude)/2)),2)+
     cos(radians(site_row.latitude))*cos(radians(punch_lat))*power(sin(radians((punch_lng-site_row.longitude)/2)),2)
   )));
-  allowed_m := coalesce(site_row.punch_radius_m,200)+greatest(coalesce(punch_accuracy,0),0);
+  -- 定位誤差最多只放寬 100 公尺，避免修改用戶端數值繞過案場範圍。
+  allowed_m := coalesce(site_row.punch_radius_m,200)+least(greatest(coalesce(punch_accuracy,0),0),100);
   if distance_m>allowed_m then raise exception '不在案場打卡範圍內（距離約 % 公尺）',round(distance_m); end if;
 
   select * into attendance_row from public.attendance
