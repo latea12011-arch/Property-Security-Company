@@ -28,20 +28,42 @@ Deno.serve(async (req) => {
     if (employeeError || !employee) throw new Error('找不到員工資料')
 
     const email = `${employee.employee_no.trim().toLowerCase()}@employee.hongjia.local`
-    let authUserId = employee.user_id
+    let authUserId = employee.user_id as string | null
     if (authUserId) {
-      const { error } = await admin.auth.admin.updateUserById(authUserId, { password, email, email_confirm: true, user_metadata: { full_name: employee.full_name } })
+      const { data: existing } = await admin.auth.admin.getUserById(authUserId)
+      if (!existing?.user) authUserId = null
+    }
+
+    if (!authUserId) {
+      for (let page = 1; page <= 10 && !authUserId; page += 1) {
+        const { data: users, error: listError } = await admin.auth.admin.listUsers({ page, perPage: 1000 })
+        if (listError) throw listError
+        authUserId = users.users.find((item) => item.email?.toLowerCase() === email)?.id || null
+        if (users.users.length < 1000) break
+      }
+    }
+
+    if (authUserId) {
+      const { error } = await admin.auth.admin.updateUserById(authUserId, {
+        password,
+        email,
+        email_confirm: true,
+        ban_duration: 'none',
+        user_metadata: { full_name: employee.full_name },
+      })
       if (error) throw error
     } else {
       const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: employee.full_name } })
       if (error) throw error
       authUserId = data.user.id
-      const { error: linkError } = await admin.from('employees').update({ user_id: authUserId }).eq('id', employee.id)
-      if (linkError) throw linkError
     }
+
+    const { error: linkError } = await admin.from('employees').update({ user_id: authUserId, status: 'active' }).eq('id', employee.id)
+    if (linkError) throw linkError
 
     return Response.json({ ok: true, user_id: authUserId }, { headers: corsHeaders })
   } catch (error) {
-    return Response.json({ ok: false, error: error instanceof Error ? error.message : '未知錯誤' }, { status: 400, headers: corsHeaders })
+    const message = error instanceof Error ? error.message : typeof error === 'object' ? JSON.stringify(error) : String(error || '未知錯誤')
+    return Response.json({ ok: false, error: message === '{}' ? '登入帳號重新啟用失敗，請查看 Edge Function 記錄' : message }, { status: 400, headers: corsHeaders })
   }
 })

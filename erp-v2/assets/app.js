@@ -334,9 +334,9 @@
   async function edgeFunctionErrorMessage(error) {
     try {
       const response=error?.context;
-      if(response?.clone){const payload=await response.clone().json();if(payload?.error)return payload.error;if(payload?.message)return payload.message;}
+      if(response?.clone){const payload=await response.clone().json();const detail=payload?.error??payload?.message;if(typeof detail==='string'&&detail&&detail!=='{}')return detail;if(detail&&typeof detail==='object')return JSON.stringify(detail);if(response.status)return `登入帳號服務回傳 HTTP ${response.status}`;}
     } catch (_) {}
-    return error?.message||'登入帳號建立失敗';
+    return error?.message&&error.message!=='Edge Function returned a non-2xx status code'?error.message:'登入帳號服務發生錯誤，請確認 Edge Function 已更新';
   }
 
   async function saveRecord(event) {
