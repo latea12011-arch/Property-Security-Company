@@ -273,6 +273,7 @@
     record = record || {};
     const value=record[name] ?? '';
     if(type==='textarea') return `<label class="wide">${label}<textarea name="${name}" ${required?'required':''}>${esc(value)}</textarea></label>`;
+    if(type==='password'){const configured=Boolean(record.user_id);return`<label class="password-field">${label}<div class="password-control"><input name="${name}" type="password" value="" autocomplete="new-password" placeholder="${configured?'留空即保留目前密碼':'請輸入至少 8 碼'}"><button type="button" class="password-toggle" aria-label="顯示密碼">顯示</button></div><small class="password-state" data-configured="${configured}">${configured?'已設定登入密碼；為保障安全無法讀取原密碼，留空不會變更。':'尚未設定登入密碼；可輸入新密碼建立登入帳號。'}</small></label>`;}
     if(type==='site-picker') {
       const selected=new Set(Array.isArray(value)?value:[]);
       return `<fieldset class="wide site-picker"><legend>${label}</legend><div class="site-picker-toolbar"><input type="search" class="site-search" placeholder="輸入案場名稱或代碼搜尋"><button type="button" class="mini-button select-visible-sites" disabled>選取搜尋結果</button><button type="button" class="mini-button clear-sites">清除全部</button></div><div class="site-picker-summary">已選 <strong class="selected-site-count">${selected.size}</strong> 個案場<div class="selected-site-chips"></div></div><div class="site-search-hint">輸入關鍵字後，才會顯示可勾選的案場。</div><div class="site-picker-options">${state.relations.sites.map(site=>`<label class="site-picker-option" data-search="${esc(`${site.code||''} ${site.name}`.toLowerCase())}" hidden><input type="checkbox" name="${name}" value="${esc(site.id)}" data-label="${esc(site.name)}" ${selected.has(site.id)?'checked':''}><span><b>${esc(site.name)}</b><small>${esc(site.code||'')}</small></span></label>`).join('')||'<span class="muted">請先建立案場</span>'}</div></fieldset>`;
@@ -305,12 +306,15 @@
     }
     $('#dialogTitle').textContent=`${record?'編輯':'新增'}${viewInfo[Object.keys(viewInfo).find(k=>viewInfo[k][1]===table)]?.[0]||'資料'}`;
     $('#formFields').innerHTML=fields[table].map(field=>inputFor(field,record)).join('');
+    initPasswordControl();
     initSitePicker();
     if(table==='payroll_records'&&!state.editing.id) initPayrollAutoFill();
     if(table==='leave_requests') initLeaveBalanceInfo();
     if(table==='employee_payroll_profiles'){initAutomaticLeaveRates();initAutomaticInsuranceRates();}
     $('#formMessage').textContent=''; $('#recordDialog').showModal();
   }
+
+  function initPasswordControl(){const input=$('.password-control input'),toggle=$('.password-toggle'),status=$('.password-state');if(!input||!toggle||!status)return;toggle.onclick=()=>{const showing=input.type==='text';input.type=showing?'password':'text';toggle.textContent=showing?'顯示':'隱藏';toggle.setAttribute('aria-label',showing?'顯示密碼':'隱藏密碼')};input.oninput=()=>{status.textContent=input.value?`將設定新的登入密碼（目前 ${input.value.length} 碼）`:status.dataset.configured==='true'?'已設定登入密碼；留空不會變更。':'尚未設定登入密碼。';status.classList.toggle('warning',Boolean(input.value)&&input.value.length<8)};}
 
   function initSitePicker(){
     const picker=$('.site-picker');if(!picker)return;const search=picker.querySelector('.site-search'),options=[...picker.querySelectorAll('.site-picker-option')],count=picker.querySelector('.selected-site-count'),chips=picker.querySelector('.selected-site-chips'),hint=picker.querySelector('.site-search-hint'),selectVisible=picker.querySelector('.select-visible-sites');
