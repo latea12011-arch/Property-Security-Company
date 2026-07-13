@@ -21,7 +21,7 @@
       ['employee_no','員工編號','text',true],['full_name','姓名','text',true],['phone','電話','tel'],['initial_password','初始登入密碼','password'],
       ['emergency_contact_name','緊急聯絡人','text'],['emergency_contact_phone','緊急聯絡電話','tel'],['hire_date','入職日期','date'],['employment_type','身分類別','select',true,[['full_time','正職人員'],['mobile','機動人員']]],
       ['assigned_sites','可排班案場','site-picker'],
-      ['job_title','職稱','select',true,[['保全員','保全員'],['機動保全員','機動保全員'],['案場主任','案場主任'],['總幹事','總幹事'],['社區秘書','社區秘書'],['勤務督導','勤務督導'],['行政專員','行政專員'],['人事專員','人事專員'],['會計專員','會計專員'],['部門主管','部門主管'],['總經理','總經理']]],
+      ['job_title','職稱','select',true,[['保全員','保全員'],['機動保全員','機動保全員'],['案場主任','案場主任'],['總幹事','總幹事'],['社區秘書','社區秘書'],['勤務督導','勤務督導'],['行政專員','行政專員'],['人事專員','人事專員'],['會計專員','會計專員'],['業務人員','業務人員'],['業務經理','業務經理'],['部門主管','部門主管'],['總經理','總經理']]],
       ['standard_daily_hours','標準每日工時','number',true],
       ['cash_shift_default_amount','現金班預設日薪','number'],
       ['annual_leave_entitlement_hours','本期特休總時數（自動）','readonly'],['annual_leave_used_hours','本期已休時數（自動）','readonly'],['annual_leave_hours','本期剩餘時數（自動）','readonly'],
