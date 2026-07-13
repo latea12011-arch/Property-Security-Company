@@ -432,7 +432,7 @@
   async function logout() { if(cloudEnabled) await client.auth.signOut(); state.user=null; $('#appView').hidden=true; $('#loginView').hidden=false; }
 
   $('#loginForm').addEventListener('submit',async event=>{event.preventDefault();$('#loginMessage').textContent='';try{await login($('#email').value,$('#password').value)}catch(error){$('#loginMessage').textContent=error.message}});
-  $('#demoButton').onclick=()=>enterApp(true); $('#logoutButton').onclick=logout; $('#recordForm').addEventListener('submit',saveRecord);
+  $('#demoButton').onclick=()=>enterApp(true); $('#logoutButton').onclick=logout; $('#mobileLogoutButton').onclick=()=>{closeMobileMore();logout()}; $('#recordForm').addEventListener('submit',saveRecord);
   $$('[data-close-dialog]').forEach(button=>button.onclick=()=>$('#recordDialog').close());
   $$('[data-view]').forEach(button=>button.onclick=()=>switchView(button.dataset.view));
   $('#mobileMoreButton').onclick=()=>{const backdrop=$('#mobileMoreBackdrop'),open=backdrop.hidden;backdrop.hidden=!open;$('#mobileMoreButton').setAttribute('aria-expanded',String(open))};$('#mobileMoreClose').onclick=closeMobileMore;$('#mobileMoreBackdrop').onclick=event=>{if(event.target===$('#mobileMoreBackdrop'))closeMobileMore()};
