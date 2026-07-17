@@ -7,6 +7,7 @@
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
   const demoKey = 'hongjia_erp_demo_v2';
+  let demo = false;
 
   const viewInfo = {
     dashboard: ['營運總覽', 'dashboard'], employees: ['員工管理', 'employees'], sites: ['案場管理', 'sites'],
@@ -536,11 +537,12 @@
     await loadSignedInUser(data.user);enterApp();
   }
 
-  function enterApp(demo=false) {
-    window.ERP_DEMO_MODE=demo;
-    if(demo) state.user={name:'示範管理員',email:'demo@local',role:'admin',permissions:[]};
+  function enterApp(isDemo=false) {
+    demo=isDemo;
+    window.ERP_DEMO_MODE=isDemo;
+    if(isDemo) state.user={name:'示範管理員',email:'demo@local',role:'admin',permissions:[]};
     $('#loginView').hidden=true; $('#appView').hidden=false; $('#userName').textContent=state.user.name; $('#userInitial').textContent=state.user.name.slice(0,1);
-    $('#modeLabel').textContent=cloudEnabled&&!demo?'雲端模式':'本機示範模式';window.ERPCalendar?.configure({client:demo?null:client,cloud:cloudEnabled&&!demo,notice:showNotice});applyNavigationPermissions();switchView('dashboard');checkSystemHealth();
+    $('#modeLabel').textContent=cloudEnabled&&!isDemo?'雲端模式':'本機示範模式';window.ERPCalendar?.configure({client:isDemo?null:client,cloud:cloudEnabled&&!isDemo,notice:showNotice});applyNavigationPermissions();switchView('dashboard');checkSystemHealth();
   }
 
   async function logout() { if(cloudEnabled) await client.auth.signOut(); state.user=null; $('#appView').hidden=true; $('#loginView').hidden=false; }
