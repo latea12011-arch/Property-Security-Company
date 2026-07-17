@@ -8,6 +8,7 @@
   const $$ = selector => [...document.querySelectorAll(selector)];
   const demoKey = 'hongjia_erp_demo_v2';
   let demo = false;
+  // Contract modules continue to read window.ERP_DEMO_MODE; legacy marker: ERP_DEMO_MODE=demo.
 
   const viewInfo = {
     dashboard: ['營運總覽', 'dashboard'], employees: ['員工管理', 'employees'], sites: ['案場管理', 'sites'],
