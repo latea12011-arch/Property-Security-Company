@@ -546,6 +546,6 @@
   $$('[data-view]').forEach(button=>button.onclick=()=>switchView(button.dataset.view));
   $('#mobileMoreButton').onclick=()=>{const backdrop=$('#mobileMoreBackdrop'),open=backdrop.hidden;backdrop.hidden=!open;$('#mobileMoreButton').setAttribute('aria-expanded',String(open))};$('#mobileMoreClose').onclick=closeMobileMore;$('#mobileMoreBackdrop').onclick=event=>{if(event.target===$('#mobileMoreBackdrop'))closeMobileMore()};
   $$('.nav-group-toggle').forEach(button=>button.onclick=()=>{const group=button.closest('.nav-group'),open=group.dataset.open==='true';group.dataset.open=String(!open);button.setAttribute('aria-expanded',String(!open));});
-  if('serviceWorker' in navigator && location.protocol!=='file:') window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(console.warn));
+  if('serviceWorker' in navigator && location.protocol!=='file:') window.addEventListener('load',async()=>{try{const legacyScope=new URL('./',location.href).href,registrations=await navigator.serviceWorker.getRegistrations();await Promise.all(registrations.filter(x=>x.scope===legacyScope).map(x=>x.unregister()));await navigator.serviceWorker.register('./admin-service-worker.js',{scope:'./index.html'})}catch(error){console.warn(error)}});
   if(cloudEnabled) client.auth.getSession().then(async({data})=>{if(data.session){await loadSignedInUser(data.session.user);enterApp();}});
 })();
