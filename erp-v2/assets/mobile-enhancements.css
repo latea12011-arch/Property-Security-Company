@@ -1,6 +1,5 @@
 nav.employee-bottom-nav{grid-template-columns:repeat(5,1fr)!important;padding:8px 6px calc(8px + env(safe-area-inset-bottom));gap:2px}
-nav.employee-bottom-nav button{min-height:55px;padding:5px 2px;font-size:14px;line-height:1.2;display:grid;place-items:center;gap:2px}
-nav.employee-bottom-nav button span{display:block;font-size:17px;font-weight:900}
+nav.employee-bottom-nav button{min-height:58px;padding:8px 2px;font-size:16px;line-height:1.2;display:grid;place-items:center}
 .month-head{display:grid;grid-template-columns:42px 1fr 42px;align-items:center;text-align:center;margin-bottom:12px}
 .month-head h3{margin:2px 0}.month-head small{color:var(--muted)}
 .month-button{width:42px;height:42px;padding:0;border-radius:50%;background:#e8f3f0;color:#176d60;font-size:24px}

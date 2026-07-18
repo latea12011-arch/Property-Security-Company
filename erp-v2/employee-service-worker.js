@@ -1,4 +1,4 @@
-const EMPLOYEE_CACHE='hongjia-employee-pwa-v3';
+const EMPLOYEE_CACHE='hongjia-employee-pwa-v4';
 const EMPLOYEE_SHELL=['./mobile.html','./favicon-v2.ico','./config.js','./mobile-manifest-v2.json','./assets/mobile.css','./assets/mobile-enhancements.css','./assets/mobile.js','./assets/company-logo.png','./assets/employee-icon-v2-192.png','./assets/employee-icon-v2-512.png','./assets/employee-icon-v2-maskable.png'];
 
 self.addEventListener('install',event=>{event.waitUntil(caches.open(EMPLOYEE_CACHE).then(cache=>cache.addAll(EMPLOYEE_SHELL)));self.skipWaiting()});
