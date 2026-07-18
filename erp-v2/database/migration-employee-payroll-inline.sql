@@ -9,4 +9,16 @@ comment on column public.employee_payroll_profiles.pension_contribution
 
 grant select,insert,update on public.employee_payroll_profiles to authenticated;
 
+drop policy if exists "hr manages payroll profiles" on public.employee_payroll_profiles;
+create policy "hr manages payroll profiles"
+on public.employee_payroll_profiles for all to authenticated
+using (
+  public.has_feature_permission('payrollProfiles')
+  or public.has_feature_permission('employees')
+)
+with check (
+  public.has_feature_permission('payrollProfiles')
+  or public.has_feature_permission('employees')
+);
+
 select 'employee payroll inline migration installed' as result;
