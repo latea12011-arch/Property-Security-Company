@@ -132,7 +132,7 @@
       ['returned_date','實際歸還日期','date'],['condition_in','歸還時狀況','select',false,[['good','良好'],['used','有使用痕跡'],['damaged','損壞']]],['note','備註','textarea']
     ],
     announcements:[['publisher','發布單位','text',true],['content','公告內容','textarea',true],['published_at','發布時間','datetime-local',true],['is_active','狀態','select',true,[['true','上架'],['false','下架']]]],
-    employee_rules:[['section_title','守則標題','text',true],['content','守則內容（每行一項）','textarea',true],['sort_order','顯示順序','number',true],['is_active','員工端顯示','select',true,[['true','顯示'],['false','暫停顯示']]]]
+    employee_rules:[['section_title','守則標題','text',true],['content','守則內容（每行一項）','textarea',true],['sort_order','順序（1 最前面）','number',true],['is_active','員工端顯示','select',true,[['true','顯示'],['false','暫停顯示']]]]
   };
 
   const columns = {
@@ -188,7 +188,11 @@
   const db = {
     async list(table) {
       if (!cloudEnabled||window.ERP_DEMO_MODE) return demoData()[table] || [];
-      const {data,error} = await client.from(table).select('*').order('created_at',{ascending:false});
+      let query=client.from(table).select('*');
+      query=table==='employee_rules'
+        ? query.order('sort_order').order('created_at')
+        : query.order('created_at',{ascending:false});
+      const {data,error} = await query;
       if (error) throw error; return data;
     },
     async save(table, record, id) {
@@ -311,7 +315,7 @@
     $('#content').innerHTML=`<article class="panel"><div class="panel-head"><div><h3>${viewInfo[view][0]}</h3><span class="muted">共 ${rows.length} 筆${table==='bullying_complaints'?'（保密資料）':''}</span></div>${canAdd?'<button class="btn primary" id="addRecord">＋ 新增</button>':''}</div>
       <div class="table-wrap"><table><thead><tr>${cols.map(x=>`<th>${x[1]}</th>`).join('')}<th>操作</th></tr></thead><tbody>${rows.length?rows.map(row=>`<tr>${cols.map(([key])=>`<td>${cellHtml(key,row[key])}</td>`).join('')}<td><div class="action-row"><button class="mini-button" data-edit="${esc(row.id)}">編輯</button>${['employees','payroll_records','termination_certificates','salary_advances','inventory_transactions','inventory_loans'].includes(table)?`<button class="mini-button" data-print="${esc(row.id)}">${table==='employees'?'下載／列印':'列印'}</button>`:''}${table==='inventory_loans'&&row.status==='borrowed'?`<button class="mini-button" data-return-loan="${esc(row.id)}">辦理歸還</button>`:''}${['bullying_complaints','inventory_loans'].includes(table)?'':`<button class="mini-button danger" data-delete="${esc(row.id)}">${table==='employees'?'停用':'刪除'}</button>`}</div></td></tr>`).join(''):`<tr><td colspan="${cols.length+1}" class="empty">尚無資料。</td></tr>`}</tbody></table></div></article>`;
     if(table==='audit_logs'){$$('.action-row').forEach(row=>row.innerHTML='<span class="muted">唯讀</span>');const download=document.createElement('button'),archive=document.createElement('button');download.className='btn ghost';download.textContent='下載備份';download.onclick=()=>{if(downloadAuditArchive(rows))showNotice(`已下載 ${rows.length} 筆操作紀錄。`,'success')};archive.className='btn primary';archive.textContent='下載並清除雲端';archive.onclick=()=>archiveAndClearAuditLogs(rows);$('.panel-head').append(download,archive);}
-    if(canAdd) $('#addRecord').onclick=()=>openDialog(table,null);
+    if(canAdd) $('#addRecord').onclick=()=>openDialog(table,table==='employee_rules'?{sort_order:rows.length+1,is_active:true}:null);
     if(table==='inventory_transactions'){const batch=document.createElement('button');batch.className='btn primary';batch.textContent='＋ 批次領用';batch.onclick=openBatchIssueDialog;$('.panel-head').appendChild(batch);}
     $$('[data-edit]').forEach(button=>button.onclick=()=>openDialog(table,rows.find(x=>x.id===button.dataset.edit)));
     $$('[data-return-loan]').forEach(button=>button.onclick=()=>{const row=rows.find(x=>x.id===button.dataset.returnLoan);openDialog(table,{...row,status:'returned',returned_date:new Date().toISOString().slice(0,10),condition_in:'good'});});
@@ -364,7 +368,7 @@
       if(record?.id&&!cloudEnabled)payrollProfile=(demoData().employee_payroll_profiles||[]).find(x=>x.employee_id===record.id)||null;
       record={...(record||{}),assigned_sites:assigned,feature_permissions:permissions,payroll_basic_salary:payrollProfile?.basic_salary??record?.payroll_basic_salary??0,payroll_personal_leave_day_rate:payrollProfile?.personal_leave_day_rate??0,payroll_sick_leave_day_rate:payrollProfile?.sick_leave_day_rate??0,payroll_unpaid_leave_day_rate:payrollProfile?.personal_leave_day_rate??0,payroll_labor_insurance:payrollProfile?.labor_insurance??record?.payroll_labor_insurance??0,payroll_health_insurance:payrollProfile?.health_insurance??record?.payroll_health_insurance??0,payroll_group_insurance:payrollProfile?.group_insurance??record?.payroll_group_insurance??0,payroll_pension_contribution:payrollProfile?.pension_contribution??record?.payroll_pension_contribution??0,payroll_effective_date:payrollProfile?.effective_date??record?.payroll_effective_date??new Date().toISOString().slice(0,10),payroll_note:payrollProfile?.note??record?.payroll_note??''};
     }
-    $('#dialogTitle').textContent=`${record?'編輯':'新增'}${viewInfo[Object.keys(viewInfo).find(k=>viewInfo[k][1]===table)]?.[0]||'資料'}`;
+    $('#dialogTitle').textContent=`${state.editing.id?'編輯':'新增'}${viewInfo[Object.keys(viewInfo).find(k=>viewInfo[k][1]===table)]?.[0]||'資料'}`;
     $('#formFields').innerHTML=fields[table].map(field=>inputFor(field,record)).join('');
     initPasswordControl();
     if(table==='employees'){initEmployeeIdentityUpload(record?.id_document_path||'');initLicensePicker();initSalaryPaymentMethod();initAutomaticLeaveRates('payroll_');initAutomaticInsuranceRates('payroll_');}

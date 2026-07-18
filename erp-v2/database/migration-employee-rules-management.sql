@@ -39,6 +39,16 @@ from (values
 ) as seed(section_title, content, sort_order)
 where not exists (select 1 from public.employee_rules);
 
+-- 將舊的 10、20、30…自動整理為直覺的 1、2、3…。
+with ranked as (
+  select id, row_number() over (order by sort_order, created_at, id) as new_order
+  from public.employee_rules
+)
+update public.employee_rules rule
+set sort_order = ranked.new_order
+from ranked
+where rule.id = ranked.id and rule.sort_order <> ranked.new_order;
+
 grant select on public.employee_rules to authenticated;
 grant insert, update, delete on public.employee_rules to authenticated;
 
