@@ -6,6 +6,7 @@ create table if not exists public.numbering_rules (
   prefix text not null default '',
   digits integer not null default 3 check (digits between 1 and 10),
   start_number integer not null default 1 check (start_number >= 0),
+  last_number integer not null default 0 check (last_number >= 0),
   match_job_title text,
   is_default boolean not null default false,
   is_active boolean not null default true,
@@ -14,6 +15,8 @@ create table if not exists public.numbering_rules (
   updated_at timestamptz not null default now(),
   unique (target_type, rule_name)
 );
+alter table public.numbering_rules
+  add column if not exists last_number integer not null default 0 check (last_number >= 0);
 
 alter table public.numbering_rules enable row level security;
 drop policy if exists "authenticated reads numbering rules" on public.numbering_rules;
@@ -43,5 +46,44 @@ on conflict (target_type,rule_name) do nothing;
 drop trigger if exists numbering_rules_updated on public.numbering_rules;
 create trigger numbering_rules_updated before update on public.numbering_rules
 for each row execute function public.set_updated_at();
+
+-- 舊資料先納入已使用流水號，避免永久刪除後再次使用相同編號。
+update public.numbering_rules rule
+set last_number=greatest(rule.last_number,coalesce((
+  select max(substring(employee.employee_no from length(rule.prefix)+1)::integer)
+  from public.employees employee
+  where rule.target_type='employee'
+    and left(employee.employee_no,length(rule.prefix))=rule.prefix
+    and length(substring(employee.employee_no from length(rule.prefix)+1))=rule.digits
+    and substring(employee.employee_no from length(rule.prefix)+1) ~ '^[0-9]+$'
+),0),coalesce((
+  select max(substring(cert.certificate_no from length(rule.prefix)+1)::integer)
+  from public.termination_certificates cert
+  where rule.target_type='termination_certificate'
+    and left(cert.certificate_no,length(rule.prefix))=rule.prefix
+    and length(substring(cert.certificate_no from length(rule.prefix)+1))=rule.digits
+    and substring(cert.certificate_no from length(rule.prefix)+1) ~ '^[0-9]+$'
+),0));
+
+create or replace function public.remember_used_document_number()
+returns trigger language plpgsql security definer set search_path=public as $$
+declare rule public.numbering_rules%rowtype; number_text text;
+begin
+  if new.numbering_rule_id is null then return new; end if;
+  select * into rule from public.numbering_rules where id=new.numbering_rule_id;
+  if not found then return new; end if;
+  number_text := substring(case when tg_table_name='employees' then new.employee_no else new.certificate_no end from length(rule.prefix)+1);
+  if left(case when tg_table_name='employees' then new.employee_no else new.certificate_no end,length(rule.prefix))=rule.prefix
+     and length(number_text)=rule.digits and number_text ~ '^[0-9]+$' then
+    update public.numbering_rules set last_number=greatest(last_number,number_text::integer) where id=rule.id;
+  end if;
+  return new;
+end $$;
+drop trigger if exists employees_remember_number on public.employees;
+create trigger employees_remember_number after insert or update of employee_no,numbering_rule_id on public.employees
+for each row execute function public.remember_used_document_number();
+drop trigger if exists termination_remember_number on public.termination_certificates;
+create trigger termination_remember_number after insert or update of certificate_no,numbering_rule_id on public.termination_certificates
+for each row execute function public.remember_used_document_number();
 
 select 'numbering rules installed' as status;
