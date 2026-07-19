@@ -43,6 +43,27 @@ values
   ('termination_certificate','離職證明書','HJ-TERM-',5,1,null,true,true,10)
 on conflict (target_type,rule_name) do nothing;
 
+-- 依 ERP 現有職稱預先建立完整分類；規則仍可由管理員自行修改。
+insert into public.numbering_rules
+  (target_type,rule_name,prefix,digits,start_number,match_job_title,is_default,is_active,sort_order)
+values
+  ('employee','機動保全人員','D',3,1,'機動保全員',false,true,40),
+  ('employee','案場主任','E',3,1,'案場主任',false,true,50),
+  ('employee','社區秘書','F',3,1,'社區秘書',false,true,60),
+  ('employee','勤務督導','G',3,1,'勤務督導',false,true,70),
+  ('employee','行政專員','H',3,1,'行政專員',false,true,80),
+  ('employee','人事專員','I',3,1,'人事專員',false,true,90),
+  ('employee','會計專員','J',3,1,'會計專員',false,true,100),
+  ('employee','業務人員','K',3,1,'業務人員',false,true,110),
+  ('employee','業務經理','L',3,1,'業務經理',false,true,120),
+  ('employee','部門主管','M',3,1,'部門主管',false,true,130),
+  ('employee','總經理','N',3,1,'總經理',false,true,140)
+on conflict (target_type,rule_name) do nothing;
+
+update public.numbering_rules
+set match_job_title='保全員'
+where target_type='employee' and rule_name='一般員工' and match_job_title is null;
+
 drop trigger if exists numbering_rules_updated on public.numbering_rules;
 create trigger numbering_rules_updated before update on public.numbering_rules
 for each row execute function public.set_updated_at();
