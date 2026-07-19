@@ -73,6 +73,12 @@ Deno.serve(async (req) => {
         const { error } = await admin.from(table).delete().eq('employee_id', employeeId)
         if (error && error.code !== '42P01') throw new Error(`${table} 清除失敗：${error.message}`)
       }
+      const { error: preserveCashError } = await admin.from('schedules').update({
+        employee_id: null,
+        employee_no_snapshot: employee.employee_no,
+        employee_name_snapshot: employee.full_name,
+      }).eq('employee_id', employeeId).eq('shift_type', 'cash').eq('cash_payment_status', 'paid')
+      if (preserveCashError) throw new Error(`已領現班次保留失敗：${preserveCashError.message}`)
       for (const table of ['employee_feature_permissions','site_assignments','schedules','attendance','leave_requests','bullying_complaints','employee_payroll_profiles','salary_advances','payroll_records','termination_certificates','supervisor_inspections','inventory_loans']) await removeRows(table)
       const { error: inventoryError } = await admin.from('inventory_transactions').update({ employee_id: null }).eq('employee_id', employeeId)
       if (inventoryError && inventoryError.code !== '42P01') throw new Error(`庫存紀錄解除連結失敗：${inventoryError.message}`)
