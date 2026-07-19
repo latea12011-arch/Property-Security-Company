@@ -88,13 +88,17 @@ set last_number=greatest(rule.last_number,coalesce((
 
 create or replace function public.remember_used_document_number()
 returns trigger language plpgsql security definer set search_path=public as $$
-declare rule public.numbering_rules%rowtype; number_text text;
+declare rule public.numbering_rules%rowtype; document_number text; number_text text;
 begin
   if new.numbering_rule_id is null then return new; end if;
   select * into rule from public.numbering_rules where id=new.numbering_rule_id;
   if not found then return new; end if;
-  number_text := substring(case when tg_table_name='employees' then new.employee_no else new.certificate_no end from length(rule.prefix)+1);
-  if left(case when tg_table_name='employees' then new.employee_no else new.certificate_no end,length(rule.prefix))=rule.prefix
+  document_number := case when tg_table_name='employees'
+    then to_jsonb(new)->>'employee_no'
+    else to_jsonb(new)->>'certificate_no'
+  end;
+  number_text := substring(document_number from length(rule.prefix)+1);
+  if left(document_number,length(rule.prefix))=rule.prefix
      and length(number_text)=rule.digits and number_text ~ '^[0-9]+$' then
     update public.numbering_rules set last_number=greatest(last_number,number_text::integer) where id=rule.id;
   end if;
