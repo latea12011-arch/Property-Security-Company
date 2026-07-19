@@ -12,16 +12,16 @@
 
   const viewInfo = {
     dashboard: ['營運總覽', 'dashboard'], employees: ['員工管理', 'employees'], sites: ['案場管理', 'sites'],
-    schedules: ['勤務排班', 'schedules'], attendance: ['打卡紀錄', 'attendance'], supervisorInspections: ['督導巡查', 'supervisor_inspections'], leaves: ['請假審核', 'leave_requests'], complaints: ['反霸凌申訴', 'bullying_complaints'], payrollProfiles: ['薪資設定', 'employee_payroll_profiles'], advances: ['員工借支', 'salary_advances'], payroll: ['薪資明細', 'payroll_records'], cashReceipts: ['現金班領取單','schedules'], terminations: ['離職證明', 'termination_certificates'], tenderQuotations: ['競標合約報價', 'tender_quotations'], tenderContracts: ['合約管理', 'tender_contracts'], vendors: ['合作廠商', 'vendors'], inventoryItems: ['庫存物品', 'inventory_items'], inventoryTransactions: ['入庫／領用紀錄', 'inventory_transactions'], inventoryLoans: ['設備借用／歸還','inventory_loans'], websiteManager: ['網站快速入口','website_manager'], communityReports: ['社區月報系統','community_reports'], websiteNotifications: ['網站通知','website_submissions'], auditLogs: ['操作紀錄', 'audit_logs'], announcements: ['公告管理','announcements'], employeeRules: ['員工守則管理','employee_rules']
+    schedules: ['勤務排班', 'schedules'], attendance: ['打卡紀錄', 'attendance'], supervisorInspections: ['督導巡查', 'supervisor_inspections'], leaves: ['請假審核', 'leave_requests'], complaints: ['反霸凌申訴', 'bullying_complaints'], payrollProfiles: ['薪資設定', 'employee_payroll_profiles'], advances: ['員工借支', 'salary_advances'], payroll: ['薪資明細', 'payroll_records'], cashReceipts: ['現金班領取單','schedules'], terminations: ['離職證明', 'termination_certificates'], tenderQuotations: ['競標合約報價', 'tender_quotations'], tenderContracts: ['合約管理', 'tender_contracts'], vendors: ['合作廠商', 'vendors'], inventoryItems: ['庫存物品', 'inventory_items'], inventoryTransactions: ['入庫／領用紀錄', 'inventory_transactions'], inventoryLoans: ['設備借用／歸還','inventory_loans'], websiteManager: ['網站快速入口','website_manager'], communityReports: ['社區月報系統','community_reports'], websiteNotifications: ['網站通知','website_submissions'], auditLogs: ['操作紀錄', 'audit_logs'], numberingRules: ['編號規則設定','numbering_rules'], announcements: ['公告管理','announcements'], employeeRules: ['員工守則管理','employee_rules']
   };
   const featureOptions=[['employees','員工管理'],['sites','案場管理'],['schedules','勤務排班'],['attendance','打卡紀錄'],['supervisorInspections','督導巡查'],['leaves','請假審核'],['complaints','反霸凌申訴'],['payrollProfiles','薪資設定'],['advances','員工借支'],['payroll','薪資明細'],['terminations','離職證明'],['tenderQuotations','競標合約報價'],['tenderContracts','合約管理'],['vendors','合作廠商'],['inventoryItems','庫存物品'],['inventoryTransactions','入庫／領用紀錄'],['inventoryLoans','設備借用／歸還'],['websiteManager','網站快速入口'],['communityReports','社區月報系統'],['websiteNotifications','網站通知'],['announcements','公告管理'],['employeeRules','員工守則管理']];
   const featurePresentation={employees:['人','人事管理'],sites:['場','營運管理'],schedules:['班','營運管理'],attendance:['卡','營運管理'],supervisorInspections:['巡','營運管理'],leaves:['假','人事管理'],complaints:['申','人事管理'],payrollProfiles:['薪','薪資行政'],advances:['借','薪資行政'],payroll:['單','薪資行政'],terminations:['離','薪資行政'],tenderQuotations:['標','業務競標'],tenderContracts:['約','業務競標'],vendors:['商','採購庫存'],inventoryItems:['庫','採購庫存'],inventoryTransactions:['領','採購庫存'],inventoryLoans:['借','採購庫存'],websiteManager:['網','網站管理'],communityReports:['報','網站管理'],websiteNotifications:['訊','網站管理'],announcements:['告','公告管理'],employeeRules:['規','公告管理']};
-  const mobileMenuSections=[['營運管理',['sites','supervisorInspections']],['人事管理',['employees','complaints']],['薪資與行政',['payrollProfiles','advances','payroll','cashReceipts','terminations']],['業務與競標',['tenderQuotations','tenderContracts']],['採購與庫存',['vendors','inventoryItems','inventoryTransactions','inventoryLoans']],['網站管理',['websiteManager','communityReports','websiteNotifications']],['系統與公告',['auditLogs','announcements','employeeRules']]];
+  const mobileMenuSections=[['營運管理',['sites','supervisorInspections']],['人事管理',['employees','complaints']],['薪資與行政',['payrollProfiles','advances','payroll','cashReceipts','terminations']],['業務與競標',['tenderQuotations','tenderContracts']],['採購與庫存',['vendors','inventoryItems','inventoryTransactions','inventoryLoans']],['網站管理',['websiteManager','communityReports','websiteNotifications']],['系統與公告',['auditLogs','numberingRules','announcements','employeeRules']]];
   const bankOptions=[['004','004 臺灣銀行'],['005','005 土地銀行'],['006','006 合作金庫'],['007','007 第一銀行'],['008','008 華南銀行'],['009','009 彰化銀行'],['011','011 上海商銀'],['012','012 台北富邦'],['013','013 國泰世華'],['016','016 高雄銀行'],['017','017 兆豐銀行'],['048','048 王道銀行'],['050','050 臺灣企銀'],['052','052 渣打銀行'],['053','053 台中銀行'],['054','054 京城銀行'],['081','081 滙豐銀行'],['102','102 華泰銀行'],['103','103 新光銀行'],['108','108 陽信銀行'],['118','118 板信銀行'],['147','147 三信銀行'],['700','700 中華郵政'],['803','803 聯邦銀行'],['805','805 遠東銀行'],['806','806 元大銀行'],['807','807 永豐銀行'],['808','808 玉山銀行'],['809','809 凱基銀行'],['810','810 星展銀行'],['812','812 台新銀行'],['816','816 安泰銀行'],['822','822 中國信託']];
 
   const fields = {
     employees: [
-      ['employee_no','員工編號','text',true],['full_name','姓名','text',true],['phone','電話','tel'],['initial_password','初始登入密碼（至少 8 碼）','password'],
+      ['numbering_rule_id','員工編號類別','number-rule:employee'],['employee_no','員工編號（可修改）','text',true],['full_name','姓名','text',true],['phone','電話','tel'],['initial_password','初始登入密碼（至少 8 碼）','password'],
       ['national_id','身分證字號','id-number'],['registered_address','戶籍地址','text'],['residential_address','現居地址','text'],
       ['driver_license_type','駕照類別（最多兩種）','license-picker',false,[['none','無駕照'],['light_motorcycle','普通輕型機車'],['heavy_motorcycle','普通重型機車'],['large_heavy_motorcycle','大型重型機車'],['ordinary_car','普通小型車'],['professional_car','職業小型車'],['ordinary_truck','普通大貨車'],['professional_truck','職業大貨車'],['ordinary_bus','普通大客車'],['professional_bus','職業大客車'],['trailer','聯結車'],['multiple_other','其他類別']]],
       ['transportation_method','交通方式','select',false,[['walk','步行'],['bicycle','自行車'],['motorcycle','機車'],['car','自用汽車'],['public_transport','大眾運輸'],['company_vehicle','公司車'],['family_pickup','親友接送'],['other','其他']]],['chief_manager_certificate_no','總幹事證號','text'],['id_document_path','身分證件照片','private-image'],
@@ -108,7 +108,7 @@
         ['駐衛保全勤務（門禁、巡邏、防竊、防災）','駐衛保全勤務（門禁、巡邏、防竊、防災）'],['機動保全勤務','機動保全勤務'],['系統保全勤務','系統保全勤務'],['運送保全勤務','運送保全勤務'],['人身保全勤務','人身保全勤務'],
         ['案場主任／現場管理','案場主任／現場管理'],['勤務督導／勤務管理','勤務督導／勤務管理'],['行政／人事作業','行政／人事作業'],['會計／薪資作業','會計／薪資作業'],['部門主管／營運管理','部門主管／營運管理']
       ]],
-      ['issue_date','開立日期','date',true],['certificate_no','證明書編號','text'],['note','補充說明','textarea']
+      ['issue_date','開立日期','date',true],['numbering_rule_id','證明書編號規則','number-rule:termination_certificate'],['certificate_no','證明書編號（可修改）','text'],['note','補充說明','textarea']
     ],
     vendors: [
       ['vendor_code','廠商編號','text',true],['name','廠商名稱','text',true],['category','廠商類別','select',true,[['security_equipment','保全設備'],['uniform','制服／配件'],['cleaning','清潔用品'],['repair','修繕工程'],['fire_safety','消防設備'],['electromechanical','機電維護'],['staffing','人力支援'],['office','辦公用品'],['other','其他']]],
@@ -132,7 +132,8 @@
       ['returned_date','實際歸還日期','date'],['condition_in','歸還時狀況','select',false,[['good','良好'],['used','有使用痕跡'],['damaged','損壞']]],['note','備註','textarea']
     ],
     announcements:[['publisher','發布單位','text',true],['content','公告內容','textarea',true],['published_at','發布時間','datetime-local',true],['is_active','狀態','select',true,[['true','上架'],['false','下架']]]],
-    employee_rules:[['section_title','守則標題','text',true],['content','守則內容（每行一項）','textarea',true],['sort_order','順序（1 最前面）','number',true],['is_active','員工端顯示','select',true,[['true','顯示'],['false','暫停顯示']]]]
+    employee_rules:[['section_title','守則標題','text',true],['content','守則內容（每行一項）','textarea',true],['sort_order','順序（1 最前面）','number',true],['is_active','員工端顯示','select',true,[['true','顯示'],['false','暫停顯示']]]],
+    numbering_rules:[['target_type','適用用途','select',true,[['employee','員工編號'],['termination_certificate','離職證明書']]],['rule_name','規則名稱','text',true],['prefix','編號字首','text'],['digits','流水號位數','number',true],['start_number','起始號碼','number',true],['match_job_title','對應職稱（選填提醒）','text'],['is_default','預設規則','select',true,[['true','是'],['false','否']]],['is_active','啟用','select',true,[['true','啟用'],['false','停用']]],['sort_order','顯示順序','number',true]]
   };
 
   const columns = {
@@ -153,10 +154,11 @@
     inventory_loans: [['document_no','借用單號'],['loan_date','借用日'],['expected_return_date','預計歸還'],['employee_id','借用員工'],['item_id','設備'],['quantity','數量'],['display_status','狀態'],['returned_date','實際歸還']],
     audit_logs: [['created_at','操作時間'],['actor_name','操作者'],['action','動作'],['table_name','資料表'],['record_id','資料編號']],
     announcements:[['published_at','發布時間'],['publisher','發布單位'],['content','內容'],['is_active','狀態']],
-    employee_rules:[['sort_order','順序'],['section_title','守則標題'],['content','內容'],['is_active','員工端顯示']]
+    employee_rules:[['sort_order','順序'],['section_title','守則標題'],['content','內容'],['is_active','員工端顯示']],
+    numbering_rules:[['sort_order','順序'],['target_type','用途'],['rule_name','規則名稱'],['prefix','字首'],['digits','位數'],['start_number','起始'],['match_job_title','對應職稱'],['is_default','預設'],['is_active','啟用']]
   };
 
-  let state = { view: 'dashboard', user: null, editing: null, relations: {employees:[],sites:[],inventory_items:[],vendors:[],inventory_loans:[]}, scheduleMonth: new Date().toISOString().slice(0,7), scheduleEmployee: '', attendanceMonth: new Date().toISOString().slice(0,7), attendanceSite: '', cashReceiptMonth:new Date().toISOString().slice(0,7),cashReceiptSite:'',cashReceiptEmployee:'' };
+  let state = { view: 'dashboard', user: null, editing: null, relations: {employees:[],sites:[],inventory_items:[],vendors:[],inventory_loans:[],numbering_rules:[]}, scheduleMonth: new Date().toISOString().slice(0,7), scheduleEmployee: '', attendanceMonth: new Date().toISOString().slice(0,7), attendanceSite: '', cashReceiptMonth:new Date().toISOString().slice(0,7),cashReceiptSite:'',cashReceiptEmployee:'' };
 
   function seedDemo() {
     const today = new Date().toISOString().slice(0,10);
@@ -174,7 +176,8 @@
       vendors:[{id:'v1',vendor_code:'V001',name:'安心保全設備行',category:'security_equipment',tax_id:'12345678',contact_name:'林先生',contact_phone:'02-2345-6789',payment_terms:'net_30',status:'active'}],
       inventory_items:[{id:'i1',item_code:'EQ001',item_name:'筆記型電腦',category:'office',specification:'業務簡報用',unit:'台',current_stock:2,minimum_stock:0,status:'active'}],
       site_assignments:[{id:'sa1',employee_id:'e1',site_id:'s1',start_date:today,is_manager:true},{id:'sa2',employee_id:'e2',site_id:'s1',start_date:today,is_manager:false}],
-      inventory_transactions:[],inventory_loans:[]
+      inventory_transactions:[],inventory_loans:[],
+      numbering_rules:[{id:'nr-a',target_type:'employee',rule_name:'一般員工',prefix:'A',digits:3,start_number:1,is_default:true,is_active:true,sort_order:10},{id:'nr-b',target_type:'employee',rule_name:'現金班人員',prefix:'B',digits:3,start_number:1,is_default:false,is_active:true,sort_order:20},{id:'nr-c',target_type:'employee',rule_name:'總幹事',prefix:'C',digits:3,start_number:1,match_job_title:'總幹事',is_default:false,is_active:true,sort_order:30},{id:'nr-term',target_type:'termination_certificate',rule_name:'離職證明書',prefix:'HJ-TERM-',digits:5,start_number:1,is_default:true,is_active:true,sort_order:10}]
     };
   }
 
@@ -189,7 +192,7 @@
     async list(table) {
       if (!cloudEnabled||window.ERP_DEMO_MODE) return demoData()[table] || [];
       let query=client.from(table).select('*');
-      query=table==='employee_rules'
+      query=['employee_rules','numbering_rules'].includes(table)
         ? query.order('sort_order').order('created_at')
         : query.order('created_at',{ascending:false});
       const {data,error} = await query;
@@ -221,6 +224,8 @@
     }
     if(key==='item_id'&&value)return state.relations.inventory_items.find(row=>row.id===value)?.item_name||value;
     if(key==='vendor_id'&&value)return state.relations.vendors.find(row=>row.id===value)?.name||value;
+    if(key==='numbering_rule_id'&&value)return state.relations.numbering_rules.find(row=>row.id===value)?.rule_name||value;
+    if(key==='target_type')return value==='employee'?'員工編號':value==='termination_certificate'?'離職證明書':value;
     if(key==='salary_payment_method')return value==='cash'?'領現':value==='bank_transfer'?'銀行匯款':value||'—';
     if(key==='action')return({INSERT:'新增',UPDATE:'修改',DELETE:'刪除'})[value]||value;
     if (key==='start_time' && value) return value;
@@ -235,9 +240,9 @@
   const effectiveLoanStatus=row=>row.status==='borrowed'&&row.expected_return_date&&row.expected_return_date<new Date().toISOString().slice(0,10)?'overdue':row.status;
   async function loadRelations() {
     const canInventory=state.user?.role==='admin'||state.user?.permissions?.some(x=>['vendors','inventoryItems','inventoryTransactions','inventoryLoans'].includes(x));
-    const [employees,sites,items,vendors,loans]=await Promise.all([db.list('employees'),db.list('sites'),canInventory?db.list('inventory_items'):Promise.resolve([]),canInventory?db.list('vendors'):Promise.resolve([]),canInventory?db.list('inventory_loans'):Promise.resolve([])]);
+    const [employees,sites,items,vendors,loans,numberingRules]=await Promise.all([db.list('employees'),db.list('sites'),canInventory?db.list('inventory_items'):Promise.resolve([]),canInventory?db.list('vendors'):Promise.resolve([]),canInventory?db.list('inventory_loans'):Promise.resolve([]),db.list('numbering_rules')]);
     const unavailableByItem=new Map();loans.filter(x=>unavailableLoanStatuses.has(x.status)).forEach(x=>unavailableByItem.set(x.item_id,(unavailableByItem.get(x.item_id)||0)+Number(x.quantity||0)));
-    state.relations={employees,sites,inventory_items:items.map(item=>({...item,borrowed_stock:unavailableByItem.get(item.id)||0,available_stock:Math.max(0,Number(item.current_stock||0)-(unavailableByItem.get(item.id)||0))})),vendors,inventory_loans:loans};
+    state.relations={employees,sites,inventory_items:items.map(item=>({...item,borrowed_stock:unavailableByItem.get(item.id)||0,available_stock:Math.max(0,Number(item.current_stock||0)-(unavailableByItem.get(item.id)||0))})),vendors,inventory_loans:loans,numbering_rules:numberingRules};
   }
 
   async function dashboardLoanAlerts(){const canLoan=state.user?.role==='admin'||state.user?.permissions?.includes('inventoryLoans');if(!canLoan)return'';await loadRelations();const today=new Date().toISOString().slice(0,10),open=state.relations.inventory_loans.filter(x=>x.status==='borrowed').sort((a,b)=>String(a.expected_return_date).localeCompare(String(b.expected_return_date))),urgent=open.filter(x=>x.expected_return_date<=new Date(Date.now()+7*86400000).toISOString().slice(0,10));return`<article class="panel loan-alerts"><div class="panel-head"><div><h3>設備歸還提醒</h3><span class="muted">借用中 ${open.length} 筆${urgent.length?`，其中 ${urgent.length} 筆已逾期或七日內到期`:''}</span></div><button class="mini-button" data-go="inventoryLoans">設備借用管理</button></div><div class="quick-list">${urgent.length?urgent.slice(0,8).map(row=>{const employee=state.relations.employees.find(x=>x.id===row.employee_id),item=state.relations.inventory_items.find(x=>x.id===row.item_id),overdue=row.expected_return_date<today;return`<div class="quick-item contract-alert ${overdue?'overdue':''}"><div><strong>${esc(employee?.full_name||'')}－${esc(item?.item_name||'')}</strong><small>${esc(row.document_no)} · 預計 ${esc(row.expected_return_date)} 歸還</small></div><span class="badge ${overdue?'danger':'warning'}">${overdue?'已逾期':'即將到期'}</span></div>`}).join(''):'<div class="empty">目前沒有逾期或近期應歸還設備</div>'}</div></article>`;}
@@ -313,7 +318,7 @@
     let rows=table==='inventory_items'?state.relations.inventory_items:await db.list(table);if(table==='inventory_loans')rows=rows.map(row=>({...row,display_status:effectiveLoanStatus(row)}));const cols=columns[table];
     const canAdd=!['bullying_complaints','audit_logs'].includes(table);
     $('#content').innerHTML=`<article class="panel"><div class="panel-head"><div><h3>${viewInfo[view][0]}</h3><span class="muted">共 ${rows.length} 筆${table==='bullying_complaints'?'（保密資料）':''}</span></div>${canAdd?'<button class="btn primary" id="addRecord">＋ 新增</button>':''}</div>
-      <div class="table-wrap"><table><thead><tr>${cols.map(x=>`<th>${x[1]}</th>`).join('')}<th>操作</th></tr></thead><tbody>${rows.length?rows.map(row=>`<tr>${cols.map(([key])=>`<td>${cellHtml(key,row[key])}</td>`).join('')}<td><div class="action-row"><button class="mini-button" data-edit="${esc(row.id)}">編輯</button>${['employees','payroll_records','termination_certificates','salary_advances','inventory_transactions','inventory_loans'].includes(table)?`<button class="mini-button" data-print="${esc(row.id)}">${table==='employees'?'下載／列印':'列印'}</button>`:''}${table==='inventory_loans'&&row.status==='borrowed'?`<button class="mini-button" data-return-loan="${esc(row.id)}">辦理歸還</button>`:''}${['bullying_complaints','inventory_loans'].includes(table)?'':`<button class="mini-button danger" data-delete="${esc(row.id)}">${table==='employees'?'停用':'刪除'}</button>`}</div></td></tr>`).join(''):`<tr><td colspan="${cols.length+1}" class="empty">尚無資料。</td></tr>`}</tbody></table></div></article>`;
+      <div class="table-wrap"><table><thead><tr>${cols.map(x=>`<th>${x[1]}</th>`).join('')}<th>操作</th></tr></thead><tbody>${rows.length?rows.map(row=>`<tr>${cols.map(([key])=>`<td>${cellHtml(key,row[key])}</td>`).join('')}<td><div class="action-row"><button class="mini-button" data-edit="${esc(row.id)}">編輯</button>${['employees','payroll_records','termination_certificates','salary_advances','inventory_transactions','inventory_loans'].includes(table)?`<button class="mini-button" data-print="${esc(row.id)}">${table==='employees'?'下載／列印':'列印'}</button>`:''}${table==='inventory_loans'&&row.status==='borrowed'?`<button class="mini-button" data-return-loan="${esc(row.id)}">辦理歸還</button>`:''}${['bullying_complaints','inventory_loans'].includes(table)?'':`<button class="mini-button danger" data-delete="${esc(row.id)}">${table==='employees'?'永久刪除':'刪除'}</button>`}</div></td></tr>`).join(''):`<tr><td colspan="${cols.length+1}" class="empty">尚無資料。</td></tr>`}</tbody></table></div></article>`;
     if(table==='audit_logs'){$$('.action-row').forEach(row=>row.innerHTML='<span class="muted">唯讀</span>');const download=document.createElement('button'),archive=document.createElement('button');download.className='btn ghost';download.textContent='下載備份';download.onclick=()=>{if(downloadAuditArchive(rows))showNotice(`已下載 ${rows.length} 筆操作紀錄。`,'success')};archive.className='btn primary';archive.textContent='下載並清除雲端';archive.onclick=()=>archiveAndClearAuditLogs(rows);$('.panel-head').append(download,archive);}
     if(canAdd) $('#addRecord').onclick=()=>openDialog(table,table==='employee_rules'?{sort_order:rows.length+1,is_active:true}:null);
     if(table==='inventory_transactions'){const batch=document.createElement('button');batch.className='btn primary';batch.textContent='＋ 批次領用';batch.onclick=openBatchIssueDialog;$('.panel-head').appendChild(batch);}
@@ -328,6 +333,7 @@
     record = record || {};
     const value=record[name] ?? '';
     if(type==='section')return`<section class="wide form-section-title"><strong>${label}</strong><small>在員工資料儲存一次即可，不必再到「薪資設定」重複建立。</small></section>`;
+    if(type.startsWith('number-rule:')){const target=type.split(':')[1],rules=state.relations.numbering_rules.filter(rule=>rule.target_type===target&&rule.is_active!==false);return`<section class="wide number-rule-picker"><label>${label}<select name="${name}"><option value="">不使用自動規則</option>${rules.map(rule=>`<option value="${esc(rule.id)}" ${String(rule.id)===String(value)?'selected':''}>${esc(rule.rule_name)}（${esc(rule.prefix)}${'0'.repeat(Math.min(10,Number(rule.digits||3)))}）</option>`).join('')}</select></label><button type="button" class="mini-button number-rule-suggest">套用下一號</button><small class="muted">這只是編號提醒；套用後仍可直接修改正式編號。</small></section>`;}
     if(type==='gps-picker')return`<section class="wide gps-picker"><div class="gps-picker-head"><div><strong>${label}</strong><small>輸入完整地址後直接在 ERP 內搜尋並選取定位，不會跳離目前畫面。</small></div><button type="button" class="mini-button gps-current-location">使用目前位置</button></div><div class="gps-search-row"><input type="search" class="gps-search-query" value="${esc(record.address||record.name||'')}" placeholder="輸入完整地址，例如：桃園市八德區高城路23號"><button type="button" class="btn ghost gps-address-search">搜尋地址定位</button></div><div class="gps-search-results" aria-live="polite" hidden></div><details class="gps-coordinate-fallback"><summary>座標／地圖網址備援設定</summary><div class="gps-paste-row"><input type="text" class="gps-coordinate-source" placeholder="貼上座標（24.123, 121.456）或 Google 地圖網址"><button type="button" class="mini-button gps-apply-coordinate">套用定位</button></div></details><div class="gps-coordinate-grid"><label>GPS 緯度<input name="latitude" type="number" step="any" value="${esc(value)}" readonly></label><label>GPS 經度<input name="longitude" type="number" step="any" value="${esc(record.longitude??'')}" readonly></label></div><div class="gps-picker-footer"><span class="gps-location-status">${value!==''&&record.longitude!=null?'已設定定位':'尚未設定定位'}</span><a class="mini-button gps-preview" href="#" target="_blank" rel="noopener" hidden>在 Google 地圖查看</a><button type="button" class="mini-button gps-clear-location">清除定位</button></div><small class="gps-help">搜尋只會在按下按鈕時執行；請選擇完整門牌結果後再儲存案場。</small></section>`;
     if(type==='textarea') return `<label class="wide">${label}<textarea name="${name}" ${required?'required':''}>${esc(value)}</textarea></label>`;
     if(type==='id-number') return `<label>${label}<input name="${name}" type="text" value="${esc(value)}" maxlength="10" autocomplete="off" placeholder="例如 A123456789"><small class="muted">將自動轉為大寫；僅人事與系統管理員可查閱。</small></label>`;
@@ -355,13 +361,15 @@
 
   async function openDialog(table,record) {
     state.editing={table,id:record?.id||null};
-    if(table==='employees'&&!record)record={employment_type:'full_time',job_title:'保全員',standard_daily_hours:8,cash_shift_default_amount:0,role:'guard',status:'active',salary_payment_method:'bank_transfer',bank_fee_mode:'company_bank',payroll_basic_salary:0,payroll_labor_insurance:0,payroll_health_insurance:0,payroll_group_insurance:0,payroll_pension_contribution:0,payroll_effective_date:new Date().toISOString().slice(0,10)};
+    if(table==='employees'&&!record){const rule=state.relations.numbering_rules.find(x=>x.target_type==='employee'&&x.is_default&&x.is_active!==false);record={numbering_rule_id:rule?.id||'',employment_type:'full_time',job_title:'保全員',standard_daily_hours:8,cash_shift_default_amount:0,role:'guard',status:'active',salary_payment_method:'bank_transfer',bank_fee_mode:'company_bank',payroll_basic_salary:0,payroll_labor_insurance:0,payroll_health_insurance:0,payroll_group_insurance:0,payroll_pension_contribution:0,payroll_effective_date:new Date().toISOString().slice(0,10)};}
     if(table==='payroll_records'&&!record) record={payroll_month:new Date().toISOString().slice(0,7),salary_payment_method:'bank_transfer',bank_fee_mode:'company_bank',transfer_fee:0,basic_salary:0,overtime_pay:0,allowances:0,personal_leave_hours:0,sick_leave_hours:0,unpaid_leave_hours:0,labor_insurance:0,health_insurance:0,group_insurance:0,court_deduction:0,advance_deduction:0,other_deduction:0,status:'draft'};
     if(table==='inventory_items'&&!record)record={unit:'個',minimum_stock:0,status:'active',category:'other'};
     if(table==='inventory_transactions'&&!record)record={transaction_date:new Date().toISOString().slice(0,10),transaction_type:'issue',quantity:1};
     if(table==='inventory_loans'&&!record){const today=new Date(),due=new Date(today.getTime()+7*86400000);record={document_no:`LOAN-${today.toISOString().replace(/\D/g,'').slice(0,14)}`,loan_date:today.toISOString().slice(0,10),expected_return_date:due.toISOString().slice(0,10),quantity:1,condition_out:'good',status:'borrowed'};}
     if(table==='vendors'&&!record)record={category:'other',payment_terms:'net_30',status:'active'};
     if(table==='supervisor_inspections'&&!record){const now=new Date();record={inspection_date:now.toISOString().slice(0,10),inspection_time:now.toTimeString().slice(0,5),employee_id:state.user?.employeeId||'',inspection_type:'routine',overall_result:'pass',staff_discipline:'good',post_records:'good',equipment_status:'good',environment_safety:'good',follow_up_status:'none'};}
+    if(table==='termination_certificates'&&!record){const rule=state.relations.numbering_rules.find(x=>x.target_type==='termination_certificate'&&x.is_default&&x.is_active!==false);record={issue_date:new Date().toISOString().slice(0,10),numbering_rule_id:rule?.id||''};}
+    if(table==='numbering_rules'&&!record)record={target_type:'employee',prefix:'A',digits:3,start_number:1,is_default:false,is_active:true,sort_order:(state.relations.numbering_rules.length+1)*10};
     if(table==='employees') {
       const assigned=[],permissions=[];let payrollProfile=null;
       if(record?.id&&cloudEnabled){const[{data:sites},{data:features},{data:payroll}]=await Promise.all([client.from('site_assignments').select('site_id').eq('employee_id',record.id),client.from('employee_feature_permissions').select('feature_key').eq('employee_id',record.id),client.from('employee_payroll_profiles').select('*').eq('employee_id',record.id).maybeSingle()]);(sites||[]).forEach(x=>assigned.push(x.site_id));(features||[]).forEach(x=>permissions.push(x.feature_key));payrollProfile=payroll;}
@@ -370,6 +378,7 @@
     }
     $('#dialogTitle').textContent=`${state.editing.id?'編輯':'新增'}${viewInfo[Object.keys(viewInfo).find(k=>viewInfo[k][1]===table)]?.[0]||'資料'}`;
     $('#formFields').innerHTML=fields[table].map(field=>inputFor(field,record)).join('');
+    if(['employees','termination_certificates'].includes(table))initNumberSuggestion(table,record);
     initPasswordControl();
     if(table==='employees'){initEmployeeIdentityUpload(record?.id_document_path||'');initLicensePicker();initSalaryPaymentMethod();initAutomaticLeaveRates('payroll_');initAutomaticInsuranceRates('payroll_');}
     initSitePicker();
@@ -379,6 +388,10 @@
     if(table==='employee_payroll_profiles'){initAutomaticLeaveRates();initAutomaticInsuranceRates();}
     $('#formMessage').textContent=''; $('#recordDialog').showModal();
   }
+
+  function numberPattern(rule){const prefix=String(rule?.prefix||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');return new RegExp(`^${prefix}(\\d{${Math.max(1,Math.min(10,Number(rule?.digits||3)))}})$`,'i');}
+  async function suggestedNumber(rule,targetTable,currentId){const field=targetTable==='employees'?'employee_no':'certificate_no',rows=(await db.list(targetTable)).filter(row=>row.id!==currentId),pattern=numberPattern(rule),used=rows.map(row=>String(row[field]||'').match(pattern)).filter(Boolean).map(match=>Number(match[1])),next=Math.max(Number(rule.start_number||1)-1,...used)+1;return`${rule.prefix||''}${String(next).padStart(Math.max(1,Number(rule.digits||3)),'0')}`;}
+  function initNumberSuggestion(table,record={}){const target=table==='employees'?'employee':'termination_certificate',select=$('[name="numbering_rule_id"]'),input=$(`[name="${table==='employees'?'employee_no':'certificate_no'}"]`),button=$('.number-rule-suggest');if(!select||!input||!button)return;const apply=async force=>{const rule=state.relations.numbering_rules.find(x=>x.id===select.value&&x.target_type===target);if(!rule)return;if(!force&&input.value)return;button.disabled=true;try{input.value=await suggestedNumber(rule,table,record.id);input.dataset.suggested='true';$('#formMessage').textContent=`建議編號：${input.value}（仍可手動修改）`;}catch(error){$('#formMessage').textContent=`編號建議失敗：${error.message}`;}finally{button.disabled=false;}};button.onclick=()=>apply(true);select.onchange=()=>apply(true);input.addEventListener('input',()=>delete input.dataset.suggested);if(table==='employees'){const title=$('[name="job_title"]');title?.addEventListener('change',()=>{const match=state.relations.numbering_rules.find(x=>x.target_type==='employee'&&x.is_active!==false&&x.match_job_title===title.value);if(match){select.value=match.id;apply(true)}});}apply(false);}
 
   function initPasswordControl(){const input=$('.password-control input'),toggle=$('.password-toggle'),status=$('.password-state');if(!input||!toggle||!status)return;toggle.onclick=()=>{const showing=input.type==='text';input.type=showing?'password':'text';toggle.textContent=showing?'顯示':'隱藏';toggle.setAttribute('aria-label',showing?'顯示密碼':'隱藏密碼')};input.oninput=()=>{status.textContent=input.value?`將設定新的登入密碼（目前 ${input.value.length} 碼）`:status.dataset.configured==='true'?'已設定登入密碼；留空不會變更。':'尚未設定登入密碼。';status.classList.toggle('warning',Boolean(input.value)&&input.value.length<8)};}
 
@@ -464,9 +477,9 @@
 
   async function deleteRecord(table,id) {
     if(table==='employees'){
-      if(cloudEnabled){const{data:loans,error:loanError}=await client.from('inventory_loans').select('document_no').eq('employee_id',id).in('status',['borrowed','lost','damaged']);if(loanError)return showNotice(`設備借用檢查失敗：${loanError.message}`,'error');if(loans?.length)return showNotice(`此員工仍有 ${loans.length} 筆設備未歸還或未結案（${loans.map(x=>x.document_no).join('、')}），請先完成設備歸還。`,'error');}
-      if(!confirm('此員工的排班、打卡與薪資歷史必須保留。確定將員工設為「離職／停用」嗎？'))return;
-      try{await db.save('employees',{status:'inactive'},id);await loadRelations();await renderCurrent();showNotice('員工已停用，歷史紀錄仍完整保留。','success')}catch(error){showNotice(`停用失敗：${error.message}`,'error')}return;
+      const employee=state.relations.employees.find(row=>row.id===id);if(!employee)return showNotice('找不到員工資料。','error');
+      const confirmation=prompt(`這會永久刪除「${employee.full_name}」的員工資料、登入帳號、排班、打卡、請假及薪資紀錄，無法復原。\n\n請輸入員工編號 ${employee.employee_no} 確認：`);if(confirmation===null)return;if(String(confirmation).trim().toUpperCase()!==String(employee.employee_no).trim().toUpperCase())return showNotice('員工編號不一致，已取消刪除。','error');
+      try{if(cloudEnabled){const{data,error}=await client.functions.invoke('quick-worker',{body:{action:'delete_employee_permanently',employee_id:id,confirmation_employee_no:confirmation}});if(error)throw new Error(await edgeFunctionErrorMessage(error));if(!data?.ok)throw new Error(data?.error||'永久刪除失敗');}else{const data=demoData();Object.keys(data).forEach(key=>{if(Array.isArray(data[key]))data[key]=key==='employees'?data[key].filter(row=>row.id!==id):data[key].filter(row=>row.employee_id!==id)});localStorage.setItem(demoKey,JSON.stringify(data));}await loadRelations();await renderCurrent();showNotice(`員工 ${employee.employee_no} 已永久刪除。`,'success')}catch(error){showNotice(`永久刪除失敗：${error.message}`,'error')}return;
     }
     if(!confirm('確定刪除這筆資料？此動作無法復原。')) return;
     try { await db.remove(table,id); await renderCurrent(); showNotice('資料已刪除。'); } catch(error) { showNotice(`刪除失敗：${error.message}`,'error'); }

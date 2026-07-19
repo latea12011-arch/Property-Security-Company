@@ -55,6 +55,40 @@ Deno.serve(async (req) => {
       return json({ ok: true, candidates })
     }
 
+    if (body?.action === 'delete_employee_permanently') {
+      if (profile?.role !== 'admin') throw new Error('只有系統管理員可以永久刪除員工')
+      const employeeId = String(body.employee_id || '')
+      const confirmation = String(body.confirmation_employee_no || '').trim().toUpperCase()
+      if (!employeeId || !confirmation) throw new Error('請輸入員工編號完成刪除確認')
+      const admin = createClient(url, serviceKey)
+      const { data: employee, error: employeeError } = await admin.from('employees').select('id,employee_no,full_name,user_id,id_document_path').eq('id', employeeId).single()
+      if (employeeError || !employee) throw new Error('找不到指定的員工資料')
+      if (employee.user_id === user.id) throw new Error('不能刪除目前正在登入的管理員帳號')
+      if (employee.employee_no.trim().toUpperCase() !== confirmation) throw new Error('輸入的員工編號不一致，已取消刪除')
+      const { data: openLoans, error: loanError } = await admin.from('inventory_loans').select('document_no').eq('employee_id', employeeId).in('status', ['borrowed', 'lost', 'damaged'])
+      if (loanError) throw loanError
+      if (openLoans?.length) throw new Error(`仍有 ${openLoans.length} 筆設備未歸還或未結案，請先完成設備歸還`)
+
+      const removeRows = async (table: string) => {
+        const { error } = await admin.from(table).delete().eq('employee_id', employeeId)
+        if (error && error.code !== '42P01') throw new Error(`${table} 清除失敗：${error.message}`)
+      }
+      for (const table of ['employee_feature_permissions','site_assignments','schedules','attendance','leave_requests','bullying_complaints','employee_payroll_profiles','salary_advances','payroll_records','termination_certificates','supervisor_inspections','inventory_loans']) await removeRows(table)
+      const { error: inventoryError } = await admin.from('inventory_transactions').update({ employee_id: null }).eq('employee_id', employeeId)
+      if (inventoryError && inventoryError.code !== '42P01') throw new Error(`庫存紀錄解除連結失敗：${inventoryError.message}`)
+      if (employee.id_document_path) {
+        const { error } = await admin.storage.from('hr-private').remove([employee.id_document_path])
+        if (error) throw new Error(`私人證件檔案刪除失敗：${error.message}`)
+      }
+      const { error: deleteEmployeeError } = await admin.from('employees').delete().eq('id', employeeId)
+      if (deleteEmployeeError) throw new Error(`員工主檔刪除失敗：${deleteEmployeeError.message}`)
+      if (employee.user_id) {
+        const { error: authDeleteError } = await admin.auth.admin.deleteUser(employee.user_id)
+        if (authDeleteError) throw new Error(`員工資料已刪除，但登入帳號刪除失敗：${authDeleteError.message}`)
+      }
+      return json({ ok: true, employee_no: employee.employee_no, full_name: employee.full_name })
+    }
+
     const { employee_id, password } = body || {}
     if (!employee_id || typeof password !== 'string' || password.length < 8) throw new Error('員工資料或密碼格式不正確，密碼至少需要 8 碼')
     const admin = createClient(url, serviceKey)
