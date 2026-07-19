@@ -18,6 +18,8 @@
   const featurePresentation={employees:['人','人事管理'],sites:['場','營運管理'],schedules:['班','營運管理'],attendance:['卡','營運管理'],supervisorInspections:['巡','營運管理'],leaves:['假','人事管理'],complaints:['申','人事管理'],payrollProfiles:['薪','薪資行政'],advances:['借','薪資行政'],payroll:['單','薪資行政'],terminations:['離','薪資行政'],tenderQuotations:['標','業務競標'],tenderContracts:['約','業務競標'],vendors:['商','採購庫存'],inventoryItems:['庫','採購庫存'],inventoryTransactions:['領','採購庫存'],inventoryLoans:['借','採購庫存'],websiteManager:['網','網站管理'],communityReports:['報','網站管理'],websiteNotifications:['訊','網站管理'],announcements:['告','公告管理'],employeeRules:['規','公告管理']};
   const mobileMenuSections=[['營運管理',['sites','supervisorInspections']],['人事管理',['employees','complaints']],['薪資與行政',['payrollProfiles','advances','payroll','cashReceipts','terminations']],['業務與競標',['tenderQuotations','tenderContracts']],['採購與庫存',['vendors','inventoryItems','inventoryTransactions','inventoryLoans']],['網站管理',['websiteManager','communityReports','websiteNotifications']],['系統與公告',['auditLogs','numberingRules','systemHealth','announcements','employeeRules']]];
   const bankOptions=[['004','004 臺灣銀行'],['005','005 土地銀行'],['006','006 合作金庫'],['007','007 第一銀行'],['008','008 華南銀行'],['009','009 彰化銀行'],['011','011 上海商銀'],['012','012 台北富邦'],['013','013 國泰世華'],['016','016 高雄銀行'],['017','017 兆豐銀行'],['048','048 王道銀行'],['050','050 臺灣企銀'],['052','052 渣打銀行'],['053','053 台中銀行'],['054','054 京城銀行'],['081','081 滙豐銀行'],['102','102 華泰銀行'],['103','103 新光銀行'],['108','108 陽信銀行'],['118','118 板信銀行'],['147','147 三信銀行'],['700','700 中華郵政'],['803','803 聯邦銀行'],['805','805 遠東銀行'],['806','806 元大銀行'],['807','807 永豐銀行'],['808','808 玉山銀行'],['809','809 凱基銀行'],['810','810 星展銀行'],['812','812 台新銀行'],['816','816 安泰銀行'],['822','822 中國信託']];
+  const numberingTargetOptions=[['employee','員工編號'],['site','案場代碼'],['supervisor_inspection','督導巡查單'],['leave_request','請假申請單'],['bullying_complaint','申訴案件'],['salary_advance','員工借支單'],['payroll_record','薪資明細單'],['termination_certificate','離職證明書'],['tender_quotation','競標報價單'],['property_contract','物業合約'],['security_contract','保全合約'],['vendor','合作廠商'],['inventory_item','庫存物品'],['inventory_transaction','庫存異動／領取單'],['inventory_loan','設備借用單']];
+  const numberingTargets={employees:{target:'employee',field:'employee_no'},sites:{target:'site',field:'code'},supervisor_inspections:{target:'supervisor_inspection',field:'inspection_no'},leave_requests:{target:'leave_request',field:'request_no'},bullying_complaints:{target:'bullying_complaint',field:'case_no'},salary_advances:{target:'salary_advance',field:'advance_no'},payroll_records:{target:'payroll_record',field:'payroll_no'},termination_certificates:{target:'termination_certificate',field:'certificate_no'},vendors:{target:'vendor',field:'vendor_code'},inventory_items:{target:'inventory_item',field:'item_code'},inventory_transactions:{target:'inventory_transaction',field:'document_no'},inventory_loans:{target:'inventory_loan',field:'document_no'}};
 
   const fields = {
     employees: [
@@ -45,7 +47,7 @@
       ['status','狀態','select',true,[['active','在職'],['inactive','離職／停用']]]
     ],
     sites: [
-      ['code','案場代碼','text',true],['name','案場名稱','text',true],['address','地址','text',true],
+      ['numbering_rule_id','案場代碼規則','number-rule:site'],['code','案場代碼（可修改）','text',true],['name','案場名稱','text',true],['address','地址','text',true],
       ['chairman_name','主委姓名','text'],['chairman_phone','主委電話','tel'],['household_count','社區戶數','number'],['committee_term_no','管理委員會屆數','number'],
       ['owners_meeting_date','區分所有權人會議日期','date'],['regular_meeting_schedule','固定例會時間','text'],
       ['contract_start_date','合約開始日期','date'],['contract_end_date','合約到期日期','date'],['renewal_reminder_days','到期前提醒天數','number',true],
@@ -61,7 +63,7 @@
       ['clock_in','上班時間','datetime-local'],['clock_out','下班時間','datetime-local'],['status','狀態','select',true,[['normal','正常'],['late','遲到'],['missing','缺卡']]]
     ],
     supervisor_inspections: [
-      ['inspection_date','巡查日期','date',true],['inspection_time','巡查時間','time',true],['site_id','巡查案場','relation:sites',true],['employee_id','督導人員','relation:employees',true],
+      ['numbering_rule_id','巡查單號規則','number-rule:supervisor_inspection'],['inspection_no','巡查單號（可修改）','text',true],['inspection_date','巡查日期','date',true],['inspection_time','巡查時間','time',true],['site_id','巡查案場','relation:sites',true],['employee_id','督導人員','relation:employees',true],
       ['inspection_type','巡查類型','select',true,[['routine','例行巡查'],['night','夜間巡查'],['payroll_delivery','薪資發放']]],['overall_result','整體結果','select',true,[['pass','合格'],['improvement_required','限期改善'],['critical','重大缺失']]],
       ['staff_discipline','人員服儀與勤務紀律','select',true,[['good','良好'],['needs_improvement','待改善'],['not_applicable','不適用']]],['post_records','哨所簿冊與交接紀錄','select',true,[['good','良好'],['needs_improvement','待改善'],['not_applicable','不適用']]],
       ['equipment_status','裝備器材與門禁設備','select',true,[['good','良好'],['needs_improvement','待改善'],['not_applicable','不適用']]],['environment_safety','環境與消防安全','select',true,[['good','良好'],['needs_improvement','待改善'],['not_applicable','不適用']]],
@@ -69,12 +71,12 @@
       ['resolved_at','完成改善日期','date'],['site_contact','案場陪同／簽認人','text'],['note','備註','textarea']
     ],
     leave_requests: [
-      ['employee_id','員工','relation:employees',true],['leave_type','假別','select',true,[['annual','特休'],['personal','事假'],['sick','病假'],['official','公假'],['marriage','婚假'],['bereavement','喪假'],['maternity','產假'],['paternity','陪產檢及陪產假'],['menstrual','生理假'],['occupational','公傷病假'],['compensatory','補休'],['unpaid','無薪假'],['typhoon_unpaid','天然災害未出勤（不支薪）'],['other','其他']]],
+      ['numbering_rule_id','請假單號規則','number-rule:leave_request'],['request_no','請假單號（可修改）','text',true],['employee_id','員工','relation:employees',true],['leave_type','假別','select',true,[['annual','特休'],['personal','事假'],['sick','病假'],['official','公假'],['marriage','婚假'],['bereavement','喪假'],['maternity','產假'],['paternity','陪產檢及陪產假'],['menstrual','生理假'],['occupational','公傷病假'],['compensatory','補休'],['unpaid','無薪假'],['typhoon_unpaid','天然災害未出勤（不支薪）'],['other','其他']]],
       ['start_date','開始日期','date',true],['end_date','結束日期','date',true],['leave_hours','請假時數','number',true],['reason','原因','textarea',true],['proof_path','證明文件路徑','text'],
       ['status','審核狀態','select',true,[['pending','待審核'],['approved','已核准'],['rejected','已退回']]],['review_note','審核備註','textarea']
     ],
     bullying_complaints: [
-      ['employee_id','申訴員工','relation:employees',true],['incident_date','事件日期','date',true],['incident_location','事件地點','text'],['accused_name','被申訴人','text'],
+      ['numbering_rule_id','案件編號規則','number-rule:bullying_complaint'],['case_no','案件編號（可修改）','text',true],['employee_id','申訴員工','relation:employees',true],['incident_date','事件日期','date',true],['incident_location','事件地點','text'],['accused_name','被申訴人','text'],
       ['description','事件說明','textarea',true],['requested_action','希望處理方式','textarea'],['evidence_path','證明文件路徑','text'],
       ['status','處理狀態','select',true,[['submitted','已送出'],['processing','處理中'],['resolved','已處理'],['closed','已結案']]],['handler_note','處理紀錄（保密）','textarea']
     ],
@@ -83,11 +85,11 @@
       ['labor_insurance','勞保自付額','number',true],['health_insurance','健保自付額','number',true],['group_insurance','團保自付額','number',true],['pension_contribution','勞退雇主提繳','number'],['effective_date','生效日期','date',true],['note','備註','textarea']
     ],
     salary_advances: [
-      ['employee_id','員工','relation:employees',true],['advance_date','借支日期','date',true],['amount','借支金額','number',true],['repayment_month','預計扣回月份','month'],
+      ['numbering_rule_id','借支單號規則','number-rule:salary_advance'],['advance_no','借支單號（可修改）','text',true],['employee_id','員工','relation:employees',true],['advance_date','借支日期','date',true],['amount','借支金額','number',true],['repayment_month','預計扣回月份','month'],
       ['status','狀態','select',true,[['pending','待審核'],['approved','已核准'],['deducted','已扣回'],['rejected','已退回'],['cancelled','已取消']]],['note','說明','textarea']
     ],
     payroll_records: [
-      ['employee_id','員工','relation:employees',true],['payroll_month','薪資月份','month',true],['salary_payment_method','發放方式','select',true,[['bank_transfer','銀行匯款'],['cash','領現']]],['bank_code','匯款銀行','select',false,bankOptions],['bank_account_no','匯款帳戶','text'],['bank_fee_mode','匯款手續費方式','radio',true,[['company_bank','本公司銀行（手續費 0 元）'],['other_bank_employee','非本公司銀行（手續費由員工負擔）']]],['transfer_fee','員工負擔匯款手續費','number'],['basic_salary','基本薪資','number',true],['overtime_pay','加班費','number',true],['allowances','津貼／加給','number',true],
+      ['numbering_rule_id','薪資單號規則','number-rule:payroll_record'],['payroll_no','薪資單號（可修改）','text',true],['employee_id','員工','relation:employees',true],['payroll_month','薪資月份','month',true],['salary_payment_method','發放方式','select',true,[['bank_transfer','銀行匯款'],['cash','領現']]],['bank_code','匯款銀行','select',false,bankOptions],['bank_account_no','匯款帳戶','text'],['bank_fee_mode','匯款手續費方式','radio',true,[['company_bank','本公司銀行（手續費 0 元）'],['other_bank_employee','非本公司銀行（手續費由員工負擔）']]],['transfer_fee','員工負擔匯款手續費','number'],['basic_salary','基本薪資','number',true],['overtime_pay','加班費','number',true],['allowances','津貼／加給','number',true],
       ['personal_leave_hours','事假時數（全額扣薪）','number',true],['sick_leave_hours','病假時數（半薪扣款）','number',true],['unpaid_leave_hours','無薪／天然災害不支薪時數','number',true],['labor_insurance','勞保','number',true],['health_insurance','健保','number',true],['group_insurance','團保','number',true],
       ['court_deduction','法院扣薪','number',true],['advance_deduction','借支扣回','number',true],['other_deduction','其他扣款','number',true],['other_deduction_note','其他扣款說明','textarea'],
       ['status','薪資單狀態','select',true,[['draft','草稿'],['confirmed','已確認'],['paid','已發薪']]],['paid_date','發薪日期','date'],['note','備註','textarea']
@@ -111,21 +113,21 @@
       ['issue_date','開立日期','date',true],['numbering_rule_id','證明書編號規則','number-rule:termination_certificate'],['certificate_no','證明書編號（可修改）','text'],['note','補充說明','textarea']
     ],
     vendors: [
-      ['vendor_code','廠商編號','text',true],['name','廠商名稱','text',true],['category','廠商類別','select',true,[['security_equipment','保全設備'],['uniform','制服／配件'],['cleaning','清潔用品'],['repair','修繕工程'],['fire_safety','消防設備'],['electromechanical','機電維護'],['staffing','人力支援'],['office','辦公用品'],['other','其他']]],
+      ['numbering_rule_id','廠商編號規則','number-rule:vendor'],['vendor_code','廠商編號（可修改）','text',true],['name','廠商名稱','text',true],['category','廠商類別','select',true,[['security_equipment','保全設備'],['uniform','制服／配件'],['cleaning','清潔用品'],['repair','修繕工程'],['fire_safety','消防設備'],['electromechanical','機電維護'],['staffing','人力支援'],['office','辦公用品'],['other','其他']]],
       ['tax_id','統一編號','text'],['contact_name','主要聯絡人','text'],['contact_phone','聯絡電話','tel'],['contact_email','電子郵件','email'],['invoice_email','發票寄送信箱','email'],['address','公司地址','text'],
       ['payment_terms','付款條件','select',true,[['cash_payment','現金'],['cod','貨到付款'],['net_30','月結30天'],['net_45','月結45天'],['net_60','月結60天'],['other','其他']]],['bank_name','往來銀行','text'],['bank_account_name','戶名','text'],['bank_account_last5','帳號末五碼','text'],
       ['contract_start_date','合作開始日','date'],['contract_end_date','合約到期日','date'],['status','合作狀態','select',true,[['active','合作中'],['inactive','暫停／終止']]],['service_scope','服務／供應內容','textarea'],['note','備註','textarea']
     ],
     inventory_items: [
-      ['item_code','物品編號','text',true],['item_name','物品名稱','text',true],['category','分類','select',true,[['uniform','服裝配件'],['equipment','保全設備'],['traffic','交通／拒馬設備'],['office','辦公用品'],['cleaning','清潔用品'],['other','其他']]],
+      ['numbering_rule_id','物品編號規則','number-rule:inventory_item'],['item_code','物品編號（可修改）','text',true],['item_name','物品名稱','text',true],['category','分類','select',true,[['uniform','服裝配件'],['equipment','保全設備'],['traffic','交通／拒馬設備'],['office','辦公用品'],['cleaning','清潔用品'],['other','其他']]],
       ['specification','規格／型號','text'],['size','尺寸','text'],['unit','單位','text',true],['minimum_stock','安全庫存量','number',true],['storage_location','存放位置','text'],['status','狀態','select',true,[['active','啟用'],['inactive','停用']]],['note','備註','textarea']
     ],
     inventory_transactions: [
-      ['item_id','物品','relation:inventory_items',true],['transaction_type','異動類型','select',true,[['purchase','採購入庫'],['issue','領用出庫'],['return','退回入庫'],['adjust_in','盤點增加'],['adjust_out','盤點減少']]],['quantity','數量','number',true],['transaction_date','日期','date',true],['vendor_id','採購廠商','relation:vendors'],
-      ['employee_id','領用員工（與案場擇一）','relation:employees'],['site_id','領用案場（與員工擇一）','relation:sites'],['receiver_name','實際領取人','text'],['purpose','用途','text'],['document_no','單據編號','text'],['note','備註','textarea']
+      ['numbering_rule_id','單據編號規則','number-rule:inventory_transaction'],['document_no','單據編號（可修改）','text',true],['item_id','物品','relation:inventory_items',true],['transaction_type','異動類型','select',true,[['purchase','採購入庫'],['issue','領用出庫'],['return','退回入庫'],['adjust_in','盤點增加'],['adjust_out','盤點減少']]],['quantity','數量','number',true],['transaction_date','日期','date',true],['vendor_id','採購廠商','relation:vendors'],
+      ['employee_id','領用員工（與案場擇一）','relation:employees'],['site_id','領用案場（與員工擇一）','relation:sites'],['receiver_name','實際領取人','text'],['purpose','用途','text'],['note','備註','textarea']
     ],
     inventory_loans: [
-      ['document_no','借用單編號','text',true],['item_id','借用設備','relation:inventory_items',true],['employee_id','借用員工','relation:employees',true],['quantity','借用數量','number',true],
+      ['numbering_rule_id','借用單號規則','number-rule:inventory_loan'],['document_no','借用單編號（可修改）','text',true],['item_id','借用設備','relation:inventory_items',true],['employee_id','借用員工','relation:employees',true],['quantity','借用數量','number',true],
       ['loan_date','借用日期','date',true],['expected_return_date','預計歸還日期','date',true],['purpose','借用用途','textarea',true],
       ['condition_out','借出時狀況','select',true,[['good','良好'],['used','已有使用痕跡'],['damaged','已有損傷']]],
       ['status','借用狀態','select',true,[['borrowed','借用中'],['returned','已歸還'],['lost','遺失'],['damaged','損壞待處理']]],
@@ -133,7 +135,7 @@
     ],
     announcements:[['publisher','發布單位','text',true],['content','公告內容','textarea',true],['published_at','發布時間','datetime-local',true],['is_active','狀態','select',true,[['true','上架'],['false','下架']]]],
     employee_rules:[['section_title','守則標題','text',true],['content','守則內容（每行一項）','textarea',true],['sort_order','順序（1 最前面）','number',true],['is_active','員工端顯示','select',true,[['true','顯示'],['false','暫停顯示']]]],
-    numbering_rules:[['target_type','適用用途','select',true,[['employee','員工編號'],['termination_certificate','離職證明書']]],['rule_name','規則名稱','text',true],['prefix','編號字首','text'],['digits','流水號位數','number',true],['start_number','起始號碼','number',true],['last_number','目前已使用至','number',true],['match_job_title','對應職稱（選填提醒）','text'],['is_default','預設規則','select',true,[['true','是'],['false','否']]],['is_active','啟用','select',true,[['true','啟用'],['false','停用']]],['sort_order','顯示順序','number',true]]
+    numbering_rules:[['target_type','適用用途','select',true,numberingTargetOptions],['rule_name','規則名稱','text',true],['prefix','編號字首','text'],['digits','流水號位數','number',true],['start_number','起始號碼','number',true],['last_number','目前已使用至','number',true],['match_job_title','對應職稱（僅員工編號使用）','text'],['is_default','預設規則','select',true,[['true','是'],['false','否']]],['is_active','啟用','select',true,[['true','啟用'],['false','停用']]],['sort_order','顯示順序','number',true]]
   };
 
   const columns = {
@@ -141,16 +143,16 @@
     sites: [['code','代碼'],['name','案場'],['chairman_name','主委'],['household_count','戶數'],['committee_term_no','屆數'],['contract_end_date','合約到期'],['renewal_status','續約進度'],['status','狀態']],
     schedules: [['work_date','日期'],['employee_id','員工'],['site_id','案場'],['shift_type','班別'],['start_time','時間']],
     attendance: [['work_date','日期'],['employee_id','員工'],['site_id','案場'],['clock_in','上班'],['clock_out','下班'],['status','狀態']],
-    supervisor_inspections: [['inspection_date','日期'],['inspection_time','時間'],['site_id','案場'],['employee_id','督導'],['inspection_type','類型'],['overall_result','結果'],['follow_up_status','改善追蹤'],['due_date','期限']],
-    leave_requests: [['employee_id','員工'],['leave_type','假別'],['start_date','開始'],['end_date','結束'],['leave_hours','時數'],['proof_path','證明文件'],['status','狀態']],
-    bullying_complaints: [['created_at','提出時間'],['employee_id','申訴員工'],['incident_date','事件日期'],['accused_name','被申訴人'],['evidence_path','證明文件'],['status','狀態']],
+    supervisor_inspections: [['inspection_no','巡查單號'],['inspection_date','日期'],['inspection_time','時間'],['site_id','案場'],['employee_id','督導'],['inspection_type','類型'],['overall_result','結果'],['follow_up_status','改善追蹤'],['due_date','期限']],
+    leave_requests: [['request_no','請假單號'],['employee_id','員工'],['leave_type','假別'],['start_date','開始'],['end_date','結束'],['leave_hours','時數'],['proof_path','證明文件'],['status','狀態']],
+    bullying_complaints: [['case_no','案件編號'],['created_at','提出時間'],['employee_id','申訴員工'],['incident_date','事件日期'],['accused_name','被申訴人'],['evidence_path','證明文件'],['status','狀態']],
     employee_payroll_profiles: [['employee_id','員工'],['basic_salary','月薪總額'],['personal_leave_day_rate','事假／日'],['sick_leave_day_rate','病假／日'],['labor_insurance','勞保'],['health_insurance','健保'],['group_insurance','團保'],['pension_contribution','勞退提繳'],['effective_date','生效日期']],
-    salary_advances: [['advance_date','日期'],['employee_id','員工'],['amount','金額'],['repayment_month','扣回月份'],['status','狀態']],
-    payroll_records: [['payroll_month','月份'],['employee_id','員工'],['salary_payment_method','發放方式'],['net_pay','員工實發'],['transfer_fee','員工負擔手續費'],['status','狀態']],
+    salary_advances: [['advance_no','借支單號'],['advance_date','日期'],['employee_id','員工'],['amount','金額'],['repayment_month','扣回月份'],['status','狀態']],
+    payroll_records: [['payroll_no','薪資單號'],['payroll_month','月份'],['employee_id','員工'],['salary_payment_method','發放方式'],['net_pay','員工實發'],['transfer_fee','員工負擔手續費'],['status','狀態']],
     termination_certificates: [['certificate_no','證明編號'],['employee_id','員工'],['separation_date','離職日期'],['issue_date','開立日期']],
     vendors: [['vendor_code','編號'],['name','廠商名稱'],['category','類別'],['tax_id','統編'],['contact_name','聯絡人'],['contact_phone','電話'],['payment_terms','付款條件'],['contract_end_date','合約到期'],['status','狀態']],
     inventory_items: [['item_code','編號'],['item_name','物品'],['category','分類'],['specification','規格'],['size','尺寸'],['current_stock','公司總數'],['borrowed_stock','借出／不可借'],['available_stock','目前可借'],['unit','單位'],['minimum_stock','安全庫存']],
-    inventory_transactions: [['transaction_date','日期'],['transaction_type','類型'],['item_id','物品'],['quantity','數量'],['vendor_id','廠商'],['employee_id','員工'],['site_id','案場'],['receiver_name','領取人']],
+    inventory_transactions: [['document_no','單據編號'],['transaction_date','日期'],['transaction_type','類型'],['item_id','物品'],['quantity','數量'],['vendor_id','廠商'],['employee_id','員工'],['site_id','案場'],['receiver_name','領取人']],
     inventory_loans: [['document_no','借用單號'],['loan_date','借用日'],['expected_return_date','預計歸還'],['employee_id','借用員工'],['item_id','設備'],['quantity','數量'],['display_status','狀態'],['returned_date','實際歸還']],
     audit_logs: [['created_at','操作時間'],['actor_name','操作者'],['action','動作'],['table_name','資料表'],['record_id','資料編號']],
     announcements:[['published_at','發布時間'],['publisher','發布單位'],['content','內容'],['is_active','狀態']],
@@ -177,7 +179,7 @@
       inventory_items:[{id:'i1',item_code:'EQ001',item_name:'筆記型電腦',category:'office',specification:'業務簡報用',unit:'台',current_stock:2,minimum_stock:0,status:'active'}],
       site_assignments:[{id:'sa1',employee_id:'e1',site_id:'s1',start_date:today,is_manager:true},{id:'sa2',employee_id:'e2',site_id:'s1',start_date:today,is_manager:false}],
       inventory_transactions:[],inventory_loans:[],
-      numbering_rules:[{id:'nr-a',target_type:'employee',rule_name:'一般員工',prefix:'A',digits:3,start_number:1,is_default:true,is_active:true,sort_order:10},{id:'nr-b',target_type:'employee',rule_name:'現金班人員',prefix:'B',digits:3,start_number:1,is_default:false,is_active:true,sort_order:20},{id:'nr-c',target_type:'employee',rule_name:'總幹事',prefix:'C',digits:3,start_number:1,match_job_title:'總幹事',is_default:false,is_active:true,sort_order:30},{id:'nr-term',target_type:'termination_certificate',rule_name:'離職證明書',prefix:'HJ-TERM-',digits:5,start_number:1,is_default:true,is_active:true,sort_order:10}]
+      numbering_rules:[{id:'nr-a',target_type:'employee',rule_name:'一般員工',prefix:'A',digits:3,start_number:1,last_number:3,is_default:true,is_active:true,sort_order:10},{id:'nr-b',target_type:'employee',rule_name:'現金班人員',prefix:'B',digits:3,start_number:1,last_number:0,is_default:false,is_active:true,sort_order:20},{id:'nr-c',target_type:'employee',rule_name:'總幹事',prefix:'C',digits:3,start_number:1,last_number:0,match_job_title:'總幹事',is_default:false,is_active:true,sort_order:30},{id:'nr-site',target_type:'site',rule_name:'案場代碼',prefix:'SITE-',digits:4,start_number:1,last_number:0,is_default:true,is_active:true,sort_order:10},{id:'nr-ins',target_type:'supervisor_inspection',rule_name:'督導巡查單',prefix:'INS-',digits:6,start_number:1,last_number:0,is_default:true,is_active:true,sort_order:10},{id:'nr-leave',target_type:'leave_request',rule_name:'請假申請單',prefix:'LEAVE-',digits:6,start_number:1,last_number:0,is_default:true,is_active:true,sort_order:10},{id:'nr-case',target_type:'bullying_complaint',rule_name:'申訴案件',prefix:'CASE-',digits:6,start_number:1,last_number:0,is_default:true,is_active:true,sort_order:10},{id:'nr-adv',target_type:'salary_advance',rule_name:'員工借支單',prefix:'ADV-',digits:6,start_number:1,last_number:0,is_default:true,is_active:true,sort_order:10},{id:'nr-pay',target_type:'payroll_record',rule_name:'薪資明細單',prefix:'PAY-',digits:6,start_number:1,last_number:0,is_default:true,is_active:true,sort_order:10},{id:'nr-term',target_type:'termination_certificate',rule_name:'離職證明書',prefix:'HJ-TERM-',digits:5,start_number:1,last_number:0,is_default:true,is_active:true,sort_order:10},{id:'nr-vendor',target_type:'vendor',rule_name:'合作廠商',prefix:'V',digits:4,start_number:1,last_number:1,is_default:true,is_active:true,sort_order:10},{id:'nr-item',target_type:'inventory_item',rule_name:'庫存物品',prefix:'ITEM-',digits:5,start_number:1,last_number:0,is_default:true,is_active:true,sort_order:10},{id:'nr-stock',target_type:'inventory_transaction',rule_name:'庫存異動單',prefix:'INV-',digits:6,start_number:1,last_number:0,is_default:true,is_active:true,sort_order:10},{id:'nr-loan',target_type:'inventory_loan',rule_name:'設備借用單',prefix:'LOAN-',digits:6,start_number:1,last_number:0,is_default:true,is_active:true,sort_order:10},{id:'nr-quote',target_type:'tender_quotation',rule_name:'競標報價單',prefix:'Q-',digits:6,start_number:1,last_number:0,is_default:true,is_active:true,sort_order:10},{id:'nr-pc',target_type:'property_contract',rule_name:'物業合約',prefix:'C-P-',digits:6,start_number:1,last_number:0,is_default:true,is_active:true,sort_order:10},{id:'nr-sc',target_type:'security_contract',rule_name:'保全合約',prefix:'C-S-',digits:6,start_number:1,last_number:0,is_default:true,is_active:true,sort_order:10}]
     };
   }
 
@@ -225,7 +227,7 @@
     if(key==='item_id'&&value)return state.relations.inventory_items.find(row=>row.id===value)?.item_name||value;
     if(key==='vendor_id'&&value)return state.relations.vendors.find(row=>row.id===value)?.name||value;
     if(key==='numbering_rule_id'&&value)return state.relations.numbering_rules.find(row=>row.id===value)?.rule_name||value;
-    if(key==='target_type')return value==='employee'?'員工編號':value==='termination_certificate'?'離職證明書':value;
+    if(key==='target_type')return numberingTargetOptions.find(option=>option[0]===value)?.[1]||value;
     if(key==='salary_payment_method')return value==='cash'?'領現':value==='bank_transfer'?'銀行匯款':value||'—';
     if(key==='action')return({INSERT:'新增',UPDATE:'修改',DELETE:'刪除'})[value]||value;
     if (key==='start_time' && value) return value;
@@ -365,10 +367,12 @@
     if(table==='payroll_records'&&!record) record={payroll_month:new Date().toISOString().slice(0,7),salary_payment_method:'bank_transfer',bank_fee_mode:'company_bank',transfer_fee:0,basic_salary:0,overtime_pay:0,allowances:0,personal_leave_hours:0,sick_leave_hours:0,unpaid_leave_hours:0,labor_insurance:0,health_insurance:0,group_insurance:0,court_deduction:0,advance_deduction:0,other_deduction:0,status:'draft'};
     if(table==='inventory_items'&&!record)record={unit:'個',minimum_stock:0,status:'active',category:'other'};
     if(table==='inventory_transactions'&&!record)record={transaction_date:new Date().toISOString().slice(0,10),transaction_type:'issue',quantity:1};
-    if(table==='inventory_loans'&&!record){const today=new Date(),due=new Date(today.getTime()+7*86400000);record={document_no:`LOAN-${today.toISOString().replace(/\D/g,'').slice(0,14)}`,loan_date:today.toISOString().slice(0,10),expected_return_date:due.toISOString().slice(0,10),quantity:1,condition_out:'good',status:'borrowed'};}
+    if(table==='inventory_loans'&&!record){const today=new Date(),due=new Date(today.getTime()+7*86400000);record={loan_date:today.toISOString().slice(0,10),expected_return_date:due.toISOString().slice(0,10),quantity:1,condition_out:'good',status:'borrowed'};}
     if(table==='vendors'&&!record)record={category:'other',payment_terms:'net_30',status:'active'};
     if(table==='supervisor_inspections'&&!record){const now=new Date();record={inspection_date:now.toISOString().slice(0,10),inspection_time:now.toTimeString().slice(0,5),employee_id:state.user?.employeeId||'',inspection_type:'routine',overall_result:'pass',staff_discipline:'good',post_records:'good',equipment_status:'good',environment_safety:'good',follow_up_status:'none'};}
-    if(table==='termination_certificates'&&!record){const rule=state.relations.numbering_rules.find(x=>x.target_type==='termination_certificate'&&x.is_default&&x.is_active!==false);record={issue_date:new Date().toISOString().slice(0,10),numbering_rule_id:rule?.id||''};}
+    if(table==='termination_certificates'&&!record)record={issue_date:new Date().toISOString().slice(0,10)};
+    if(!record&&numberingTargets[table])record={};
+    if(!state.editing.id&&numberingTargets[table]){const target=numberingTargets[table].target,rule=state.relations.numbering_rules.find(x=>x.target_type===target&&x.is_default&&x.is_active!==false)||state.relations.numbering_rules.find(x=>x.target_type===target&&x.is_active!==false);record={...(record||{}),numbering_rule_id:record?.numbering_rule_id||rule?.id||''};}
     if(table==='numbering_rules'&&!record)record={target_type:'employee',prefix:'A',digits:3,start_number:1,last_number:0,is_default:false,is_active:true,sort_order:(state.relations.numbering_rules.length+1)*10};
     if(table==='employees') {
       const assigned=[],permissions=[];let payrollProfile=null;
@@ -379,7 +383,7 @@
     }
     $('#dialogTitle').textContent=`${state.editing.id?'編輯':'新增'}${viewInfo[Object.keys(viewInfo).find(k=>viewInfo[k][1]===table)]?.[0]||'資料'}`;
     $('#formFields').innerHTML=fields[table].map(field=>inputFor(field,record)).join('');
-    if(['employees','termination_certificates'].includes(table))initNumberSuggestion(table,record);
+    if(numberingTargets[table])initNumberSuggestion(table,record);
     initPasswordControl();
     if(table==='employees'){initEmployeeIdentityUpload(record?.id_document_path||'');initLicensePicker();initSalaryPaymentMethod();initAutomaticLeaveRates('payroll_');initAutomaticInsuranceRates('payroll_');}
     initSitePicker();
@@ -391,8 +395,10 @@
   }
 
   function numberPattern(rule){const prefix=String(rule?.prefix||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');return new RegExp(`^${prefix}(\\d{${Math.max(1,Math.min(10,Number(rule?.digits||3)))}})$`,'i');}
-  async function suggestedNumber(rule,targetTable,currentId){const field=targetTable==='employees'?'employee_no':'certificate_no',rows=(await db.list(targetTable)).filter(row=>row.id!==currentId),pattern=numberPattern(rule),used=rows.map(row=>String(row[field]||'').match(pattern)).filter(Boolean).map(match=>Number(match[1])),next=Math.max(Number(rule.start_number||1)-1,Number(rule.last_number||0),...used)+1;return`${rule.prefix||''}${String(next).padStart(Math.max(1,Number(rule.digits||3)),'0')}`;}
-  function initNumberSuggestion(table,record={}){const target=table==='employees'?'employee':'termination_certificate',select=$('[name="numbering_rule_id"]'),input=$(`[name="${table==='employees'?'employee_no':'certificate_no'}"]`),button=$('.number-rule-suggest');if(!select||!input||!button)return;const apply=async force=>{const rule=state.relations.numbering_rules.find(x=>x.id===select.value&&x.target_type===target);if(!rule)return;if(!force&&input.value)return;button.disabled=true;try{input.value=await suggestedNumber(rule,table,record.id);input.dataset.suggested='true';$('#formMessage').textContent=`建議編號：${input.value}（仍可手動修改）`;}catch(error){$('#formMessage').textContent=`編號建議失敗：${error.message}`;}finally{button.disabled=false;}};button.onclick=()=>apply(true);select.onchange=()=>apply(true);input.addEventListener('input',()=>delete input.dataset.suggested);if(table==='employees'){const title=$('[name="job_title"]');title?.addEventListener('change',()=>{const match=state.relations.numbering_rules.find(x=>x.target_type==='employee'&&x.is_active!==false&&x.match_job_title===title.value);if(match){select.value=match.id;apply(true)}});}apply(false);}
+  async function suggestedNumber(rule,targetTable,currentId){const definition=numberingTargets[targetTable]||{target:rule.target_type,field:'document_no'};if(cloudEnabled&&!demo){const{data,error}=await client.rpc('reserve_document_number',{p_target_type:definition.target,p_rule_id:rule.id});if(!error&&data)return String(data);if(error&&!/could not find|schema cache|does not exist/i.test(error.message||''))throw error}const rows=targetTable?(await db.list(targetTable)).filter(row=>row.id!==currentId):[],pattern=numberPattern(rule),used=rows.map(row=>String(row[definition.field]||'').match(pattern)).filter(Boolean).map(match=>Number(match[1])),next=Math.max(Number(rule.start_number||1)-1,Number(rule.last_number||0),...used)+1;rule.last_number=next;return`${rule.prefix||''}${String(next).padStart(Math.max(1,Number(rule.digits||3)),'0')}`;}
+  function initNumberSuggestion(table,record={}){const definition=numberingTargets[table];if(!definition)return;const{target,field}=definition,select=$('[name="numbering_rule_id"]'),input=$(`[name="${field}"]`),button=$('.number-rule-suggest');if(!select||!input||!button)return;const apply=async force=>{const rule=state.relations.numbering_rules.find(x=>x.id===select.value&&x.target_type===target);if(!rule)return;if(!force&&input.value)return;button.disabled=true;try{input.value=await suggestedNumber(rule,table,record.id);input.dataset.suggested='true';$('#formMessage').textContent=`已保留下一號：${input.value}（仍可手動修改）`;}catch(error){$('#formMessage').textContent=`編號建議失敗：${error.message}`;}finally{button.disabled=false;}};button.onclick=()=>apply(true);select.onchange=()=>apply(true);input.addEventListener('input',()=>delete input.dataset.suggested);if(table==='employees'){const title=$('[name="job_title"]');title?.addEventListener('change',()=>{const match=state.relations.numbering_rules.find(x=>x.target_type==='employee'&&x.is_active!==false&&x.match_job_title===title.value);if(match){select.value=match.id;apply(true)}});}apply(false);}
+  async function nextManagedNumber(target,table,field){const rule=state.relations.numbering_rules.find(x=>x.target_type===target&&x.is_default&&x.is_active!==false)||state.relations.numbering_rules.find(x=>x.target_type===target&&x.is_active!==false);if(!rule)return'';if(cloudEnabled&&!demo){const{data,error}=await client.rpc('reserve_document_number',{p_target_type:target,p_rule_id:rule.id});if(!error&&data)return String(data);if(error&&!/could not find|schema cache|does not exist/i.test(error.message||''))throw error}const rows=table?await db.list(table):[],pattern=numberPattern(rule),used=rows.map(row=>String(row[field]||'').match(pattern)).filter(Boolean).map(match=>Number(match[1])),next=Math.max(Number(rule.start_number||1)-1,Number(rule.last_number||0),...used)+1;rule.last_number=next;return`${rule.prefix||''}${String(next).padStart(Math.max(1,Number(rule.digits||3)),'0')}`;}
+  window.ERP_NUMBERING={next:nextManagedNumber};
 
   function initPasswordControl(){const input=$('.password-control input'),toggle=$('.password-toggle'),status=$('.password-state');if(!input||!toggle||!status)return;toggle.onclick=()=>{const showing=input.type==='text';input.type=showing?'password':'text';toggle.textContent=showing?'顯示':'隱藏';toggle.setAttribute('aria-label',showing?'顯示密碼':'隱藏密碼')};input.oninput=()=>{status.textContent=input.value?`將設定新的登入密碼（目前 ${input.value.length} 碼）`:status.dataset.configured==='true'?'已設定登入密碼；留空不會變更。':'尚未設定登入密碼。';status.classList.toggle('warning',Boolean(input.value)&&input.value.length<8)};}
 
