@@ -1,5 +1,5 @@
-// Replaces hongjia-erp-v2-91 so installed ERP apps receive the latest site management fields.
-const CACHE = 'hongjia-erp-v2-92';
+// Replaces hongjia-erp-v2-92 so installed ERP apps receive the relocated schedule print settings.
+const CACHE = 'hongjia-erp-v2-93';
 const SHELL = ['./','index.html','mobile.html','favicon-v2.ico','config.js','manifest-v2.json','mobile-manifest-v2.json','assets/app.css','assets/app.js','assets/calendar.js','assets/tender-quotes.js','assets/tender-documents.js','assets/tender-contracts.js','assets/police-approvals.js','assets/website-notifications.js','assets/mobile.css','assets/mobile-enhancements.css','assets/mobile.js','assets/company-logo.png','assets/erp-icon-v2-192.png','assets/erp-icon-v2-512.png','assets/erp-icon-v2-maskable.png','assets/employee-icon-v2-192.png','assets/employee-icon-v2-512.png','assets/employee-icon-v2-maskable.png'];
 
 self.addEventListener('install', event => {
