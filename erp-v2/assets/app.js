@@ -565,6 +565,8 @@
       if(String(confirmation).trim().toUpperCase()!==String(site.code).trim().toUpperCase())return showNotice('案場代碼不一致，已取消刪除。','error');
       try{
         if(cloudEnabled){
+          const{error:preserveCashError}=await client.from('schedules').update({site_id:null}).eq('site_id',id).eq('shift_type','cash').eq('cash_payment_status','paid');
+          if(preserveCashError)throw new Error(`已領現憑證保留失敗：${preserveCashError.message}`);
           const childTables=['attendance','supervisor_inspections','inventory_transactions','schedules','site_assignments'];
           for(const childTable of childTables){
             const{error}=await client.from(childTable).delete().eq('site_id',id);
@@ -574,7 +576,8 @@
           if(error)throw error;
         }else{
           const data=demoData();
-          for(const key of ['attendance','supervisor_inspections','inventory_transactions','schedules','site_assignments'])if(Array.isArray(data[key]))data[key]=data[key].filter(row=>row.site_id!==id);
+          if(Array.isArray(data.schedules))data.schedules=data.schedules.map(row=>row.site_id===id&&row.shift_type==='cash'&&row.cash_payment_status==='paid'?{...row,site_id:null}:row).filter(row=>row.site_id!==id);
+          for(const key of ['attendance','supervisor_inspections','inventory_transactions','site_assignments'])if(Array.isArray(data[key]))data[key]=data[key].filter(row=>row.site_id!==id);
           data.sites=(data.sites||[]).filter(row=>row.id!==id);
           localStorage.setItem(demoKey,JSON.stringify(data));
         }
