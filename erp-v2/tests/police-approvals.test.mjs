@@ -14,7 +14,7 @@ test('警局核備與員工管理共用一對一資料並有獨立清冊',async(
     read('admin-service-worker.js')
   ]);
   assert.match(html,/data-view="policeApprovals"/);
-  assert.match(html,/police-approvals\.js\?v=3/);
+  assert.match(html,/police-approvals\.js\?v=4/);
   assert.match(html,/assets\/app\.js\?v=90/);
   assert.match(app,/\['policeApprovals','警局核備'\]/);
   assert.match(app,/police_approval_status/);
@@ -32,6 +32,6 @@ test('警局核備與員工管理共用一對一資料並有獨立清冊',async(
   assert.match(module,/printSelectedRows/);
   assert.match(sql,/employee_id uuid not null unique/);
   assert.match(sql,/has_feature_permission\('policeApprovals'\)/);
-  assert.match(worker,/hongjia-erp-v2-96/);
-  assert.match(adminWorker,/hongjia-admin-pwa-v17/);
+  assert.match(worker,/hongjia-erp-v2-97/);
+  assert.match(adminWorker,/hongjia-admin-pwa-v18/);
 });

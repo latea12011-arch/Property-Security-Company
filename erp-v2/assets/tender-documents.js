@@ -343,7 +343,7 @@
     const isChecklist = kind === 'checklist';
     return `<!doctype html><html lang="zh-TW"><head><meta charset="utf-8"><title>${esc(record.project_name)}－投標文件</title>
       <style>
-        @page{size:A4 ${isChecklist ? 'portrait' : 'landscape'};margin:9mm}
+        @page{size:A4 ${isChecklist ? 'portrait' : 'landscape'};margin:0}
         *{box-sizing:border-box}body{margin:0;color:#102b45;font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif}
         .print-page{position:relative;min-height:${isChecklist ? '277mm' : '190mm'};padding:12mm;page-break-after:always;border:2px solid #102b45}
         .print-page:last-child{page-break-after:auto}.sender{font-size:13px;line-height:1.65}.envelope-number{position:absolute;right:12mm;top:12mm;font-size:18px;font-weight:800}
