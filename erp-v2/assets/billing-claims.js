@@ -13,7 +13,7 @@
     property:{name:'紘嘉公寓大廈管理維護股份有限公司',taxId:'70409141'}
   };
   const statusLabels={draft:'草稿',sent:'已送出',paid:'已收款',cancelled:'已取消'};
-  const taxLabels={tax_included:'費用含稅',tax_excluded:'費用未稅（另加 5%）',tax_exempt:'免稅'};
+  const taxLabels={tax_included:'稅內含',tax_excluded:'稅外加（未稅金額另加 5%）',tax_exempt:'免稅'};
   let sites=[];
   let claims=[];
   let notice=(message,type)=>console[type==='error'?'error':'log'](message);
@@ -158,7 +158,7 @@
         <label>設備／耗材費<input name="equipment_fee" type="number" min="0" step="1" value="${Number(record.equipment_fee||0)}"></label>
         <label>其他費用<input name="other_fee" type="number" min="0" step="1" value="${Number(record.other_fee||0)}"></label>
         <label>其他費用說明<input name="other_fee_description" value="${esc(record.other_fee_description||'')}"></label>
-        <label class="wide">稅額方式<select name="tax_mode"><option value="tax_included" ${record.tax_mode!=='tax_excluded'&&record.tax_mode!=='tax_exempt'?'selected':''}>費用含稅</option><option value="tax_excluded" ${record.tax_mode==='tax_excluded'?'selected':''}>費用未稅（另加 5%）</option><option value="tax_exempt" ${record.tax_mode==='tax_exempt'?'selected':''}>免稅</option></select></label>
+        <label class="wide">稅額方式<select name="tax_mode"><option value="tax_included" ${record.tax_mode!=='tax_excluded'&&record.tax_mode!=='tax_exempt'?'selected':''}>稅內含</option><option value="tax_excluded" ${record.tax_mode==='tax_excluded'?'selected':''}>稅外加（未稅金額另加 5%）</option><option value="tax_exempt" ${record.tax_mode==='tax_exempt'?'selected':''}>免稅</option></select></label>
         <div class="billing-total wide" id="billingTotalPreview"></div>
         <div class="form-section wide">匯款資訊（選填）</div>
         <label>銀行<input name="payment_bank" value="${esc(record.payment_bank||'')}"></label>
