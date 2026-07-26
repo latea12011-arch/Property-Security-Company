@@ -1,6 +1,6 @@
-// Previous cache: hongjia-admin-pwa-v13
-const ADMIN_CACHE='hongjia-admin-pwa-v14';
-const ADMIN_SHELL=['./index.html','./favicon-v2.ico','./config.js','./manifest-v2.json','./assets/app.css','./assets/app.js','./assets/calendar.js','./assets/tender-quotes.js','./assets/tender-documents.js','./assets/tender-contracts.js','./assets/police-approvals.js','./assets/website-notifications.js','./assets/company-logo.png','./assets/erp-icon-v2-192.png','./assets/erp-icon-v2-512.png','./assets/erp-icon-v2-maskable.png'];
+// Previous cache: hongjia-admin-pwa-v14
+const ADMIN_CACHE='hongjia-admin-pwa-v15';
+const ADMIN_SHELL=['./index.html','./favicon-v2.ico','./config.js','./manifest-v2.json','./assets/app.css','./assets/app.js','./assets/calendar.js','./assets/tender-quotes.js','./assets/tender-documents.js','./assets/tender-contracts.js','./assets/contracts/hongjia-property-mark.png','./assets/police-approvals.js','./assets/website-notifications.js','./assets/company-logo.png','./assets/erp-icon-v2-192.png','./assets/erp-icon-v2-512.png','./assets/erp-icon-v2-maskable.png'];
 
 self.addEventListener('install',event=>{event.waitUntil(caches.open(ADMIN_CACHE).then(cache=>cache.addAll(ADMIN_SHELL)));self.skipWaiting()});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('hongjia-admin-pwa-')&&key!==ADMIN_CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()))});

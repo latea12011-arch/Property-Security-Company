@@ -19,6 +19,7 @@ create table if not exists public.tender_contracts (
   monthly_total numeric(14,2) not null default 0,
   service_scope text,
   contract_terms text,
+  formal_details jsonb not null default '{}'::jsonb,
   status text not null default 'draft' check (status in ('draft','attached','signed','active','expired','cancelled')),
   note text,
   created_by uuid references auth.users(id) on delete set null default auth.uid(),
@@ -70,14 +71,15 @@ begin
     insert into public.tender_contracts(
       contract_no,quotation_id,contract_type,company_name,client_name,client_representative,
       project_name,site_address,contract_start_date,contract_end_date,contract_months,
-      payment_due_day,tax_rate,service_scope,contract_terms,status,note
+      payment_due_day,tax_rate,service_scope,contract_terms,formal_details,status,note
     ) values (
       header->>'contract_no',nullif(header->>'quotation_id','')::uuid,normalized_type,normalized_company,
       header->>'client_name',nullif(header->>'client_representative',''),header->>'project_name',
       nullif(header->>'site_address',''),nullif(header->>'contract_start_date','')::date,
       nullif(header->>'contract_end_date','')::date,coalesce(nullif(header->>'contract_months','')::integer,12),
       coalesce(nullif(header->>'payment_due_day','')::integer,10),coalesce(nullif(header->>'tax_rate','')::numeric,5),
-      header->>'service_scope',header->>'contract_terms',coalesce(header->>'status','draft'),header->>'note'
+      header->>'service_scope',header->>'contract_terms',coalesce((header->>'formal_details')::jsonb,'{}'::jsonb),
+      coalesce(header->>'status','draft'),header->>'note'
     ) returning id into cid;
   else
     update public.tender_contracts set
@@ -89,7 +91,8 @@ begin
       contract_months=coalesce(nullif(header->>'contract_months','')::integer,12),
       payment_due_day=coalesce(nullif(header->>'payment_due_day','')::integer,10),
       tax_rate=coalesce(nullif(header->>'tax_rate','')::numeric,5),service_scope=header->>'service_scope',
-      contract_terms=header->>'contract_terms',status=coalesce(header->>'status','draft'),note=header->>'note',updated_at=now()
+      contract_terms=header->>'contract_terms',formal_details=coalesce((header->>'formal_details')::jsonb,'{}'::jsonb),
+      status=coalesce(header->>'status','draft'),note=header->>'note',updated_at=now()
     where id=target_id returning id into cid;
     if cid is null then raise exception '找不到合約'; end if;
     delete from public.tender_contract_items where contract_id=cid;
