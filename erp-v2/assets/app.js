@@ -363,7 +363,7 @@
     if(table==='inventory_loans')rows=rows.map(row=>({...row,display_status:effectiveLoanStatus(row)}));const cols=columns[table];
     const canAdd=!['bullying_complaints','audit_logs'].includes(table);
     $('#content').innerHTML=`<article class="panel"><div class="panel-head"><div><h3>${viewInfo[view][0]}</h3><span class="muted">共 ${rows.length} 筆${table==='bullying_complaints'?'（保密資料）':''}</span></div>${canAdd?'<button class="btn primary" id="addRecord">＋ 新增</button>':''}</div>
-      <div class="table-wrap"><table><thead><tr>${cols.map(x=>`<th>${x[1]}</th>`).join('')}<th>操作</th></tr></thead><tbody>${rows.length?rows.map(row=>`<tr>${cols.map(([key])=>`<td>${cellHtml(key,row[key])}</td>`).join('')}<td><div class="action-row"><button class="mini-button" data-edit="${esc(row.id)}">編輯</button>${['employees','payroll_records','employment_certificates','termination_certificates','salary_advances','inventory_transactions','inventory_loans'].includes(table)?`<button class="mini-button" data-print="${esc(row.id)}">${table==='employees'?'下載／列印':'列印'}</button>`:''}${table==='employment_certificates'?`<button class="mini-button" data-download-employment="${esc(row.id)}">下載 Word</button>`:''}${table==='inventory_loans'&&row.status==='borrowed'?`<button class="mini-button" data-return-loan="${esc(row.id)}">辦理歸還</button>`:''}${['bullying_complaints','inventory_loans'].includes(table)?'':`<button class="mini-button danger" data-delete="${esc(row.id)}">${table==='employees'?'永久刪除':'刪除'}</button>`}</div></td></tr>`).join(''):`<tr><td colspan="${cols.length+1}" class="empty">尚無資料。</td></tr>`}</tbody></table></div></article>`;
+      <div class="table-wrap"><table><thead><tr>${cols.map(x=>`<th>${x[1]}</th>`).join('')}<th>操作</th></tr></thead><tbody>${rows.length?rows.map(row=>`<tr>${cols.map(([key])=>`<td>${cellHtml(key,row[key])}</td>`).join('')}<td><div class="action-row"><button class="mini-button" data-edit="${esc(row.id)}">編輯</button>${['employees','payroll_records','employment_certificates','termination_certificates','salary_advances','inventory_transactions','inventory_loans'].includes(table)?`<button class="mini-button" data-print="${esc(row.id)}">${table==='employees'?'下載／列印':'列印'}</button>`:''}${table==='employment_certificates'?`<button class="mini-button" data-download-employment="${esc(row.id)}">下載 Word</button>`:''}${table==='inventory_loans'&&row.status==='borrowed'?`<button class="mini-button" data-return-loan="${esc(row.id)}">辦理歸還</button>`:''}${['bullying_complaints','inventory_loans'].includes(table)?'':`<button class="mini-button danger" data-delete="${esc(row.id)}">${['employees','sites'].includes(table)?'永久刪除':'刪除'}</button>`}</div></td></tr>`).join(''):`<tr><td colspan="${cols.length+1}" class="empty">尚無資料。</td></tr>`}</tbody></table></div></article>`;
     if(table==='audit_logs'){$$('.action-row').forEach(row=>row.innerHTML='<span class="muted">唯讀</span>');const download=document.createElement('button'),archive=document.createElement('button');download.className='btn ghost';download.textContent='下載備份';download.onclick=()=>{if(downloadAuditArchive(rows))showNotice(`已下載 ${rows.length} 筆操作紀錄。`,'success')};archive.className='btn primary';archive.textContent='下載並清除雲端';archive.onclick=()=>archiveAndClearAuditLogs(rows);$('.panel-head').append(download,archive);}
     if(table==='sites'){
       const header=$('.table-wrap thead tr');header.insertAdjacentHTML('afterbegin','<th><input id="siteSelectAll" type="checkbox" aria-label="全選案場"></th>');
@@ -557,6 +557,34 @@
   }
 
   async function deleteRecord(table,id) {
+    if(table==='sites'){
+      const site=state.relations.sites.find(row=>row.id===id);if(!site)return showNotice('找不到要刪除的案場資料。','error');
+      if(state.user?.role!=='admin')return showNotice('只有系統管理員可以永久刪除案場。','error');
+      const confirmation=prompt(`這會永久刪除「${site.name}」及其排班、打卡、派駐、督導巡查與案場領用紀錄，無法復原。\n\n請輸入案場代碼 ${site.code} 確認：`);
+      if(confirmation===null)return;
+      if(String(confirmation).trim().toUpperCase()!==String(site.code).trim().toUpperCase())return showNotice('案場代碼不一致，已取消刪除。','error');
+      try{
+        if(cloudEnabled){
+          const childTables=['attendance','supervisor_inspections','inventory_transactions','schedules','site_assignments'];
+          for(const childTable of childTables){
+            const{error}=await client.from(childTable).delete().eq('site_id',id);
+            if(error&&error.code!=='42P01')throw new Error(`${childTable} 清除失敗：${error.message}`);
+          }
+          const{error}=await client.from('sites').delete().eq('id',id);
+          if(error)throw error;
+        }else{
+          const data=demoData();
+          for(const key of ['attendance','supervisor_inspections','inventory_transactions','schedules','site_assignments'])if(Array.isArray(data[key]))data[key]=data[key].filter(row=>row.site_id!==id);
+          data.sites=(data.sites||[]).filter(row=>row.id!==id);
+          localStorage.setItem(demoKey,JSON.stringify(data));
+        }
+        if(state.scheduleSite===id)state.scheduleSite='';
+        if(state.attendanceSite===id)state.attendanceSite='';
+        if(state.cashReceiptSite===id)state.cashReceiptSite='';
+        await loadRelations();await renderCurrent();showNotice(`案場 ${site.code}－${site.name} 已永久刪除。`,'success');
+      }catch(error){showNotice(`案場永久刪除失敗：${error.message}`,'error')}
+      return;
+    }
     if(table==='employees'){
       const employee=state.relations.employees.find(row=>row.id===id);if(!employee)return showNotice('找不到員工資料。','error');
       const confirmation=prompt(`這會永久刪除「${employee.full_name}」的員工資料、登入帳號、排班、打卡、請假及薪資紀錄，無法復原。\n\n請輸入員工編號 ${employee.employee_no} 確認：`);if(confirmation===null)return;if(String(confirmation).trim().toUpperCase()!==String(employee.employee_no).trim().toUpperCase())return showNotice('員工編號不一致，已取消刪除。','error');
