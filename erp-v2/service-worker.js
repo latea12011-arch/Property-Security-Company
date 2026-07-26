@@ -1,5 +1,5 @@
-// Replaces hongjia-erp-v2-101 so high-volume management lists receive instant search.
-const CACHE = 'hongjia-erp-v2-102';
+// Replaces hongjia-erp-v2-102 so employee identity categories update immediately.
+const CACHE = 'hongjia-erp-v2-103';
 const SHELL = ['./','index.html','mobile.html','favicon-v2.ico','config.js','manifest-v2.json','mobile-manifest-v2.json','assets/app.css','assets/app.js','assets/calendar.js','assets/tender-quotes.js','assets/tender-documents.js','assets/tender-contracts.js','assets/contracts/hongjia-property-mark.png','assets/police-approvals.js','assets/website-notifications.js','assets/mobile.css','assets/mobile-enhancements.css','assets/mobile.js','assets/company-logo.png','assets/erp-icon-v2-192.png','assets/erp-icon-v2-512.png','assets/erp-icon-v2-maskable.png','assets/employee-icon-v2-192.png','assets/employee-icon-v2-512.png','assets/employee-icon-v2-maskable.png'];
 
 self.addEventListener('install', event => {

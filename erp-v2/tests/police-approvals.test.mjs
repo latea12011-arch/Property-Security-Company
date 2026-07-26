@@ -32,6 +32,6 @@ test('警局核備與員工管理共用一對一資料並有獨立清冊',async(
   assert.match(module,/printSelectedRows/);
   assert.match(sql,/employee_id uuid not null unique/);
   assert.match(sql,/has_feature_permission\('policeApprovals'\)/);
-  assert.match(worker,/hongjia-erp-v2-102/);
-  assert.match(adminWorker,/hongjia-admin-pwa-v23/);
+  assert.match(worker,/hongjia-erp-v2-103/);
+  assert.match(adminWorker,/hongjia-admin-pwa-v24/);
 });
