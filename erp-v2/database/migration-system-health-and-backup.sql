@@ -39,6 +39,7 @@ begin
   if to_regclass('public.attendance_punch_receipts') is null then issues := issues || '"缺少打卡防重複憑證資料表"'::jsonb; end if;
   if to_regclass('public.employee_payroll_profiles') is null then issues := issues || '"缺少薪資設定資料表"'::jsonb; end if;
   if to_regclass('public.payroll_records') is null then issues := issues || '"缺少薪資明細資料表"'::jsonb; end if;
+  if to_regclass('public.employment_certificates') is null then issues := issues || '"缺少在職證明資料表"'::jsonb; end if;
   if to_regclass('public.website_submissions') is null then issues := issues || '"缺少網站通知資料表"'::jsonb; end if;
   if to_regclass('public.inventory_loans') is null then issues := issues || '"缺少設備借用資料表"'::jsonb; end if;
   if to_regclass('public.employee_rules') is null then issues := issues || '"缺少員工守則資料表"'::jsonb; end if;

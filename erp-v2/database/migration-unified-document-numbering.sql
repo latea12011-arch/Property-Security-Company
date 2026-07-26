@@ -2,7 +2,7 @@
 alter table public.numbering_rules drop constraint if exists numbering_rules_target_type_check;
 alter table public.numbering_rules add constraint numbering_rules_target_type_check check (target_type in (
   'employee','site','supervisor_inspection','leave_request','bullying_complaint',
-  'salary_advance','payroll_record','termination_certificate','tender_quotation',
+  'salary_advance','payroll_record','employment_certificate','termination_certificate','tender_quotation',
   'property_contract','security_contract','vendor','inventory_item',
   'inventory_transaction','inventory_loan'
 ));
@@ -38,6 +38,7 @@ values
   ('bullying_complaint','申訴案件','CASE-',6,1,0,null,true,true,40),
   ('salary_advance','員工借支單','ADV-',6,1,0,null,true,true,50),
   ('payroll_record','薪資明細單','PAY-',6,1,0,null,true,true,60),
+  ('employment_certificate','在職證明書','HJ-EMP-',5,1,0,null,true,true,70),
   ('tender_quotation','競標報價單','Q-',6,1,0,null,true,true,80),
   ('property_contract','物業合約','C-P-',6,1,0,null,true,true,90),
   ('security_contract','保全合約','C-S-',6,1,0,null,true,true,100),
@@ -100,6 +101,7 @@ begin
     ('employees','employee','employee_no'),('sites','site','code'),('supervisor_inspections','supervisor_inspection','inspection_no'),
     ('leave_requests','leave_request','request_no'),('bullying_complaints','bullying_complaint','case_no'),
     ('salary_advances','salary_advance','advance_no'),('payroll_records','payroll_record','payroll_no'),
+    ('employment_certificates','employment_certificate','certificate_no'),
     ('termination_certificates','termination_certificate','certificate_no'),('vendors','vendor','vendor_code'),
     ('inventory_items','inventory_item','item_code'),('inventory_transactions','inventory_transaction','document_no'),
     ('inventory_loans','inventory_loan','document_no'),('tender_quotations','tender_quotation','quote_no'),
