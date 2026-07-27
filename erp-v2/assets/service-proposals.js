@@ -80,7 +80,8 @@
         transition_plan: '前 30 天先完成資料與資產交接、穩定人力排班，再將現場缺失轉成改善計畫。',
         special_requirements: '',
         fee_note: '',
-        closing_message: '我們承諾交付的，不只是一份班表，而是一套可以被看見、被查核、被持續改善的社區管理制度。'
+        closing_message: '我們承諾交付的，不只是一份班表，而是一套可以被看見、被查核、被持續改善的社區管理制度。',
+        slide_overlays: []
       },
       status: 'draft',
       note: ''
@@ -147,6 +148,49 @@
     });
   }
 
+  const overlayPositions = {
+    top_left: '左上',
+    top_right: '右上',
+    center: '中央',
+    bottom_left: '左下',
+    bottom_right: '右下'
+  };
+  const overlayStyles = {
+    title: '標題',
+    note: '白底說明框',
+    dark: '深藍重點框',
+    plain: '透明文字'
+  };
+
+  function slideOverlayRow(item = {}) {
+    const page = Math.min(originalSlideCount, Math.max(1, Number(item.page || 2)));
+    const position = overlayPositions[item.position] ? item.position : 'bottom_right';
+    const style = overlayStyles[item.style] ? item.style : 'note';
+    return `
+      <div class="proposal-slide-overlay-row">
+        <label>頁碼<input class="proposal-overlay-page" type="number" min="1" max="${originalSlideCount}" value="${page}"></label>
+        <label>位置<select class="proposal-overlay-position">${Object.entries(overlayPositions).map(([value, label]) => `<option value="${value}" ${position === value ? 'selected' : ''}>${label}</option>`).join('')}</select></label>
+        <label>樣式<select class="proposal-overlay-style">${Object.entries(overlayStyles).map(([value, label]) => `<option value="${value}" ${style === value ? 'selected' : ''}>${label}</option>`).join('')}</select></label>
+        <label class="proposal-overlay-text-label">顯示文字<textarea class="proposal-overlay-text" placeholder="輸入後會直接顯示在指定的 PPT 頁面">${esc(item.text || '')}</textarea></label>
+        <button class="mini-button danger proposal-remove-overlay" type="button">刪除</button>
+      </div>`;
+  }
+
+  function collectSlideOverlays() {
+    return $$('.proposal-slide-overlay-row').map(row => ({
+      page: Math.min(originalSlideCount, Math.max(1, Number(row.querySelector('.proposal-overlay-page').value || 1))),
+      position: row.querySelector('.proposal-overlay-position').value,
+      style: row.querySelector('.proposal-overlay-style').value,
+      text: row.querySelector('.proposal-overlay-text').value.trim()
+    })).filter(item => item.text);
+  }
+
+  function bindSlideOverlayRows() {
+    $$('.proposal-remove-overlay').forEach(button => {
+      button.onclick = () => button.closest('.proposal-slide-overlay-row').remove();
+    });
+  }
+
   function ensureDialog() {
     let dialog = $('#serviceProposalDialog');
     if (dialog) return dialog;
@@ -168,8 +212,8 @@
           <button type="button" class="icon-button" id="closeServiceProposal">×</button>
         </div>
         <div class="proposal-editor-note">
-          <strong>完整保留原始 PPT 版面</strong>
-          <span>預覽與列印會依原始 42 頁逐頁呈現，不再把內容重新排成網頁格式；需要修改簡報內文時，請下載原始 PPT 編輯。</span>
+          <strong>ERP 內直接修改 PPT 內容</strong>
+          <span>原始 42 頁版面固定保留；封面社區名稱、結語與下方新增的頁面文字會直接套入預覽及列印，LINE 官方 QR 碼也會自動放在最後一頁。</span>
         </div>
         <div class="form-grid proposal-form-grid">
           <label>企劃書編號<input name="proposal_no" required value="${esc(record.proposal_no)}"></label>
@@ -178,7 +222,7 @@
           <label>連結既有案場<select name="site_id" id="proposalSite"><option value="">尚未建立案場</option>${sites.map(item => `<option value="${esc(item.id)}" ${item.id === record.site_id ? 'selected' : ''}>${esc(item.code)}｜${esc(item.name)}</option>`).join('')}</select></label>
           <label>客戶／管委會名稱<input name="client_name" required value="${esc(record.client_name)}"></label>
           <label>社區／標案名稱<input name="project_name" required value="${esc(record.project_name)}"></label>
-          <label class="wide">案件社區名稱（供 ERP 清單紀錄；原稿封面請下載 PPT 修改）<input name="cover_community_name" value="${esc(record.editable_content.cover_community_name || record.project_name)}" placeholder="例如：陸光五村國宅社區"></label>
+          <label class="wide">首頁封面社區名稱（修改後直接套入第 1 頁）<input name="cover_community_name" value="${esc(record.editable_content.cover_community_name || record.project_name)}" placeholder="例如：陸光五村國宅社區"></label>
           <label class="wide">服務地址<input name="site_address" value="${esc(record.site_address)}"></label>
           <label>社區電話<input name="community_phone" value="${esc(record.community_phone)}"></label>
           <label>聯絡人<input name="contact_name" value="${esc(record.contact_name)}"></label>
@@ -200,6 +244,11 @@
           <div class="proposal-section-checks">${sectionOptions.map(([value, label]) => `<label><input type="checkbox" name="enabled_sections" value="${value}" checked disabled>${label}</label>`).join('')}</div>
         </section>
         <section class="proposal-editor-section">
+          <div class="panel-head"><div><h4>PPT 頁面直接編輯</h4><span class="muted">選擇頁碼、位置與樣式後輸入文字，會直接疊加到該頁原稿；不需要寫 JSON，也不用下載後再修改。</span></div><button id="addProposalSlideOverlay" class="mini-button" type="button">＋新增頁面文字</button></div>
+          <div id="proposalSlideOverlayRows">${(record.editable_content.slide_overlays || []).map(slideOverlayRow).join('')}</div>
+          <div class="proposal-qr-notice"><strong>LINE 官方 QR 碼</strong><span>已固定放在第 42 頁右側，預覽、列印與另存 PDF 都會顯示。</span></div>
+        </section>
+        <section class="proposal-editor-section">
           <div class="panel-head"><div><h4>本案人力配置</h4><span class="muted">職務、人數、班別時間及工作內容皆可依社區異動。</span></div><button id="addProposalStaff" class="mini-button" type="button">＋新增人力</button></div>
           <div class="proposal-staff-head"><span>職務</span><span>人數</span><span>班別／時間</span><span>主要工作</span><span>操作</span></div>
           <div id="proposalStaffRows">${record.staffing.map(staffingRow).join('')}</div>
@@ -213,10 +262,15 @@
       </form>`;
     dialog.showModal();
     bindStaffRows();
+    bindSlideOverlayRows();
     $('#closeServiceProposal').onclick = $('#cancelServiceProposal').onclick = () => dialog.close();
     $('#addProposalStaff').onclick = () => {
       $('#proposalStaffRows').insertAdjacentHTML('beforeend', staffingRow({ headcount: 1 }));
       bindStaffRows();
+    };
+    $('#addProposalSlideOverlay').onclick = () => {
+      $('#proposalSlideOverlayRows').insertAdjacentHTML('beforeend', slideOverlayRow());
+      bindSlideOverlayRows();
     };
     $('#proposalQuote').onchange = event => {
       const quote = quotes.find(item => item.id === event.target.value);
@@ -264,7 +318,8 @@
         transition_plan: values.transition_plan,
         special_requirements: values.special_requirements,
         fee_note: values.fee_note,
-        closing_message: values.closing_message
+        closing_message: values.closing_message,
+        slide_overlays: collectSlideOverlays()
       }
     });
   }
@@ -445,11 +500,27 @@
 
   async function buildDocument(input) {
     const exactRow = normalize(input);
-    const exactPages = visibleOriginalPages().map(page => `
+    const editable = exactRow.editable_content || {};
+    const customOverlays = Array.isArray(editable.slide_overlays) ? editable.slide_overlays : [];
+    const qrUrl = new URL(lineQrPath, window.location.href).href;
+    const exactPages = visibleOriginalPages().map(page => {
+      const overlays = customOverlays.filter(item => Number(item.page) === page.n && item.text).map(item =>
+        `<div class="slide-overlay overlay-${esc(item.position)} overlay-style-${esc(item.style)}">${esc(item.text)}</div>`
+      );
+      if (page.n === 1 && (editable.cover_community_name || exactRow.project_name)) {
+        overlays.unshift(`<div class="cover-name-replacement"><span>${esc(editable.cover_community_name || exactRow.project_name)}</span></div>`);
+      }
+      if (page.n === 42) {
+        overlays.push(`<div class="closing-editable-message">${esc(editable.closing_message || '')}</div>`);
+        overlays.push(`<div class="official-line-qr"><img src="${qrUrl}" alt="紘嘉 LINE 官方帳號 QR 碼"><strong>LINE 官方帳號</strong><span>掃描加入好友<br>諮詢・通知・聯絡</span></div>`);
+      }
+      return `
       <section class="proposal-page original-slide-page" data-original-page="${page.n}" aria-label="第 ${page.n} 頁，共 ${originalSlideCount} 頁">
-        <img src="${originalSlidePath(page.n)}" alt="社區綜合服務企劃書第 ${page.n} 頁" draggable="false">
+        <img class="original-slide-image" src="${originalSlidePath(page.n)}" alt="社區綜合服務企劃書第 ${page.n} 頁" draggable="false">
+        ${overlays.join('')}
         <span class="sr-only">第 ${page.n} 頁，共 ${originalSlideCount} 頁</span>
-      </section>`).join('');
+      </section>`;
+    }).join('');
     return `<!doctype html><html lang="zh-TW"><head><meta charset="utf-8">
       <title>${esc(exactRow.proposal_no)} ${esc(exactRow.project_name)}｜原始 42 頁企劃書</title>
       <style>
@@ -459,7 +530,20 @@
         body{font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif}
         .proposal-page{width:297mm;height:167.0625mm;margin:8mm auto;background:#fff;position:relative;overflow:hidden;page-break-after:always;break-after:page}
         .proposal-page:last-child{page-break-after:auto;break-after:auto}
-        .proposal-page img{display:block;width:100%;height:100%;object-fit:contain;object-position:center;background:#fff}
+        .original-slide-image{display:block;width:100%;height:100%;object-fit:contain;object-position:center;background:#fff}
+        .cover-name-replacement{position:absolute;left:24%;top:36.5%;width:48%;height:16%;display:flex;align-items:center;justify-content:center;padding:1.5% 2%;background:rgba(255,255,255,.94);border-top:4px solid #f5bf00;border-bottom:4px solid #f5bf00;color:#080808;font-family:DFKai-SB,"BiauKai","Microsoft JhengHei",serif;font-size:42px;font-weight:700;text-align:center;line-height:1.15}
+        .cover-name-replacement:before,.cover-name-replacement:after{content:"◆";position:absolute;left:50%;transform:translateX(-50%);color:#f5bf00;font-size:20px;background:#fff;padding:0 7px}
+        .cover-name-replacement:before{top:-14px}.cover-name-replacement:after{bottom:-14px}
+        .slide-overlay{position:absolute;z-index:3;max-width:44%;padding:1.6% 2%;white-space:pre-wrap;line-height:1.55;font-size:21px;box-shadow:0 3px 12px rgba(7,33,58,.12)}
+        .overlay-top_left{left:5.8%;top:16%}.overlay-top_right{right:5.8%;top:16%}.overlay-center{left:50%;top:50%;transform:translate(-50%,-50%)}.overlay-bottom_left{left:5.8%;bottom:8%}.overlay-bottom_right{right:5.8%;bottom:8%}
+        .overlay-style-title{max-width:80%;padding:.8% 1.5%;background:rgba(255,255,255,.95);border-bottom:4px solid #d8a43f;color:#0b2946;font-size:34px;font-weight:800}
+        .overlay-style-note{background:rgba(255,255,255,.96);border:1px solid #d5e0e8;border-left:6px solid #16877c;color:#173651}
+        .overlay-style-dark{background:rgba(8,38,65,.96);border-left:6px solid #d9aa4b;color:#fff;font-weight:700}
+        .overlay-style-plain{background:transparent;box-shadow:none;color:#0b2946;font-weight:700;text-shadow:0 1px 2px #fff}
+        .closing-editable-message{position:absolute;left:7%;top:37%;width:65%;padding:1.5% 0;background:#092642;color:#fff;font-size:33px;font-weight:800;line-height:1.45}
+        .official-line-qr{position:absolute;right:7%;top:22%;width:17%;padding:1.1%;background:#fff;border-radius:14px;display:flex;flex-direction:column;align-items:center;text-align:center;color:#092642;box-shadow:0 8px 28px rgba(0,0,0,.26)}
+        .official-line-qr img{display:block;width:100%;height:auto;background:#fff}
+        .official-line-qr strong{font-size:19px;margin-top:6px}.official-line-qr span{font-size:13px;line-height:1.45;margin-top:3px}
         .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
         .proposal-actions{position:fixed;right:14px;top:14px;z-index:99;display:flex;gap:8px;padding:8px;background:rgba(15,45,73,.92);border-radius:10px}
         .proposal-actions button{border:0;border-radius:7px;padding:10px 14px;font-weight:700;cursor:pointer}
@@ -593,12 +677,12 @@
       content.innerHTML = `
         <article class="panel proposal-manager">
           <div class="panel-head">
-            <div><p class="eyebrow">業務與競標</p><h3>社區綜合服務企劃書</h3><span class="muted">完整保留原始 PPT 的 42 頁版面；可逐頁預覽、列印及下載原始 PPT。</span></div>
+            <div><p class="eyebrow">業務與競標</p><h3>社區綜合服務企劃書</h3><span class="muted">直接在 ERP 修改封面、結語及指定頁文字；預覽、列印與 PDF 會立即套用，並保留原始 42 頁版面。</span></div>
             <button class="btn primary" id="addServiceProposal">＋新增企劃書</button>
           </div>
           <div class="proposal-storage-note"><strong>原稿保真模式</strong><span>42 頁原稿只共用一份，僅在開啟預覽時載入，不會重複存入每筆企劃書，也不影響 ERP 平常操作。</span></div>
           <div class="table-wrap"><table><thead><tr><th>企劃書編號</th><th>客戶／社區</th><th>提案日期</th><th>人力配置</th><th>頁數</th><th>狀態</th><th>操作</th></tr></thead><tbody>
-            ${rows.length ? rows.map(row => `<tr><td><strong>${esc(row.proposal_no)}</strong></td><td>${esc(row.client_name)}<small>${esc(row.project_name)}</small></td><td>${esc(row.proposal_date)}</td><td>${row.staffing.reduce((sum, item) => sum + Number(item.headcount || 0), 0)} 人<small>${row.staffing.map(item => item.role_name).join('、')}</small></td><td>${originalSlideCount} 頁</td><td><span class="badge">${esc(statusLabels[row.status] || row.status)}</span></td><td><div class="action-row"><button class="mini-button" data-p-edit="${row.id}">編輯</button><button class="mini-button" data-p-preview="${row.id}">預覽／列印</button><button class="mini-button" data-p-download="${row.id}">下載原始 PPT</button><button class="mini-button danger" data-p-delete="${row.id}">刪除</button></div></td></tr>`).join('') : '<tr><td colspan="7" class="empty">尚無企劃書，請按右上角新增。</td></tr>'}
+            ${rows.length ? rows.map(row => `<tr><td><strong>${esc(row.proposal_no)}</strong></td><td>${esc(row.client_name)}<small>${esc(row.project_name)}</small></td><td>${esc(row.proposal_date)}</td><td>${row.staffing.reduce((sum, item) => sum + Number(item.headcount || 0), 0)} 人<small>${row.staffing.map(item => item.role_name).join('、')}</small></td><td>${originalSlideCount} 頁</td><td><span class="badge">${esc(statusLabels[row.status] || row.status)}</span></td><td><div class="action-row"><button class="mini-button" data-p-edit="${row.id}">ERP 內編輯</button><button class="mini-button" data-p-preview="${row.id}">預覽／列印</button><button class="mini-button" data-p-download="${row.id}">原始 PPT 備份</button><button class="mini-button danger" data-p-delete="${row.id}">刪除</button></div></td></tr>`).join('') : '<tr><td colspan="7" class="empty">尚無企劃書，請按右上角新增。</td></tr>'}
           </tbody></table></div>
         </article>`;
       $('#addServiceProposal').onclick = () => openEditor(null);

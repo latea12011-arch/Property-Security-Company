@@ -108,6 +108,13 @@
 .proposal-staff-head{padding:0 4px 8px;color:#627789;font-size:12px;font-weight:700}
 .proposal-staff-row{margin-bottom:8px}
 .proposal-staff-row input{min-width:0}
+.proposal-slide-overlay-row{display:grid;grid-template-columns:82px 120px 140px minmax(260px,1fr) auto;gap:10px;align-items:end;margin:10px 0;padding:12px;border:1px solid #d8e2e8;border-radius:12px;background:#fff}
+.proposal-slide-overlay-row label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:#536b7d;font-weight:700}
+.proposal-slide-overlay-row input,.proposal-slide-overlay-row select,.proposal-slide-overlay-row textarea{width:100%;min-width:0}
+.proposal-slide-overlay-row textarea{min-height:64px;resize:vertical}
+.proposal-overlay-text-label{min-width:0}
+.proposal-qr-notice{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 14px;border-radius:10px;background:#eef8f5;color:#24465a}
+.proposal-qr-notice strong{color:#087d70;white-space:nowrap}
 .proposal-manager .table-wrap small{display:block;color:#6f8090;margin-top:3px}
 @media(max-width:760px){
   .proposal-editor-note,.proposal-storage-note{align-items:flex-start;flex-direction:column}
@@ -115,4 +122,8 @@
   .proposal-staff-row{grid-template-columns:1fr 90px}
   .proposal-staff-row .proposal-shift,.proposal-staff-row .proposal-duty{grid-column:1/-1}
   .proposal-staff-row button{grid-column:2;grid-row:1}
+  .proposal-slide-overlay-row{grid-template-columns:1fr 1fr}
+  .proposal-overlay-text-label{grid-column:1/-1}
+  .proposal-slide-overlay-row button{grid-column:2}
+  .proposal-qr-notice{align-items:flex-start;flex-direction:column}
 }

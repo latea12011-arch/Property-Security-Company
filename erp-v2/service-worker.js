@@ -1,5 +1,5 @@
 // Previous caches: hongjia-erp-v2-102, hongjia-erp-v2-103, hongjia-erp-v2-104.
-const CACHE = 'hongjia-erp-v2-112';
+const CACHE = 'hongjia-erp-v2-113';
 const SHELL = ['./','index.html','mobile.html','favicon-v2.ico','config.js','manifest-v2.json','mobile-manifest-v2.json','assets/app.css','assets/app.js','assets/calendar.js','assets/billing-claims.js','assets/tender-quotes.js','assets/service-proposal-original-pages.js','assets/service-proposals.js','assets/tender-documents.js','assets/tender-contracts.js','assets/contracts/hongjia-property-mark.png','assets/contracts/hongjia-line-official-qr.png','assets/police-approvals.js','assets/website-notifications.js','assets/mobile.css','assets/mobile-enhancements.css','assets/mobile.js','assets/company-logo.png','assets/erp-icon-v2-192.png','assets/erp-icon-v2-512.png','assets/erp-icon-v2-maskable.png','assets/employee-icon-v2-192.png','assets/employee-icon-v2-512.png','assets/employee-icon-v2-maskable.png'];
 
 self.addEventListener('install', event => {
