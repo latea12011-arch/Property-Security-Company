@@ -344,7 +344,101 @@
     return `<section class="proposal-page"><header><span>社區綜合服務企劃書</span><b>${esc(title)}</b></header><h2>${esc(subtitle)}</h2>${content}<footer>紘嘉公寓大廈管理維護股份有限公司｜專業・透明・可追蹤</footer></section>`;
   }
 
+  const originalSectionRanges = {
+    company: [5, 14],
+    staffing: [15, 20],
+    security: [21, 27],
+    operations: [28, 35],
+    digital: [36, 42]
+  };
+  const originalDividerPages = new Set([5, 15, 21, 28, 36]);
+  const visibleOriginalPages = row => (window.ServiceProposalOriginalPages || []).filter(page => {
+    if (page.n <= 4) return true;
+    return Object.entries(originalSectionRanges).some(([key, range]) => page.n >= range[0] && page.n <= range[1] && sectionEnabled(row, key));
+  });
+  const cleanOriginalLines = page => page.text.split(/\r?\n/).map(line => line.trim()).filter(line =>
+    line &&
+    line !== '綜合服務企劃' &&
+    line !== String(page.n).padStart(2, '0') &&
+    line !== String(page.n) &&
+    line !== '紘嘉公寓大廈管理維護股份有限公司' &&
+    line !== '專業・透明・可追蹤'
+  );
+  const originalTitle = page => {
+    const lines = cleanOriginalLines(page);
+    if (originalDividerPages.has(page.n)) return lines[1] || lines[0] || '';
+    if (page.n === 1) return '社區綜合服務企劃書';
+    return lines[0] || '';
+  };
+  const originalBodyLines = page => {
+    const lines = cleanOriginalLines(page);
+    if (originalDividerPages.has(page.n)) return lines.slice(2).filter(line => line !== 'HONG JIA PROPERTY GROUP');
+    return lines.slice(1);
+  };
+  const originalCopy = lines => `<div class="original-copy ${lines.length > 22 ? 'dense' : ''}">${lines.map(line =>
+    `<p class="${line.length <= 10 ? 'short' : ''}">${esc(line)}</p>`
+  ).join('')}</div>`;
+
+  async function buildOriginal42PageDocument(input) {
+    const row = normalize(input);
+    const sourcePages = visibleOriginalPages(row);
+    const [logo, qr] = await Promise.all([assetDataUrl(logoPath, 'logo'), assetDataUrl(lineQrPath, 'qr')]);
+    const profile = [
+      row.household_count ? `${row.household_count} 戶` : '',
+      row.building_count ? `${row.building_count} 棟` : '',
+      row.service_start_date ? `預計進場 ${row.service_start_date}` : ''
+    ].filter(Boolean).join('｜');
+    const staffingRows = row.staffing.map(item => `<tr><td>${esc(item.role_name)}</td><td>${esc(item.headcount)}</td><td>${esc(item.shift_time)}</td><td>${esc(item.responsibility)}</td></tr>`).join('');
+    const pages = sourcePages.map(page => {
+      if (page.n === 1) return `<section class="proposal-page proposal-cover original-page" data-original-page="1">
+        <img class="proposal-logo" src="${logo}" alt="紘嘉物業">
+        <p>紘嘉保全暨公寓大廈管理</p>
+        <h1>社區綜合服務企劃書</h1>
+        <h2>${esc(row.editable_content.cover_community_name || row.project_name)}</h2>
+        <div class="gold-line"></div>
+        <strong>${esc(row.client_name)}</strong>
+        <p>${esc(row.site_address)}</p><p>${esc(profile)}</p>
+        <div class="cover-meta"><span>企劃書編號：${esc(row.proposal_no)}</span><span>提案日期：${esc(row.proposal_date)}</span><span>第 1 頁・共 42 頁</span></div>
+        <div class="cover-qr"><img src="${qr}" alt="LINE 官方 QR Code"><span>LINE 官方諮詢<br>${lineOfficialUrl}</span></div>
+      </section>`;
+      if (page.n === 42) return `<section class="proposal-page proposal-closing original-page" data-original-page="42">
+        <img class="proposal-logo" src="${logo}" alt="紘嘉物業">
+        <p class="page-marker">第 42 頁・共 42 頁</p>
+        <h2>${esc(row.editable_content.closing_message)}</h2>
+        <p>穩定人力｜清楚責任｜透明財務｜快速應變｜持續改善</p>
+        <div class="closing-contact"><img src="${qr}" alt="LINE 官方 QR Code"><div><h3>紘嘉物業 LINE 官方</h3><p>社區如有服務諮詢、異常通知或後續聯繫，可掃描 QR Code 加入官方 LINE。</p><p>${lineOfficialUrl}</p></div></div>
+        <footer>紘嘉公寓大廈管理維護股份有限公司<br>桃園市八德區高城路 23 號 1 樓｜03-283-0453</footer>
+      </section>`;
+      if (originalDividerPages.has(page.n)) return `<section class="proposal-page original-divider original-page" data-original-page="${page.n}">
+        <span class="divider-number">${esc(cleanOriginalLines(page)[0])}</span>
+        <h1>${esc(originalTitle(page))}</h1>
+        <p>${esc(originalBodyLines(page).join(' '))}</p>
+        <small>HONG JIA PROPERTY GROUP</small>
+        <footer>第 ${page.n} 頁・共 42 頁</footer>
+      </section>`;
+
+      const additions = [];
+      if (page.n === 2) additions.push(`<div class="proposal-note">${esc(row.editable_content.opening_message)}<br>${esc(row.editable_content.management_goal)}</div>`);
+      if (page.n === 4 && row.editable_content.special_requirements) additions.push(`<h3>本案特殊需求</h3><div class="proposal-note">${esc(row.editable_content.special_requirements)}</div>`);
+      if (page.n === 16) additions.push(`<h3>本案人力配置</h3><table class="proposal-table compact"><thead><tr><th>職務</th><th>人數</th><th>班別／時間</th><th>主要工作</th></tr></thead><tbody>${staffingRows}</tbody></table>`);
+      if (page.n === 19) additions.push(`<h3>本案進場／交接計畫</h3><div class="proposal-note">${esc(row.editable_content.transition_plan)}</div>`);
+      if (page.n === 31 && row.editable_content.fee_note) additions.push(`<h3>本案費用／報價說明</h3><div class="proposal-note">${esc(row.editable_content.fee_note)}</div>`);
+      const lines = originalBodyLines(page);
+      return `<section class="proposal-page original-page" data-original-page="${page.n}">
+        <header><span>綜合服務企劃</span><b>第 ${page.n} 頁・共 42 頁</b></header>
+        <h2>${esc(originalTitle(page))}</h2>
+        ${originalCopy(lines)}
+        ${additions.join('')}
+        <footer>紘嘉公寓大廈管理維護股份有限公司｜專業・透明・可追蹤</footer>
+      </section>`;
+    });
+    return `<!doctype html><html lang="zh-TW"><head><meta charset="utf-8"><title>${esc(row.proposal_no)} ${esc(row.project_name)}</title><style>
+      @page{size:A4 landscape;margin:0}*{box-sizing:border-box}body{margin:0;background:#dfe6ec;color:#102f4d;font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif}.proposal-page{width:297mm;min-height:210mm;margin:8mm auto;background:#fff;padding:14mm 18mm 12mm;position:relative;page-break-after:always;overflow:hidden}.proposal-page:last-child{page-break-after:auto}.proposal-page:after{content:"HJ";position:absolute;right:13mm;bottom:12mm;font-size:64pt;font-weight:900;color:rgba(20,50,79,.035);z-index:0}.proposal-page>*{position:relative;z-index:1}header{display:flex;justify-content:space-between;border-bottom:2px solid #d3a53b;padding-bottom:4mm;margin-bottom:8mm;font-size:10pt;letter-spacing:1px}header b{color:#168777}.proposal-page h2{font-size:24pt;margin:0 0 7mm}.proposal-page h3{font-size:13pt;margin:5mm 0 2mm}.proposal-page p,.proposal-page li,.proposal-table{font-size:10.5pt;line-height:1.55}.proposal-page footer{position:absolute;left:18mm;right:18mm;bottom:6mm;border-top:1px solid #d6dee5;padding-top:2mm;font-size:8.5pt;color:#647789}.original-copy{white-space:normal}.original-copy p{margin:0 0 2.3mm}.original-copy p.short{font-weight:800;color:#0f5f6c}.original-copy.dense{columns:2;column-gap:14mm;column-rule:1px solid #d7e0e7}.original-copy.dense p{break-inside:avoid;margin-bottom:1.5mm;font-size:9.5pt;line-height:1.4}.original-divider{display:grid;place-content:center;text-align:center;background:linear-gradient(135deg,#0f2d49,#174d67);color:#fff}.original-divider:after{color:rgba(255,255,255,.035)}.original-divider .divider-number{font-size:22pt;color:#d3a53b;font-weight:900}.original-divider h1{font-size:36pt;margin:5mm 0}.original-divider p{font-size:16pt}.original-divider small{color:#d3a53b;letter-spacing:3px}.original-divider footer{color:#d9e4ec;border-color:#668094}.proposal-cover{background:linear-gradient(120deg,#fff 0 66%,#eef4f7 66%);padding-top:18mm}.proposal-cover:before{content:"";position:absolute;inset:0 0 auto;height:10mm;background:#0f2d49;border-bottom:2mm solid #d3a53b}.proposal-logo{width:42mm;height:24mm;object-fit:contain;object-position:left center}.proposal-cover>p:first-of-type{font-size:13pt;letter-spacing:3px}.proposal-cover h1{font-size:36pt;margin:16mm 0 5mm}.proposal-cover h2{font-size:26pt}.gold-line{width:65mm;border-top:3px solid #d3a53b;margin:8mm 0}.cover-meta{position:absolute;left:18mm;bottom:20mm;display:flex;gap:14mm;font-size:9.5pt}.cover-qr{position:absolute;right:18mm;bottom:18mm;display:flex;align-items:center;gap:5mm}.cover-qr img{width:28mm;height:28mm}.cover-qr span{font-size:10pt;line-height:1.5}.proposal-note{padding:4mm 5mm;background:#edf5f7;border-left:4px solid #168777;white-space:pre-wrap;line-height:1.6}.proposal-table{width:100%;border-collapse:collapse}.proposal-table th,.proposal-table td{border:1px solid #cbd6de;padding:2.2mm;text-align:left;vertical-align:top}.proposal-table th{background:#eef3f6;white-space:nowrap}.proposal-table.compact{font-size:9pt}.proposal-closing{background:#0f2d49;color:#fff;padding-top:22mm}.proposal-closing:after{color:rgba(255,255,255,.03)}.proposal-closing .proposal-logo{background:#fff;border-radius:2mm;padding:2mm}.proposal-closing h2{font-size:28pt;max-width:220mm;margin-top:20mm}.proposal-closing>p{color:#d3a53b;letter-spacing:2px}.proposal-closing footer{color:#dbe5ec;border-color:#5d7182}.page-marker{position:absolute;right:18mm;top:14mm;color:#d3a53b}.closing-contact{display:flex;align-items:center;gap:8mm;margin-top:18mm;border:1px solid #607589;padding:6mm;width:155mm}.closing-contact img{width:34mm;height:34mm;background:#fff}.closing-contact h3{margin:0 0 2mm}.closing-contact p{font-size:10pt;margin:1mm 0}@media print{body{background:#fff}.proposal-page{margin:0;width:297mm;height:210mm;min-height:210mm}.proposal-actions{display:none}}
+    </style></head><body>${pages.join('')}</body></html>`;
+  }
+
   async function buildDocument(input) {
+    return buildOriginal42PageDocument(input);
     const row = normalize(input);
     const [logo, qr] = await Promise.all([assetDataUrl(logoPath, 'logo'), assetDataUrl(lineQrPath, 'qr')]);
     const staffingRows = row.staffing.map(item => `<tr><td>${esc(item.role_name)}</td><td>${esc(item.headcount)}</td><td>${esc(item.shift_time)}</td><td>${esc(item.responsibility)}</td></tr>`).join('');
@@ -472,8 +566,8 @@
             <button class="btn primary" id="addServiceProposal">＋新增企劃書</button>
           </div>
           <div class="proposal-storage-note"><strong>輕量化設計</strong><span>系統只儲存本案欄位與人力配置，固定 42 頁內容、公司圖示及 LINE QR 不會重複存入每筆資料。</span></div>
-          <div class="table-wrap"><table><thead><tr><th>企劃書編號</th><th>客戶／社區</th><th>提案日期</th><th>人力配置</th><th>章節</th><th>狀態</th><th>操作</th></tr></thead><tbody>
-            ${rows.length ? rows.map(row => `<tr><td><strong>${esc(row.proposal_no)}</strong></td><td>${esc(row.client_name)}<small>${esc(row.project_name)}</small></td><td>${esc(row.proposal_date)}</td><td>${row.staffing.reduce((sum, item) => sum + Number(item.headcount || 0), 0)} 人<small>${row.staffing.map(item => item.role_name).join('、')}</small></td><td>${row.enabled_sections.length}／${sectionOptions.length}</td><td><span class="badge">${esc(statusLabels[row.status] || row.status)}</span></td><td><div class="action-row"><button class="mini-button" data-p-edit="${row.id}">編輯</button><button class="mini-button" data-p-preview="${row.id}">預覽／列印</button><button class="mini-button" data-p-download="${row.id}">下載 Word</button><button class="mini-button danger" data-p-delete="${row.id}">刪除</button></div></td></tr>`).join('') : '<tr><td colspan="7" class="empty">尚無企劃書，請按右上角新增。</td></tr>'}
+          <div class="table-wrap"><table><thead><tr><th>企劃書編號</th><th>客戶／社區</th><th>提案日期</th><th>人力配置</th><th>頁數</th><th>狀態</th><th>操作</th></tr></thead><tbody>
+            ${rows.length ? rows.map(row => `<tr><td><strong>${esc(row.proposal_no)}</strong></td><td>${esc(row.client_name)}<small>${esc(row.project_name)}</small></td><td>${esc(row.proposal_date)}</td><td>${row.staffing.reduce((sum, item) => sum + Number(item.headcount || 0), 0)} 人<small>${row.staffing.map(item => item.role_name).join('、')}</small></td><td>${visibleOriginalPages(row).length} 頁</td><td><span class="badge">${esc(statusLabels[row.status] || row.status)}</span></td><td><div class="action-row"><button class="mini-button" data-p-edit="${row.id}">編輯</button><button class="mini-button" data-p-preview="${row.id}">預覽／列印</button><button class="mini-button" data-p-download="${row.id}">下載 Word</button><button class="mini-button danger" data-p-delete="${row.id}">刪除</button></div></td></tr>`).join('') : '<tr><td colspan="7" class="empty">尚無企劃書，請按右上角新增。</td></tr>'}
           </tbody></table></div>
         </article>`;
       $('#addServiceProposal').onclick = () => openEditor(null);
