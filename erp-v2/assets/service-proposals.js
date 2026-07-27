@@ -17,6 +17,12 @@
   const lineOfficialUrl = 'https://lin.ee/XUE5xg6';
   const lineQrPath = 'assets/contracts/hongjia-line-official-qr.png';
   const logoPath = 'assets/company-logo.png';
+  const originalPptPath = 'assets/contracts/hongjia-community-service-proposal-original.pptx';
+  const originalSlideCount = 42;
+  const originalSlidePath = page => new URL(
+    `assets/service-proposal-slides/slide-${String(page).padStart(2, '0')}.png`,
+    window.location.href
+  ).href;
   const sectionOptions = [
     ['company', '公司能力與治理'],
     ['staffing', '人力配置與進場'],
@@ -162,8 +168,8 @@
           <button type="button" class="icon-button" id="closeServiceProposal">×</button>
         </div>
         <div class="proposal-editor-note">
-          <strong>固定版型不會被誤改</strong>
-          <span>公司治理、安全勤務、營運財務與數位管理等標準內容由系統共用；下方只需填寫每個案場不同的資料。</span>
+          <strong>完整保留原始 PPT 版面</strong>
+          <span>預覽與列印會依原始 42 頁逐頁呈現，不再把內容重新排成網頁格式；需要修改簡報內文時，請下載原始 PPT 編輯。</span>
         </div>
         <div class="form-grid proposal-form-grid">
           <label>企劃書編號<input name="proposal_no" required value="${esc(record.proposal_no)}"></label>
@@ -172,7 +178,7 @@
           <label>連結既有案場<select name="site_id" id="proposalSite"><option value="">尚未建立案場</option>${sites.map(item => `<option value="${esc(item.id)}" ${item.id === record.site_id ? 'selected' : ''}>${esc(item.code)}｜${esc(item.name)}</option>`).join('')}</select></label>
           <label>客戶／管委會名稱<input name="client_name" required value="${esc(record.client_name)}"></label>
           <label>社區／標案名稱<input name="project_name" required value="${esc(record.project_name)}"></label>
-          <label class="wide">首頁封面社區名稱（可獨立修改）<input name="cover_community_name" value="${esc(record.editable_content.cover_community_name || record.project_name)}" placeholder="例如：陸光五村國宅社區"></label>
+          <label class="wide">案件社區名稱（供 ERP 清單紀錄；原稿封面請下載 PPT 修改）<input name="cover_community_name" value="${esc(record.editable_content.cover_community_name || record.project_name)}" placeholder="例如：陸光五村國宅社區"></label>
           <label class="wide">服務地址<input name="site_address" value="${esc(record.site_address)}"></label>
           <label>社區電話<input name="community_phone" value="${esc(record.community_phone)}"></label>
           <label>聯絡人<input name="contact_name" value="${esc(record.contact_name)}"></label>
@@ -190,8 +196,8 @@
           <label class="wide">內部備註<textarea name="note">${esc(record.note)}</textarea></label>
         </div>
         <section class="proposal-editor-section">
-          <div class="panel-head"><div><h4>企劃書章節</h4><span class="muted">取消勾選的章節不會出現在列印與下載版本。</span></div></div>
-          <div class="proposal-section-checks">${sectionOptions.map(([value, label]) => `<label><input type="checkbox" name="enabled_sections" value="${value}" ${record.enabled_sections.includes(value) ? 'checked' : ''}>${label}</label>`).join('')}</div>
+          <div class="panel-head"><div><h4>原始 42 頁章節</h4><span class="muted">為避免頁碼、目錄與版面跑掉，原稿章節固定完整保留。</span></div></div>
+          <div class="proposal-section-checks">${sectionOptions.map(([value, label]) => `<label><input type="checkbox" name="enabled_sections" value="${value}" checked disabled>${label}</label>`).join('')}</div>
         </section>
         <section class="proposal-editor-section">
           <div class="panel-head"><div><h4>本案人力配置</h4><span class="muted">職務、人數、班別時間及工作內容皆可依社區異動。</span></div><button id="addProposalStaff" class="mini-button" type="button">＋新增人力</button></div>
@@ -352,10 +358,10 @@
     digital: [36, 42]
   };
   const originalDividerPages = new Set([5, 15, 21, 28, 36]);
-  const visibleOriginalPages = row => (window.ServiceProposalOriginalPages || []).filter(page => {
-    if (page.n <= 4) return true;
-    return Object.entries(originalSectionRanges).some(([key, range]) => page.n >= range[0] && page.n <= range[1] && sectionEnabled(row, key));
-  });
+  const visibleOriginalPages = () => Array.from(
+    { length: originalSlideCount },
+    (_, index) => ({ n: index + 1 })
+  );
   const cleanOriginalLines = page => page.text.split(/\r?\n/).map(line => line.trim()).filter(line =>
     line &&
     line !== '綜合服務企劃' &&
@@ -438,7 +444,31 @@
   }
 
   async function buildDocument(input) {
-    return buildOriginal42PageDocument(input);
+    const exactRow = normalize(input);
+    const exactPages = visibleOriginalPages().map(page => `
+      <section class="proposal-page original-slide-page" data-original-page="${page.n}" aria-label="第 ${page.n} 頁，共 ${originalSlideCount} 頁">
+        <img src="${originalSlidePath(page.n)}" alt="社區綜合服務企劃書第 ${page.n} 頁" draggable="false">
+        <span class="sr-only">第 ${page.n} 頁，共 ${originalSlideCount} 頁</span>
+      </section>`).join('');
+    return `<!doctype html><html lang="zh-TW"><head><meta charset="utf-8">
+      <title>${esc(exactRow.proposal_no)} ${esc(exactRow.project_name)}｜原始 42 頁企劃書</title>
+      <style>
+        @page{size:297mm 167.0625mm;margin:0}
+        *{box-sizing:border-box}
+        html,body{margin:0;background:#172535}
+        body{font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif}
+        .proposal-page{width:297mm;height:167.0625mm;margin:8mm auto;background:#fff;position:relative;overflow:hidden;page-break-after:always;break-after:page}
+        .proposal-page:last-child{page-break-after:auto;break-after:auto}
+        .proposal-page img{display:block;width:100%;height:100%;object-fit:contain;object-position:center;background:#fff}
+        .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+        .proposal-actions{position:fixed;right:14px;top:14px;z-index:99;display:flex;gap:8px;padding:8px;background:rgba(15,45,73,.92);border-radius:10px}
+        .proposal-actions button{border:0;border-radius:7px;padding:10px 14px;font-weight:700;cursor:pointer}
+        @media print{
+          html,body{background:#fff}
+          .proposal-page{margin:0;width:297mm;height:167.0625mm}
+          .proposal-actions{display:none!important}
+        }
+      </style></head><body>${exactPages}</body></html>`;
     const row = normalize(input);
     const [logo, qr] = await Promise.all([assetDataUrl(logoPath, 'logo'), assetDataUrl(lineQrPath, 'qr')]);
     const staffingRows = row.staffing.map(item => `<tr><td>${esc(item.role_name)}</td><td>${esc(item.headcount)}</td><td>${esc(item.shift_time)}</td><td>${esc(item.responsibility)}</td></tr>`).join('');
@@ -526,16 +556,17 @@
     document.body.appendChild(previewDialog);
     previewDialog.showModal();
     const html = await buildDocument(row);
-    frame.srcdoc = html.replace('<body>', '<body><div class="proposal-actions" style="position:fixed;right:14px;top:14px;z-index:99;display:flex;gap:8px"><button style="padding:10px 14px" onclick="parent.document.getElementById(\'serviceProposalPreviewDialog\').remove()">關閉預覽</button><button style="padding:10px 14px" onclick="window.print()">列印／另存 PDF</button></div>');
+    frame.srcdoc = html.replace('<body>', '<body><div class="proposal-actions"><button onclick="parent.document.getElementById(\'serviceProposalPreviewDialog\').remove()">關閉預覽</button><button onclick="Promise.all(Array.from(document.images).map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=img.onerror=resolve}))).then(()=>window.print())">列印／另存 PDF</button></div>');
   }
 
   async function download(row) {
-    const html = await buildDocument(row);
-    const blob = new Blob(['\ufeff' + html], { type: 'application/msword;charset=utf-8' });
+    const response = await fetch(new URL(originalPptPath, window.location.href).href, { cache: 'no-store' });
+    if (!response.ok) throw new Error('原始 PPT 下載失敗，請稍後再試。');
+    const blob = await response.blob();
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${safeFile(`${row.proposal_no}_${row.project_name}`)}.doc`;
+    link.download = `${safeFile(`${row.proposal_no}_${row.project_name || '社區綜合服務企劃書'}`)}.pptx`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -562,12 +593,12 @@
       content.innerHTML = `
         <article class="panel proposal-manager">
           <div class="panel-head">
-            <div><p class="eyebrow">業務與競標</p><h3>社區綜合服務企劃書</h3><span class="muted">固定版型共用、案場資料獨立儲存；可預覽、列印及下載 Word。</span></div>
+            <div><p class="eyebrow">業務與競標</p><h3>社區綜合服務企劃書</h3><span class="muted">完整保留原始 PPT 的 42 頁版面；可逐頁預覽、列印及下載原始 PPT。</span></div>
             <button class="btn primary" id="addServiceProposal">＋新增企劃書</button>
           </div>
-          <div class="proposal-storage-note"><strong>輕量化設計</strong><span>系統只儲存本案欄位與人力配置，固定 42 頁內容、公司圖示及 LINE QR 不會重複存入每筆資料。</span></div>
+          <div class="proposal-storage-note"><strong>原稿保真模式</strong><span>42 頁原稿只共用一份，僅在開啟預覽時載入，不會重複存入每筆企劃書，也不影響 ERP 平常操作。</span></div>
           <div class="table-wrap"><table><thead><tr><th>企劃書編號</th><th>客戶／社區</th><th>提案日期</th><th>人力配置</th><th>頁數</th><th>狀態</th><th>操作</th></tr></thead><tbody>
-            ${rows.length ? rows.map(row => `<tr><td><strong>${esc(row.proposal_no)}</strong></td><td>${esc(row.client_name)}<small>${esc(row.project_name)}</small></td><td>${esc(row.proposal_date)}</td><td>${row.staffing.reduce((sum, item) => sum + Number(item.headcount || 0), 0)} 人<small>${row.staffing.map(item => item.role_name).join('、')}</small></td><td>${visibleOriginalPages(row).length} 頁</td><td><span class="badge">${esc(statusLabels[row.status] || row.status)}</span></td><td><div class="action-row"><button class="mini-button" data-p-edit="${row.id}">編輯</button><button class="mini-button" data-p-preview="${row.id}">預覽／列印</button><button class="mini-button" data-p-download="${row.id}">下載 Word</button><button class="mini-button danger" data-p-delete="${row.id}">刪除</button></div></td></tr>`).join('') : '<tr><td colspan="7" class="empty">尚無企劃書，請按右上角新增。</td></tr>'}
+            ${rows.length ? rows.map(row => `<tr><td><strong>${esc(row.proposal_no)}</strong></td><td>${esc(row.client_name)}<small>${esc(row.project_name)}</small></td><td>${esc(row.proposal_date)}</td><td>${row.staffing.reduce((sum, item) => sum + Number(item.headcount || 0), 0)} 人<small>${row.staffing.map(item => item.role_name).join('、')}</small></td><td>${originalSlideCount} 頁</td><td><span class="badge">${esc(statusLabels[row.status] || row.status)}</span></td><td><div class="action-row"><button class="mini-button" data-p-edit="${row.id}">編輯</button><button class="mini-button" data-p-preview="${row.id}">預覽／列印</button><button class="mini-button" data-p-download="${row.id}">下載原始 PPT</button><button class="mini-button danger" data-p-delete="${row.id}">刪除</button></div></td></tr>`).join('') : '<tr><td colspan="7" class="empty">尚無企劃書，請按右上角新增。</td></tr>'}
           </tbody></table></div>
         </article>`;
       $('#addServiceProposal').onclick = () => openEditor(null);
