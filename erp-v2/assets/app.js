@@ -349,15 +349,16 @@
   function printApplicantResumeForm(){
     const workRows=Array.from({length:3},()=>'<tr><td></td><td></td><td></td><td></td><td></td></tr>').join('');
     const body=`<style>
-      .resume-form{font-size:12px;line-height:1.45}.resume-form h2{margin:0 0 10px;padding:6px 10px;background:#eaf1f6;border-left:5px solid #16324f;font-size:15px}.resume-form table{margin-bottom:12px}.resume-form th,.resume-form td{padding:7px}.resume-form th{width:14%;background:#f5f8fa;white-space:nowrap}.resume-form td{height:24px}.resume-form .blank-row td{height:42px}.resume-form .work-history th{width:auto;text-align:center}.resume-form .work-history td{height:44px}.resume-form .check-line{letter-spacing:.5px;line-height:1.9}.resume-form .photo-box{width:92px;height:112px;text-align:center;color:#718393}.resume-form .page-break{break-before:page;page-break-before:always;padding-top:5mm}.resume-form .resume-note{color:#53697b;font-size:11px;margin:-3px 0 10px}.resume-form .declaration{border:1px solid #bdc9d3;padding:10px 12px;margin-top:10px}.resume-form .signature-row{display:flex;justify-content:space-between;margin-top:24px}.resume-form .company-only{border:2px solid #8da3b5;padding:12px;margin-top:14px}.resume-form .company-only h2{background:#fff4db;border-left-color:#c98b18}.resume-form .writing-space{height:74px}
+      .resume-form{font-size:12px;line-height:1.45}.resume-form h2{margin:0 0 10px;padding:6px 10px;background:#eaf1f6;border-left:5px solid #16324f;font-size:15px}.resume-form table{margin-bottom:12px}.resume-form th,.resume-form td{padding:7px}.resume-form th{width:14%;background:#f5f8fa;white-space:nowrap}.resume-form td{height:24px}.resume-form .basic-info th{width:auto}.resume-form .birth-date{white-space:nowrap;letter-spacing:.5px}.resume-form .blank-row td{height:42px}.resume-form .work-history th{width:auto;text-align:center}.resume-form .work-history td{height:44px}.resume-form .check-line{letter-spacing:.5px;line-height:1.9}.resume-form .photo-box{height:112px;text-align:center;color:#718393}.resume-form .page-break{break-before:page;page-break-before:always;padding-top:5mm}.resume-form .resume-note{color:#53697b;font-size:11px;margin:-3px 0 10px}.resume-form .declaration{border:1px solid #bdc9d3;padding:10px 12px;margin-top:10px}.resume-form .signature-row{display:flex;justify-content:space-between;margin-top:24px}.resume-form .company-only{border:2px solid #8da3b5;padding:12px;margin-top:14px}.resume-form .company-only h2{background:#fff4db;border-left-color:#c98b18}.resume-form .writing-space{height:74px}
       @media print{.resume-form h2{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
     </style>
     <section class="resume-form">
       <p class="resume-note"><strong>應徵者填寫區：</strong>請由前來面試的人員本人填寫；面試階段不需填寫銀行帳號、薪資或勞健保加保資料。</p>
       <h2>一、應徵與基本資料</h2>
-      <table>
+      <table class="basic-info">
+        <colgroup><col style="width:11%"><col style="width:18%"><col style="width:11%"><col style="width:18%"><col style="width:11%"><col style="width:13%"><col style="width:18%"></colgroup>
         <tr><th>應徵日期</th><td>民國　　年　　月　　日</td><th>應徵職務</th><td colspan="3"></td><td class="photo-box" rowspan="4">二吋照片<br>黏貼處</td></tr>
-        <tr><th>姓名</th><td></td><th>性別</th><td>□ 男　□ 女　□ 其他</td><th>出生日期</th><td></td></tr>
+        <tr><th>姓名</th><td></td><th>性別</th><td>□ 男　□ 女　□ 其他</td><th>出生日期</th><td class="birth-date">民國　　年　　月　　日</td></tr>
         <tr><th>身分證字號</th><td></td><th>聯絡電話</th><td></td><th>Email</th><td></td></tr>
         <tr><th>戶籍地址</th><td colspan="5"></td></tr>
         <tr><th>現居地址</th><td colspan="6"></td></tr>
@@ -368,7 +369,7 @@
         <tr><th>希望身分類別</th><td colspan="5" class="check-line">□ 正職人員　□ 機動人員　□ 內部人員　□ 兼職人員　□ 現金班人員　□ 臨時／支援人員</td></tr>
         <tr><th>可配合班別</th><td colspan="5" class="check-line">□ 日班　□ 夜班　□ 輪班　□ 假日　□ 現金班　□ 臨時支援　□ 其他：________________</td></tr>
         <tr><th>可到職日期</th><td></td><th>希望服務區域／案場</th><td colspan="3"></td></tr>
-        <tr><th>交通方式</th><td colspan="2">□ 步行　□ 自行車　□ 機車　□ 汽車　□ 大眾運輸　□ 其他</td><th>駕照一</th><td></td><th>駕照二：____________</th></tr>
+        <tr><th>交通方式</th><td colspan="2">□ 步行　□ 自行車　□ 機車　□ 汽車　□ 大眾運輸　□ 其他</td><th>駕照類別</th><td colspan="2">________________________</td></tr>
         <tr><th>總幹事證號</th><td colspan="2"></td><th>其他專業證照</th><td colspan="2"></td></tr>
         <tr><th>是否可接受<br>警局核備</th><td colspan="2">□ 是　□ 否　□ 不適用</td><th>是否有相關前科<br>或核備限制</th><td colspan="2">□ 無　□ 有，說明：____________</td></tr>
       </table>
