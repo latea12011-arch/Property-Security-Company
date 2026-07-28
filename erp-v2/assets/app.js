@@ -346,6 +346,69 @@
 
   function printDocument(title,body,showSignatures=true,headerName='紘嘉物業集團'){const old=$('#printFrame');if(old)old.remove();const frame=document.createElement('iframe');frame.id='printFrame';frame.title='列印文件';frame.style.cssText='position:fixed;width:1px;height:1px;right:0;bottom:0;border:0;opacity:0;pointer-events:none';document.body.appendChild(frame);frame.onload=()=>setTimeout(()=>{frame.contentWindow.focus();frame.contentWindow.print()},150);frame.srcdoc=`<!doctype html><html lang="zh-TW"><head><meta charset="utf-8"><title>${esc(title)}</title><style>@page{size:A4;margin:0}body{font-family:"Microsoft JhengHei",sans-serif;color:#162b3d;margin:0;padding:18mm;box-sizing:border-box}header{text-align:center;border-bottom:2px solid #16324f;padding-bottom:18px;margin-bottom:24px}h1{margin:0 0 8px;font-size:24px;letter-spacing:2px}table{width:100%;border-collapse:collapse}thead{display:table-header-group}tfoot{display:table-footer-group}tr{break-inside:avoid;page-break-inside:avoid}th,td{border:1px solid #bdc9d3;padding:10px;text-align:left;vertical-align:top;overflow-wrap:anywhere;word-break:break-word}.amount{text-align:right}.sign{margin-top:70px;display:flex;justify-content:space-between;break-inside:avoid;page-break-inside:avoid}.print-meta{text-align:right;color:#53697b;font-size:12px}.site-print-list{font-size:11px}.site-print-list th,.site-print-list td{padding:7px}.certificate-meta{text-align:right;font-size:12px;color:#53697b}.certificate-copy{font-size:17px;line-height:2.25;margin:38px 22px}.certificate-copy p{text-align:justify}.certificate-footer{display:grid;grid-template-columns:1fr 1.35fr;gap:34px;align-items:end;margin-top:48px}.certificate-stamp{height:112px;border:2px dashed #9aabb8;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#53697b;letter-spacing:3px}.certificate-seal{text-align:right;line-height:1.9}.certificate-valid{text-align:center;margin-top:28px;padding-top:12px;border-top:1px solid #bdc9d3;color:#53697b;font-size:12px;letter-spacing:3px}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head><body><header><h1>${esc(headerName)}</h1><strong>${esc(title)}</strong></header>${body}${showSignatures?'<div class="sign"><span>公司用印：________________</span><span>員工簽收：________________</span></div>':''}</body></html>`;}
 
+  function printApplicantResumeForm(){
+    const workRows=Array.from({length:3},()=>'<tr><td></td><td></td><td></td><td></td><td></td></tr>').join('');
+    const body=`<style>
+      .resume-form{font-size:12px;line-height:1.45}.resume-form h2{margin:0 0 10px;padding:6px 10px;background:#eaf1f6;border-left:5px solid #16324f;font-size:15px}.resume-form table{margin-bottom:12px}.resume-form th,.resume-form td{padding:7px}.resume-form th{width:14%;background:#f5f8fa;white-space:nowrap}.resume-form td{height:24px}.resume-form .blank-row td{height:42px}.resume-form .work-history th{width:auto;text-align:center}.resume-form .work-history td{height:44px}.resume-form .check-line{letter-spacing:.5px;line-height:1.9}.resume-form .photo-box{width:92px;height:112px;text-align:center;color:#718393}.resume-form .page-break{break-before:page;page-break-before:always;padding-top:5mm}.resume-form .resume-note{color:#53697b;font-size:11px;margin:-3px 0 10px}.resume-form .declaration{border:1px solid #bdc9d3;padding:10px 12px;margin-top:10px}.resume-form .signature-row{display:flex;justify-content:space-between;margin-top:24px}.resume-form .company-only{border:2px solid #8da3b5;padding:12px;margin-top:14px}.resume-form .company-only h2{background:#fff4db;border-left-color:#c98b18}.resume-form .writing-space{height:74px}
+      @media print{.resume-form h2{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+    </style>
+    <section class="resume-form">
+      <p class="resume-note"><strong>應徵者填寫區：</strong>請由前來面試的人員本人填寫；面試階段不需填寫銀行帳號、薪資或勞健保加保資料。</p>
+      <h2>一、應徵與基本資料</h2>
+      <table>
+        <tr><th>應徵日期</th><td>民國　　年　　月　　日</td><th>應徵職務</th><td colspan="3"></td><td class="photo-box" rowspan="4">二吋照片<br>黏貼處</td></tr>
+        <tr><th>姓名</th><td></td><th>性別</th><td>□ 男　□ 女　□ 其他</td><th>出生日期</th><td></td></tr>
+        <tr><th>身分證字號</th><td></td><th>聯絡電話</th><td></td><th>Email</th><td></td></tr>
+        <tr><th>戶籍地址</th><td colspan="5"></td></tr>
+        <tr><th>現居地址</th><td colspan="6"></td></tr>
+        <tr><th>緊急聯絡人</th><td></td><th>關係</th><td></td><th>聯絡電話</th><td colspan="2"></td></tr>
+      </table>
+      <h2>二、任職條件與證照</h2>
+      <table>
+        <tr><th>希望身分類別</th><td colspan="5" class="check-line">□ 正職人員　□ 機動人員　□ 內部人員　□ 兼職人員　□ 現金班人員　□ 臨時／支援人員</td></tr>
+        <tr><th>可配合班別</th><td colspan="5" class="check-line">□ 日班　□ 夜班　□ 輪班　□ 假日　□ 現金班　□ 臨時支援　□ 其他：________________</td></tr>
+        <tr><th>可到職日期</th><td></td><th>希望服務區域／案場</th><td colspan="3"></td></tr>
+        <tr><th>交通方式</th><td colspan="2">□ 步行　□ 自行車　□ 機車　□ 汽車　□ 大眾運輸　□ 其他</td><th>駕照一</th><td></td><th>駕照二：____________</th></tr>
+        <tr><th>總幹事證號</th><td colspan="2"></td><th>其他專業證照</th><td colspan="2"></td></tr>
+        <tr><th>是否可接受<br>警局核備</th><td colspan="2">□ 是　□ 否　□ 不適用</td><th>是否有相關前科<br>或核備限制</th><td colspan="2">□ 無　□ 有，說明：____________</td></tr>
+      </table>
+      <h2>三、學歷</h2>
+      <table><thead><tr><th>學校名稱</th><th>科系</th><th>就讀期間</th><th>畢業／肄業</th></tr></thead><tbody><tr class="blank-row"><td></td><td></td><td></td><td></td></tr><tr class="blank-row"><td></td><td></td><td></td><td></td></tr></tbody></table>
+      <div class="page-break">
+        <h2>四、工作經歷（請至少填寫最近三筆）</h2>
+        <table class="work-history"><thead><tr><th>公司／單位</th><th>任職期間</th><th>職稱</th><th>工作內容</th><th>離職原因</th></tr></thead><tbody>${workRows}</tbody></table>
+        <h2>五、專長、自我介紹與應徵說明</h2>
+        <table>
+          <tr><th>電腦／行政能力</th><td colspan="3" class="check-line">□ Word　□ Excel　□ PowerPoint　□ 社區財務／帳務　□ 其他：________________</td></tr>
+          <tr><th>工作專長</th><td colspan="3" class="writing-space"></td></tr>
+          <tr><th>自我介紹與<br>應徵原因</th><td colspan="3" class="writing-space"></td></tr>
+          <tr><th>健康或勤務上<br>需留意事項</th><td colspan="3" class="writing-space"></td></tr>
+        </table>
+      </div>
+      <div class="page-break">
+        <h2>六、錄取後資料繳交確認（面試者免填）</h2>
+        <p class="resume-note">以下由公司於錄取後再向錄取者確認，前來面試的人員不需在面試當日填寫或繳交。</p>
+        <table>
+          <tr><th>身分與聯絡</th><td class="check-line">□ 身分證正反面影本　□ 二吋照片　□ 緊急聯絡資料</td></tr>
+          <tr><th>任職文件</th><td class="check-line">□ 駕照影本　□ 總幹事證照　□ 其他專業證照　□ 警局核備所需文件</td></tr>
+          <tr><th>薪資發放</th><td class="check-line">□ 銀行匯款（存摺影本）　□ 領現　<span>銀行與帳號由錄取者另填公司正式資料</span></td></tr>
+        </table>
+        <div class="declaration"><strong>個人資料告知與聲明</strong><br>本人確認以上資料均據實填寫，並同意紘嘉物業集團於招募、面試、任用審查及依法辦理警局核備之必要範圍內，蒐集、處理及利用本人所提供的個人資料；未錄取資料依公司招募管理規範辦理。<div class="signature-row"><span>應徵者簽名：________________</span><span>日期：民國　　　年　　　月　　　日</span></div></div>
+        <section class="company-only">
+          <h2>七、公司面試紀錄（由面試人員填寫）</h2>
+          <table>
+            <tr><th>面試結果</th><td colspan="3" class="check-line">□ 錄取　□ 備取　□ 不錄取　□ 二次面試</td></tr>
+            <tr><th>建議職稱</th><td></td><th>建議身分類別</th><td></td></tr>
+            <tr><th>建議案場／部門</th><td></td><th>預計到職日</th><td></td></tr>
+            <tr><th>面試評語</th><td colspan="3" class="writing-space"></td></tr>
+          </table>
+          <div class="signature-row"><span>面試人員：________________</span><span>主管核示：________________</span></div>
+        </section>
+      </div>
+    </section>`;
+    printDocument('應徵人員面試履歷表',body,false);
+  }
+
   function openBatchIssueDialog(){let dialog=$('#batchIssueDialog');if(!dialog){dialog=document.createElement('dialog');dialog.id='batchIssueDialog';document.body.appendChild(dialog)}const employeeOptions=state.relations.employees.filter(x=>x.status==='active').map(x=>`<option value="${x.id}">${esc(x.employee_no)}－${esc(x.full_name)}</option>`).join(''),siteOptions=state.relations.sites.filter(x=>x.status==='active').map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');dialog.innerHTML=`<form id="batchIssueForm"><div class="dialog-head"><div><p class="eyebrow">庫存管理</p><h3>新增多品項領取單</h3></div><button type="button" class="icon-button batch-close">×</button></div><div class="form-grid"><label>領用日期<input name="transaction_date" type="date" value="${new Date().toISOString().slice(0,10)}" required></label><label>單據編號<input name="document_no" value="ISS-${new Date().toISOString().replace(/\D/g,'').slice(0,14)}" required></label><label>領用員工（與案場擇一）<select name="employee_id"><option value="">不指定員工</option>${employeeOptions}</select></label><label>領用案場（與員工擇一）<select name="site_id"><option value="">不指定案場</option>${siteOptions}</select></label><label>實際領取人<input name="receiver_name"></label><label>用途<input name="purpose" value="新進／勤務物品領用"></label><label class="wide">備註<textarea name="note"></textarea></label></div><div class="batch-lines-head"><h4>領取物品</h4><button type="button" class="mini-button" id="addBatchLine">＋ 增加品項</button></div><div id="batchLines"></div><p id="batchMessage" class="form-message"></p><div class="dialog-actions"><button type="button" class="btn ghost batch-close">取消</button><button type="submit" class="btn primary">儲存整張領取單</button></div></form>`;const lines=$('#batchLines'),addLine=()=>{const div=document.createElement('div');div.className='batch-line';div.innerHTML=`<select class="batch-item" required><option value="">選擇物品</option>${state.relations.inventory_items.filter(x=>x.status==='active').map(x=>`<option value="${x.id}">${esc(x.item_code)}－${esc(x.item_name)}（庫存 ${esc(x.current_stock)} ${esc(x.unit)}）</option>`).join('')}</select><input class="batch-quantity" type="number" min="0.01" step="any" value="1" required><button type="button" class="mini-button danger">移除</button>`;div.querySelector('button').onclick=()=>div.remove();lines.appendChild(div)};addLine();$('#addBatchLine').onclick=addLine;dialog.querySelectorAll('.batch-close').forEach(x=>x.onclick=()=>dialog.close());$('#batchIssueForm').onsubmit=saveBatchIssue;dialog.showModal();}
   async function saveBatchIssue(event){event.preventDefault();const form=new FormData(event.currentTarget),employeeId=form.get('employee_id'),siteId=form.get('site_id'),message=$('#batchMessage'),lines=$$('.batch-line');if(Boolean(employeeId)===Boolean(siteId)){message.textContent='請選擇一位領用員工或一個領用案場，兩者只能擇一。';return}if(!lines.length){message.textContent='請至少新增一項物品。';return}const common={transaction_type:'issue',transaction_date:form.get('transaction_date'),document_no:form.get('document_no'),employee_id:employeeId||null,site_id:siteId||null,receiver_name:form.get('receiver_name')||null,purpose:form.get('purpose')||null,note:form.get('note')||null},records=lines.map(line=>({...common,item_id:line.querySelector('.batch-item').value,quantity:Number(line.querySelector('.batch-quantity').value)}));if(records.some(x=>!x.item_id||!x.quantity)){message.textContent='請完整選擇每項物品與數量。';return}message.textContent='正在儲存並扣除庫存…';const{error}=await client.from('inventory_transactions').insert(records);if(error){message.textContent=`儲存失敗：${error.message}`;return}$('#batchIssueDialog').close();showNotice(`領取單 ${common.document_no} 已建立，共 ${records.length} 項物品。`,'success');await renderCurrent();}
 
@@ -371,6 +434,7 @@
       $(`#${searchId}`).oninput=applySearch;searchBar.querySelector('.record-search-clear').onclick=()=>{const input=$(`#${searchId}`);input.value='';applySearch();input.focus()};applySearch();
     }
     if(table==='audit_logs'){$$('.action-row').forEach(row=>row.innerHTML='<span class="muted">唯讀</span>');const download=document.createElement('button'),archive=document.createElement('button');download.className='btn ghost';download.textContent='下載備份';download.onclick=()=>{if(downloadAuditArchive(rows))showNotice(`已下載 ${rows.length} 筆操作紀錄。`,'success')};archive.className='btn primary';archive.textContent='下載並清除雲端';archive.onclick=()=>archiveAndClearAuditLogs(rows);$('.panel-head').append(download,archive);}
+    if(table==='employees'){const resume=document.createElement('button');resume.className='btn ghost';resume.id='printBlankApplicantResume';resume.textContent='面試履歷表下載／列印';resume.onclick=printApplicantResumeForm;$('.panel-head').appendChild(resume);}
     if(table==='sites'){
       const searchBar=document.createElement('div');searchBar.className='site-management-search';searchBar.innerHTML=`<label for="siteManagementSearch">搜尋案場<input id="siteManagementSearch" type="search" value="${esc(state.siteSearch)}" placeholder="輸入代碼、名稱、地址、電話、統編或介紹來源" autocomplete="off"></label><button type="button" class="mini-button" id="clearSiteManagementSearch">清除搜尋</button><span id="siteManagementSearchCount" aria-live="polite"></span>`;$('.panel-head').insertAdjacentElement('afterend',searchBar);
       const header=$('.table-wrap thead tr');header.insertAdjacentHTML('afterbegin','<th><input id="siteSelectAll" type="checkbox" aria-label="全選案場"></th>');

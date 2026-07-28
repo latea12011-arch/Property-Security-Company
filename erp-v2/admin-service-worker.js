@@ -1,5 +1,5 @@
 // Previous caches: hongjia-admin-pwa-v23, hongjia-admin-pwa-v24, hongjia-admin-pwa-v25
-const ADMIN_CACHE='hongjia-admin-pwa-v36';
+const ADMIN_CACHE='hongjia-admin-pwa-v37';
 const ADMIN_SHELL=['./index.html','./favicon-v2.ico','./config.js','./manifest-v2.json','./assets/app.css','./assets/app.js','./assets/calendar.js','./assets/billing-claims.js','./assets/tender-quotes.js','./assets/tender-documents.js','./assets/tender-contracts.js','./assets/contracts/hongjia-property-mark.png','./assets/contracts/hongjia-line-official-qr.png','./assets/police-approvals.js','./assets/website-notifications.js','./assets/company-logo.png','./assets/erp-icon-v2-192.png','./assets/erp-icon-v2-512.png','./assets/erp-icon-v2-maskable.png'];
 
 self.addEventListener('install',event=>{event.waitUntil(caches.open(ADMIN_CACHE).then(cache=>cache.addAll(ADMIN_SHELL)));self.skipWaiting()});
