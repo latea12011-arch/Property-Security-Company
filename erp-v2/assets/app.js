@@ -437,7 +437,21 @@
       $(`#${searchId}`).oninput=applySearch;searchBar.querySelector('.record-search-clear').onclick=()=>{const input=$(`#${searchId}`);input.value='';applySearch();input.focus()};applySearch();
     }
     if(table==='audit_logs'){$$('.action-row').forEach(row=>row.innerHTML='<span class="muted">唯讀</span>');const download=document.createElement('button'),archive=document.createElement('button');download.className='btn ghost';download.textContent='下載備份';download.onclick=()=>{if(downloadAuditArchive(rows))showNotice(`已下載 ${rows.length} 筆操作紀錄。`,'success')};archive.className='btn primary';archive.textContent='下載並清除雲端';archive.onclick=()=>archiveAndClearAuditLogs(rows);$('.panel-head').append(download,archive);}
-    if(table==='employees'){const resume=document.createElement('button');resume.className='btn ghost';resume.id='printBlankApplicantResume';resume.textContent='面試履歷表下載／列印';resume.onclick=printApplicantResumeForm;$('.panel-head').appendChild(resume);}
+    if(table==='employees'){
+      const resume=document.createElement('button');resume.className='btn ghost';resume.id='printBlankApplicantResume';resume.textContent='面試履歷表下載／列印';resume.onclick=printApplicantResumeForm;$('.panel-head').appendChild(resume);
+      if(window.EmployeeImport){
+        window.EmployeeImport.configure({
+          client,
+          cloudEnabled:cloudEnabled&&!window.ERP_DEMO_MODE,
+          db,
+          employees:()=>state.relations.employees,
+          sites:()=>state.relations.sites,
+          reload:async()=>{await loadRelations();await renderCurrent();},
+          notice:showNotice,
+        });
+        window.EmployeeImport.attach($('.panel-head'));
+      }
+    }
     if(table==='sites'){
       const searchBar=document.createElement('div');searchBar.className='site-management-search';searchBar.innerHTML=`<label for="siteManagementSearch">搜尋案場<input id="siteManagementSearch" type="search" value="${esc(state.siteSearch)}" placeholder="輸入代碼、名稱、地址、電話、統編或介紹來源" autocomplete="off"></label><button type="button" class="mini-button" id="clearSiteManagementSearch">清除搜尋</button><span id="siteManagementSearchCount" aria-live="polite"></span>`;$('.panel-head').insertAdjacentElement('afterend',searchBar);
       const header=$('.table-wrap thead tr');header.insertAdjacentHTML('afterbegin','<th><input id="siteSelectAll" type="checkbox" aria-label="全選案場"></th>');

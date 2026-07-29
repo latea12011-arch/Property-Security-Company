@@ -116,6 +116,14 @@
 .proposal-qr-notice{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 14px;border-radius:10px;background:#eef8f5;color:#24465a}
 .proposal-qr-notice strong{color:#087d70;white-space:nowrap}
 .proposal-manager .table-wrap small{display:block;color:#6f8090;margin-top:3px}
+.employee-import-dialog{width:min(1180px,96vw);max-height:92vh;padding:0;overflow:hidden}
+.employee-import-form,.employee-import-result{display:flex;flex-direction:column;max-height:92vh;padding:24px}
+.employee-import-summary{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:12px;margin:16px 0}
+.employee-import-summary article{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:13px;background:#f8fbfd}
+.employee-import-summary article span{color:var(--muted);font-size:12px;font-weight:800}.employee-import-summary article strong{color:var(--green);font-size:20px;overflow-wrap:anywhere}.employee-import-summary article.has-error{border-color:#efb5b5;background:#fff6f6}.employee-import-summary article.has-error strong{color:#b94343}
+.employee-import-options{display:grid;grid-template-columns:minmax(320px,.8fr) minmax(0,1.2fr);align-items:end;gap:16px;margin-bottom:14px;padding:14px 16px;border:1px solid #cfe0e7;border-radius:13px;background:#f4faf9}.employee-import-options label{display:grid;gap:7px;font-weight:800}.employee-import-options p{margin:0;color:var(--muted);font-size:12px;line-height:1.65}
+.employee-import-preview{flex:1;max-height:50vh;overflow:auto;border:1px solid var(--line);border-radius:12px}.employee-import-preview table{min-width:900px}.employee-import-preview thead{position:sticky;top:0;z-index:1;background:#eef4f7}.employee-import-preview td{vertical-align:top}.employee-import-preview .import-row-error td{background:#fff2f2;color:#8f3535}.employee-import-preview .employee-import-action{font-weight:900;color:#0b7e77}
+@media(max-width:720px){.employee-import-dialog{width:100vw;height:100dvh;max-width:none;max-height:none;border-radius:0}.employee-import-form,.employee-import-result{min-height:100dvh;max-height:100dvh;padding:16px}.employee-import-summary{grid-template-columns:1fr 1fr}.employee-import-options{grid-template-columns:1fr}.employee-import-preview{max-height:none}.employee-import-form .dialog-actions,.employee-import-result .dialog-actions{position:sticky;bottom:0}}
 @media(max-width:760px){
   .proposal-editor-note,.proposal-storage-note{align-items:flex-start;flex-direction:column}
   .proposal-staff-head{display:none}
