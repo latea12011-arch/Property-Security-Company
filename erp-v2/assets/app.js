@@ -640,6 +640,8 @@
         const accountError=error?await edgeFunctionErrorMessage(error):data?.ok?'':data?.error||'登入帳號建立失敗';
         if(accountError){$('#recordDialog').close();await renderCurrent();showNotice(`員工資料已儲存，但登入帳號建立失敗：${accountError}`,'error');return}
       }
+      if(cloudEnabled&&table==='announcements'&&saved.is_active)window.HongJiaPush?.dispatch();
+      if(cloudEnabled&&table==='leave_requests'&&['approved','rejected'].includes(saved.status))window.HongJiaPush?.dispatch();
       $('#recordDialog').close(); await renderCurrent(); showNotice(table==='employees'&&initialPassword?'員工與登入帳號已建立。':'資料已儲存。','success');
     }
     catch(error) { $('#formMessage').textContent=`儲存失敗：${error.message}`; }
@@ -779,7 +781,7 @@
     for(const select of $$('.site-shift-cell')){if(select.dataset.paid==='true'||!select.value)continue;const shift=select.value,times=scheduleDutyShifts.has(shift)?parseShiftTime(shift,select.dataset.time):{start:'00:00',end:'00:00',text:''};if(!times){showNotice(`${select.dataset.date} 的值勤時段格式錯誤。`,'error');return}records.push({employee_id:select.dataset.employee,site_id:state.scheduleSite,work_date:select.dataset.date,shift_type:shift,start_time:times.start,end_time:times.end,work_time_text:times.text,cash_amount:shift==='cash'?Number(select.dataset.cashAmount||0):0,cash_payment_status:shift==='cash'?'pending':'none'});}
     if(window.ERP_DEMO_MODE){if(!confirm(`確定儲存「${site?.name||''}」${state.scheduleMonth} 的示範班表？`))return;const demo=demoData(),kept=(demo.schedules||[]).filter(x=>x.site_id!==state.scheduleSite||x.work_date<`${state.scheduleMonth}-01`||x.work_date>monthRange(state.scheduleMonth).last||(x.shift_type==='cash'&&x.cash_payment_status==='paid'));demo.schedules=[...kept,...records.map(x=>({id:crypto.randomUUID(),...x}))];localStorage.setItem(demoKey,JSON.stringify(demo));showNotice(`示範班表已儲存，共 ${records.length} 個班次。`,'success');await renderSiteMonthlySchedule();return}
     try{const conflicts=await findScheduleConflicts(records);if(conflicts.length){const first=conflicts.slice(0,5).map(x=>{const employee=employees.find(e=>e.id===x.employee_id);return`${x.work_date} ${employee?.full_name||'員工'}`}).join('、');showNotice(`無法儲存：${first}${conflicts.length>5?' 等':''}在其他案場已有相同開始時間的班次，請先調整衝突班表。`,'error');return}}catch(error){showNotice(`班表衝突檢查失敗：${error.message}`,'error');return}
-    if(!confirm(`確定儲存並發布「${site?.name||''}」${state.scheduleMonth} 的整月班表？\n空白格會清除原班次；已領現的現金班會保留。`))return;const button=$('#saveMonth');button.disabled=true;button.textContent='儲存中…';const{data,error}=await client.rpc('replace_site_month_schedules',{target_site_id:state.scheduleSite,target_month:`${state.scheduleMonth}-01`,schedule_records:records});if(error){button.disabled=false;button.textContent='儲存並發布';const missing=/replace_site_month_schedules|schema cache|function/i.test(error.message||'');showNotice(missing?'尚未安裝「案場排班安全更新」資料庫功能，請先執行最新 migration-site-based-schedule-import.sql。':`班表儲存失敗：${error.message}`,'error');return}showNotice(`班表已發布，共更新 ${Number(data||0)} 個班次；已領現紀錄均保留。`,'success');await renderSiteMonthlySchedule();
+    if(!confirm(`確定儲存並發布「${site?.name||''}」${state.scheduleMonth} 的整月班表？\n空白格會清除原班次；已領現的現金班會保留。`))return;const button=$('#saveMonth');button.disabled=true;button.textContent='儲存中…';const{data,error}=await client.rpc('replace_site_month_schedules',{target_site_id:state.scheduleSite,target_month:`${state.scheduleMonth}-01`,schedule_records:records});if(error){button.disabled=false;button.textContent='儲存並發布';const missing=/replace_site_month_schedules|schema cache|function/i.test(error.message||'');showNotice(missing?'尚未安裝「案場排班安全更新」資料庫功能，請先執行最新 migration-site-based-schedule-import.sql。':`班表儲存失敗：${error.message}`,'error');return}const{error:noticeError}=await client.rpc('queue_schedule_publication_notifications',{target_site_id:state.scheduleSite,target_month:`${state.scheduleMonth}-01`});if(!noticeError)window.HongJiaPush?.dispatch();showNotice(`班表已發布，共更新 ${Number(data||0)} 個班次；已領現紀錄均保留${noticeError?'；通知功能尚待資料庫更新':'，通知已送出'}。`,'success');await renderSiteMonthlySchedule();
   }
   const scheduleShiftOptions=[['','休'],['day','日班'],['night','夜班'],['mobile','機動班'],['special','特勤班'],['cash','現金班（當日領現）'],['custom','自訂班'],['off','輪休'],['annual','特休'],['personal','事假'],['sick','病假']];
   const scheduleDutyShifts=new Set(['day','night','mobile','special','cash','custom']);
@@ -832,7 +834,7 @@
     window.ERP_DEMO_MODE=isDemo;
     if(isDemo) state.user={name:'示範管理員',email:'demo@local',role:'admin',permissions:[]};
     $('#loginView').hidden=true; $('#appView').hidden=false; $('#userName').textContent=state.user.name; $('#userInitial').textContent=state.user.name.slice(0,1);
-    $('#modeLabel').textContent=cloudEnabled&&!isDemo?'雲端模式':'本機示範模式';window.ERPCalendar?.configure({client:isDemo?null:client,cloud:cloudEnabled&&!isDemo,notice:showNotice});window.BillingClaims?.configure({notice:showNotice});applyNavigationPermissions();switchView('dashboard');checkSystemHealth();
+    $('#modeLabel').textContent=cloudEnabled&&!isDemo?'雲端模式':'本機示範模式';window.ERPCalendar?.configure({client:isDemo?null:client,cloud:cloudEnabled&&!isDemo,notice:showNotice});window.BillingClaims?.configure({notice:showNotice});applyNavigationPermissions();const requestedView=new URLSearchParams(location.search).get('view'),allowedView=requestedView&&viewTitles[requestedView]&&canAccessView(requestedView)?requestedView:'dashboard';switchView(allowedView);checkSystemHealth();window.HongJiaPush?.init({mode:'admin'});
   }
 
   async function logout() { if(cloudEnabled) await client.auth.signOut(); state.user=null; $('#appView').hidden=true; $('#loginView').hidden=false; }
@@ -843,6 +845,11 @@
   $$('[data-view]').forEach(button=>button.onclick=()=>switchView(button.dataset.view));
   $('#mobileMoreButton').onclick=()=>{const backdrop=$('#mobileMoreBackdrop'),open=backdrop.hidden;backdrop.hidden=!open;$('#mobileMoreButton').setAttribute('aria-expanded',String(open))};$('#mobileMoreClose').onclick=closeMobileMore;$('#mobileMoreBackdrop').onclick=event=>{if(event.target===$('#mobileMoreBackdrop'))closeMobileMore()};
   $$('.nav-group-toggle').forEach(button=>button.onclick=()=>{const group=button.closest('.nav-group'),open=group.dataset.open==='true';group.dataset.open=String(!open);button.setAttribute('aria-expanded',String(!open));});
+  let deferredInstallPrompt=null;
+  const installErpButton=$('#installErpButton');
+  window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferredInstallPrompt=event;if(installErpButton)installErpButton.hidden=false});
+  if(installErpButton)installErpButton.onclick=async()=>{if(!deferredInstallPrompt){showNotice('請使用 Windows 的 Edge 或 Chrome 開啟此頁，再從網址列安裝 ERP。','error');return}deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;installErpButton.hidden=true};
+  window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;if(installErpButton)installErpButton.hidden=true;showNotice('Windows ERP 已完成安裝。','success')});
   if('serviceWorker' in navigator && location.protocol!=='file:') window.addEventListener('load',async()=>{try{const legacyScope=new URL('./',location.href).href,registrations=await navigator.serviceWorker.getRegistrations();await Promise.all(registrations.filter(x=>x.scope===legacyScope).map(x=>x.unregister()));await navigator.serviceWorker.register('./admin-service-worker.js',{scope:'./index.html'})}catch(error){console.warn(error)}});
   if(cloudEnabled) client.auth.getSession().then(async({data})=>{if(data.session){await loadSignedInUser(data.session.user);enterApp();}});
 })();
