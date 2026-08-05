@@ -1,19 +1,18 @@
 # 紘嘉物業 ERP v2
 
-這是與舊版並存的第二版 PWA。電腦、Android 與 iPhone 使用同一個網址；未設定 Supabase 時可使用本機示範模式。
+這是與舊版並存的第二版 PWA。電腦、Android 與 iPhone 使用同一個網址，正式環境統一使用 Supabase 帳號登入。
 
 ## 已完成的第一階段
 
 - 響應式 ERP 管理介面
 - 員工、案場、勤務排班、出勤、請假六個核心模組
-- 本機示範資料的新增、編輯與刪除
 - Supabase 電子郵件登入與資料存取介面
 - PostgreSQL 資料表、角色與 Row Level Security 權限
 - PWA manifest、Service Worker 與加入手機主畫面支援
 
-## 1. 先使用示範模式
+## 1. 登入正式系統
 
-使用本機或 GitHub Pages 開啟 `erp-v2/index.html`，按「使用示範模式」。示範資料保存在該瀏覽器的 localStorage，不會同步到其他裝置。
+使用 HTTPS 網址開啟 `erp-v2/index.html`，以 ERP 工號或管理員 Email 與密碼登入。
 
 PWA 與 Supabase 必須透過 `https://` 或本機開發伺服器使用，直接雙擊 `file://` 只能預覽介面。
 
