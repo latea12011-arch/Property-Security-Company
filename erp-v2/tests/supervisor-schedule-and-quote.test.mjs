@@ -21,7 +21,7 @@ test('督導檢視顯示所選案場整月全員班表，排班編輯維持不�
   assert.match(app,/scheduleDisplay==='edit'\?`<button class="btn ghost" id="printSiteSchedule"/);
   assert.match(css,/\.supervisor-month-cell/);
   assert.match(html,/assets\/app\.js\?v=119/);
-  assert.match(html,/assets\/app\.css\?v=69/);
+  assert.match(html,/assets\/app\.css\?v=70/);
 });
 
 test('正式報價單提供大型用印區並抑制瀏覽器列印網址頁尾',async()=>{
@@ -43,5 +43,9 @@ test('正式報價單提供大型用印區並抑制瀏覽器列印網址頁尾',
   assert.match(quotes,/data-t-download/);
   assert.match(quotes,/hongjia-property-mark\.png/);
   assert.doesNotMatch(quotes,/\.delete\(\).*tender_quotation_items/);
-  assert.match(html,/assets\/tender-quotes\.js\?v=14/);
+  assert.match(quotes,/id="tenderAddTax"/);
+  assert.match(quotes,/加計 5% 營業稅/);
+  assert.match(quotes,/tax_excluded':'tax_exempt/);
+  assert.doesNotMatch(quotes,/課稅方式<select/);
+  assert.match(html,/assets\/tender-quotes\.js\?v=15/);
 });

@@ -65,6 +65,9 @@
 .tender-document-preview-dialog .tender-preview-head{height:64px;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)}
 .tender-preview-head>div{display:flex;align-items:center;gap:8px}
 .tender-document-preview-dialog iframe{display:block;width:100%;height:calc(100% - 64px);border:0;background:#8997a5}
+.tax-add-option{display:grid;gap:6px}
+.tax-check-row{display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#f5faf9;color:var(--green);font-weight:800}
+.tax-check-row input{width:20px!important;height:20px;margin:0;accent-color:var(--green)}
 @media(max-width:1100px){
   .tender-document-toolbar{grid-template-columns:1fr 1fr}
   .tender-document-toolbar .btn{grid-column:1/-1}
