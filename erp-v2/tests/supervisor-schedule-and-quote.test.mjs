@@ -37,13 +37,15 @@ test('正式報價單提供大型用印區並抑制瀏覽器列印網址頁尾',
   assert.match(quotes,/function quoteContact/);
   assert.match(quotes,/letter-spacing:14px/);
   assert.match(quotes,/\.quote-title b\{justify-self:end;font-size:15px/);
-  assert.match(quotes,/\.quote-title\{display:grid;grid-template-columns:190px 1fr/);
-  assert.match(quotes,/\.quote-title h1\{width:190px;margin:0;text-align:center/);
+  assert.match(quotes,/\.quote-title\{display:grid;grid-template-columns:300px 1fr/);
+  assert.match(quotes,/\.quote-title h1\{width:300px;margin:0;text-align:center/);
   assert.match(quotes,/\.totals td\{border:0/);
-  assert.match(quotes,/\.quote-head\{display:grid;grid-template-columns:190px 1fr;align-items:center\}/);
+  assert.match(quotes,/\.quote-head\{display:grid;grid-template-columns:300px 1fr;align-items:center\}/);
+  assert.match(quotes,/\.quote-logos\{display:grid;grid-template-columns:1fr 1fr/);
   assert.match(quotes,/application\/msword/);
   assert.match(quotes,/data-t-download/);
   assert.match(quotes,/hongjia-property-full-logo\.png/);
+  assert.match(quotes,/hongjia-security-knight-logo\.png/);
   assert.match(quotes,/taxRows=showTax\?/);
   assert.match(quotes,/<table class="totals">\$\{taxRows\}/);
   assert.match(quotes,/innerHTML=mode==='tax_excluded'\?/);
@@ -52,5 +54,5 @@ test('正式報價單提供大型用印區並抑制瀏覽器列印網址頁尾',
   assert.match(quotes,/加計 5% 營業稅/);
   assert.match(quotes,/tax_excluded':'tax_exempt/);
   assert.doesNotMatch(quotes,/課稅方式<select/);
-  assert.match(html,/assets\/tender-quotes\.js\?v=17/);
+  assert.match(html,/assets\/tender-quotes\.js\?v=18/);
 });
