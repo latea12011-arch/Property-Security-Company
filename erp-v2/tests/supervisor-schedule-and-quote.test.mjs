@@ -21,7 +21,8 @@ test('督導檢視顯示所選案場整月全員班表，排班編輯維持不�
   assert.match(app,/scheduleDisplay==='edit'\?`<button class="btn ghost" id="printSiteSchedule"/);
   assert.match(css,/\.supervisor-month-cell/);
   assert.match(html,/assets\/app\.js\?v=119/);
-  assert.match(html,/assets\/app\.css\?v=70/);
+  assert.match(css,/\.quote-type-options/);
+  assert.match(html,/assets\/app\.css\?v=71/);
 });
 
 test('正式報價單提供大型用印區並抑制瀏覽器列印網址頁尾',async()=>{
@@ -54,5 +55,11 @@ test('正式報價單提供大型用印區並抑制瀏覽器列印網址頁尾',
   assert.match(quotes,/加計 5% 營業稅/);
   assert.match(quotes,/tax_excluded':'tax_exempt/);
   assert.doesNotMatch(quotes,/課稅方式<select/);
-  assert.match(html,/assets\/tender-quotes\.js\?v=18/);
+  assert.match(quotes,/quoteTypeNames=\['常駐','臨駐','增哨'\]/);
+  assert.match(quotes,/class="quote-type-options wide"/);
+  assert.match(quotes,/name="quote_type" type="checkbox"/);
+  assert.match(quotes,/types=quoteTypes\(row\)/);
+  assert.match(quotes,/types\.includes\(name\)/);
+  assert.doesNotMatch(quotes,/type===name/);
+  assert.match(html,/assets\/tender-quotes\.js\?v=19/);
 });
