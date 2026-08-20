@@ -28,7 +28,7 @@
   const fields = {
     employees: [
       ['numbering_rule_id','員工編號類別','number-rule:employee'],['employee_no','員工編號（可修改）','text',true],['full_name','姓名','text',true],['phone','電話','tel'],['initial_password','初始登入密碼（至少 8 碼）','password'],
-      ['national_id','身分證字號','id-number'],['birth_date','出生年月日','date'],['registered_address','戶籍地址','text'],['residential_address','現居地址','text'],
+      ['national_id','身分證字號','id-number'],['birth_date','出生年月日','date'],['highest_education','最高學歷','text'],['registered_address','戶籍地址','text'],['residential_address','現居地址','text'],
       ['driver_license_type','駕照類別（最多兩種）','license-picker',false,[['none','無駕照'],['light_motorcycle','普通輕型機車'],['heavy_motorcycle','普通重型機車'],['large_heavy_motorcycle','大型重型機車'],['ordinary_car','普通小型車'],['professional_car','職業小型車'],['ordinary_truck','普通大貨車'],['professional_truck','職業大貨車'],['ordinary_bus','普通大客車'],['professional_bus','職業大客車'],['trailer','聯結車'],['multiple_other','其他類別']]],
       ['transportation_method','交通方式','select',false,[['walk','步行'],['bicycle','自行車'],['motorcycle','機車'],['car','自用汽車'],['public_transport','大眾運輸'],['company_vehicle','公司車'],['family_pickup','親友接送'],['other','其他']]],['chief_manager_certificate_no','總幹事證號','text'],['id_document_path','身分證件照片','private-image'],
       ['police_clearance_status','良民證繳交狀態','select',true,[['not_submitted','未繳交'],['submitted','已繳交']]],
@@ -166,7 +166,7 @@
   };
 
   const columns = {
-    employees: [['employee_no','編號'],['full_name','姓名'],['birth_date','出生年月日'],['job_title','職稱'],['police_clearance_status','良民證'],['medical_exam_status','體檢報告'],['medical_exam_date','體檢日期'],['police_approval_status','警局核備'],['labor_84_1_status','84-1 核備'],['hire_date','到職日'],['cash_shift_default_amount','現金班日薪'],['annual_leave_entitlement_hours','本期特休'],['annual_leave_used_hours','已休'],['annual_leave_hours','剩餘'],['annual_leave_period_end','本期截止'],['status','狀態']],
+    employees: [['employee_no','編號'],['full_name','姓名'],['birth_date','出生年月日'],['highest_education','最高學歷'],['job_title','職稱'],['police_clearance_status','良民證'],['medical_exam_status','體檢報告'],['medical_exam_date','體檢日期'],['police_approval_status','警局核備'],['labor_84_1_status','84-1 核備'],['hire_date','到職日'],['cash_shift_default_amount','現金班日薪'],['annual_leave_entitlement_hours','本期特休'],['annual_leave_used_hours','已休'],['annual_leave_hours','剩餘'],['annual_leave_period_end','本期截止'],['status','狀態']],
     sites: [['code','代碼'],['name','案場'],['community_tax_id','社區統編'],['community_phone','社區電話'],['acquisition_source','案場來源'],['referrer_name','介紹人／合作來源'],['chairman_name','主委'],['household_count','戶數'],['contract_end_date','合約到期'],['renewal_status','續約進度'],['status','狀態']],
     schedules: [['work_date','日期'],['employee_id','員工'],['site_id','案場'],['shift_type','班別'],['start_time','時間']],
     attendance: [['work_date','日期'],['employee_id','員工'],['site_id','案場'],['clock_in','上班'],['clock_out','下班'],['status','狀態']],

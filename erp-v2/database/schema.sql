@@ -21,6 +21,7 @@ create table public.employees (
   employee_no text not null unique,
   full_name text not null,
   birth_date date,
+  highest_education text,
   job_title text not null default '保全員',
   phone text,
   role public.app_role not null default 'guard',

@@ -40,7 +40,7 @@
   async function load() {
     if (useCloud()) {
       const [employeeResult, approvalResult] = await Promise.all([
-        client.from('employees').select('id,employee_no,full_name,job_title,status').order('employee_no'),
+        client.from('employees').select('id,employee_no,full_name,birth_date,national_id,highest_education,job_title,status').order('employee_no'),
         client.from('employee_police_approvals').select('*')
       ]);
       if (employeeResult.error || approvalResult.error) throw employeeResult.error || approvalResult.error;
@@ -60,6 +60,9 @@
       employee_id: employee.id,
       employee_no: employee.employee_no,
       full_name: employee.full_name,
+      birth_date: employee.birth_date || '',
+      national_id: employee.national_id || '',
+      highest_education: employee.highest_education || '',
       job_title: employee.job_title,
       employee_status: employee.status,
       status: approval?.status || 'not_submitted',
@@ -97,6 +100,9 @@
         <td class="police-select-cell"><input type="checkbox" data-police-select="${esc(row.employee_id)}" aria-label="選取 ${esc(row.full_name)}" ${selectedEmployeeIds.has(row.employee_id) ? 'checked' : ''}></td>
         <td><strong>${esc(row.employee_no)}</strong></td>
         <td>${esc(row.full_name)}<small>${esc(row.job_title || '')}</small></td>
+        <td>${esc(row.birth_date || '—')}</td>
+        <td>${esc(row.national_id || '—')}</td>
+        <td>${esc(row.highest_education || '—')}</td>
         <td>${badge(row.status)}</td>
         <td>${esc(row.police_station || '—')}</td>
         <td>${esc(row.submitted_date || '—')}</td>
@@ -104,7 +110,7 @@
         <td>${esc(row.approval_date || '—')}</td>
         <td class="police-row-actions"><button class="mini-button" type="button" data-police-print-one="${esc(row.employee_id)}">單獨列印</button><button class="mini-button" type="button" data-police-edit="${esc(row.employee_id)}">編輯核備</button></td>
       </tr>
-    `).join('') : '<tr><td colspan="9" class="empty">沒有符合條件的員工。</td></tr>';
+    `).join('') : '<tr><td colspan="12" class="empty">沒有符合條件的員工。</td></tr>';
     $$('[data-police-select]').forEach(input => {
       input.onchange = () => {
         input.checked ? selectedEmployeeIds.add(input.dataset.policeSelect) : selectedEmployeeIds.delete(input.dataset.policeSelect);
@@ -237,7 +243,7 @@
     const frame = document.createElement('iframe');
     frame.style.cssText = 'position:fixed;width:1px;height:1px;right:0;bottom:0;border:0;opacity:0;pointer-events:none';
     document.body.appendChild(frame);
-    frame.srcdoc = `<!doctype html><html lang="zh-TW"><head><meta charset="utf-8"><title>警局核備清冊</title><style>@page{size:A4 landscape;margin:0}body{font-family:"Microsoft JhengHei",sans-serif;color:#16324f;margin:0;padding:10mm;box-sizing:border-box}h1{text-align:center;margin:0 0 8px}.meta{text-align:right;margin:0 0 14px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #8091a0;padding:8px;font-size:12px;text-align:center}th{background:#eaf0f4}.document-no{font-weight:700;white-space:nowrap}</style></head><body><h1>紘嘉物業保全－警局核備清冊</h1><p class="meta">列印日期：${new Date().toLocaleDateString('zh-TW')}　｜　共 ${printableRows.length} 筆</p><table><thead><tr><th>工號</th><th>姓名</th><th>職稱</th><th>狀態</th><th>送件警局</th><th>送件日期</th><th>警局核備字號</th><th>核備日期</th></tr></thead><tbody>${printableRows.map(row => `<tr><td>${esc(row.employee_no)}</td><td>${esc(row.full_name)}</td><td>${esc(row.job_title)}</td><td>${esc(statusLabels[row.status])}</td><td>${esc(row.police_station || '—')}</td><td>${esc(row.submitted_date || '—')}</td><td class="document-no">${esc(fullDocumentNumber(row.document_no))}</td><td>${esc(row.approval_date || '—')}</td></tr>`).join('')}</tbody></table></body></html>`;
+    frame.srcdoc = `<!doctype html><html lang="zh-TW"><head><meta charset="utf-8"><title>警局核備清冊</title><style>@page{size:A4 landscape;margin:0}body{font-family:"Microsoft JhengHei",sans-serif;color:#16324f;margin:0;padding:8mm;box-sizing:border-box}h1{text-align:center;margin:0 0 8px}.meta{text-align:right;margin:0 0 12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #8091a0;padding:6px 5px;font-size:10px;text-align:center}th{background:#eaf0f4}.document-no{font-weight:700;white-space:nowrap}</style></head><body><h1>紘嘉物業保全－警局核備清冊</h1><p class="meta">列印日期：${new Date().toLocaleDateString('zh-TW')}　｜　共 ${printableRows.length} 筆</p><table><thead><tr><th>工號</th><th>姓名</th><th>出生年月日</th><th>身分證字號</th><th>最高學歷</th><th>職稱</th><th>狀態</th><th>送件警局</th><th>送件日期</th><th>警局核備字號</th><th>核備日期</th></tr></thead><tbody>${printableRows.map(row => `<tr><td>${esc(row.employee_no)}</td><td>${esc(row.full_name)}</td><td>${esc(row.birth_date || '—')}</td><td>${esc(row.national_id || '—')}</td><td>${esc(row.highest_education || '—')}</td><td>${esc(row.job_title)}</td><td>${esc(statusLabels[row.status])}</td><td>${esc(row.police_station || '—')}</td><td>${esc(row.submitted_date || '—')}</td><td class="document-no">${esc(fullDocumentNumber(row.document_no))}</td><td>${esc(row.approval_date || '—')}</td></tr>`).join('')}</tbody></table></body></html>`;
     frame.onload = () => {
       frame.contentWindow.print();
       setTimeout(() => frame.remove(), 60000);
@@ -266,7 +272,7 @@
             <label>狀態篩選<select id="policeApprovalStatusFilter"><option value="all">全部狀態</option>${Object.entries(statusLabels).map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}</select></label>
             <label>搜尋員工<input id="policeApprovalSearch" type="search" placeholder="工號、姓名、警局或文號"></label>
           </div>
-          <div class="table-wrap"><table><thead><tr><th class="police-select-cell"><input id="policeApprovalSelectAll" type="checkbox" aria-label="選取目前篩選結果"></th><th>工號</th><th>員工</th><th>核備狀態</th><th>送件警局</th><th>送件日期</th><th>警局核備字號</th><th>核備日期</th><th>操作</th></tr></thead><tbody id="policeApprovalRows"></tbody></table></div>
+          <div class="table-wrap"><table><thead><tr><th class="police-select-cell"><input id="policeApprovalSelectAll" type="checkbox" aria-label="選取目前篩選結果"></th><th>工號</th><th>員工</th><th>出生年月日</th><th>身分證字號</th><th>最高學歷</th><th>核備狀態</th><th>送件警局</th><th>送件日期</th><th>警局核備字號</th><th>核備日期</th><th>操作</th></tr></thead><tbody id="policeApprovalRows"></tbody></table></div>
         </article>`;
       $('#policeApprovalStatusFilter').value = filterStatus;
       $('#policeApprovalStatusFilter').onchange = event => { filterStatus = event.target.value; renderTable(); };
