@@ -20,9 +20,9 @@ test('督導檢視顯示所選案場整月全員班表，排班編輯維持不�
   assert.match(css,/\.supervisor-month-cell b\{font-size:14px\}/);
   assert.match(app,/scheduleDisplay==='edit'\?`<button class="btn ghost" id="printSiteSchedule"/);
   assert.match(css,/\.supervisor-month-cell/);
-  assert.match(html,/assets\/app\.js\?v=119/);
+  assert.match(html,/assets\/app\.js\?v=120/);
   assert.match(css,/\.quote-type-options/);
-  assert.match(html,/assets\/app\.css\?v=71/);
+  assert.match(html,/assets\/app\.css\?v=72/);
 });
 
 test('正式報價單提供大型用印區並抑制瀏覽器列印網址頁尾',async()=>{

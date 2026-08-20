@@ -14,8 +14,8 @@ test('員工管理提供範本下載、Excel CSV 預覽與批次新增更新', a
     read('admin-service-worker.js'),
     readFile(new URL('../assets/templates/employee-import-template.xlsx', import.meta.url)),
   ]);
-  assert.match(html, /assets\/employee-import\.js\?v=1/);
-  assert.match(html, /assets\/app\.js\?v=111/);
+  assert.match(html, /assets\/employee-import\.js\?v=2/);
+  assert.match(html, /assets\/app\.js\?v=120/);
   assert.match(app, /EmployeeImport\.configure/);
   assert.match(app, /EmployeeImport\.attach/);
   assert.match(importer, /下載員工匯入範本/);
@@ -32,10 +32,10 @@ test('員工管理提供範本下載、Excel CSV 預覽與批次新增更新', a
   assert.match(importer, /下載結果 CSV/);
   assert.match(importer, /providedEmployeeFields/);
   assert.match(css, /\.employee-import-dialog/);
-  assert.match(worker, /hongjia-erp-v2-120/);
+  assert.match(worker, /hongjia-erp-v2-132/);
   assert.match(worker, /assets\/employee-import\.js/);
   assert.match(worker, /employee-import-template\.xlsx/);
-  assert.match(adminWorker, /hongjia-admin-pwa-v42/);
+  assert.match(adminWorker, /hongjia-admin-pwa-v55/);
   assert.ok(template.byteLength > 10_000);
   assert.equal(template.subarray(0, 2).toString(), 'PK');
 });
