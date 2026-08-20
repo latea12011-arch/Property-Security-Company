@@ -14,7 +14,7 @@ test('警局核備與員工管理共用一對一資料並有獨立清冊',async(
     read('admin-service-worker.js')
   ]);
   assert.match(html,/data-view="policeApprovals"/);
-  assert.match(html,/police-approvals\.js\?v=4/);
+  assert.match(html,/police-approvals\.js\?v=5/);
   assert.match(html,/assets\/app\.js\?v=90/);
   assert.match(app,/\['policeApprovals','警局核備'\]/);
   assert.match(app,/police_approval_status/);
@@ -25,8 +25,8 @@ test('警局核備與員工管理共用一對一資料並有獨立清冊',async(
   assert.match(module,/未送件/);
   assert.match(module,/補件中/);
   assert.match(module,/核備通過/);
-  assert.match(module,/紘嘉\(核\)字號/);
-  assert.doesNotMatch(module,/鴻嘉\(核\)字號/);
+  assert.match(module,/桃警刑字/);
+  assert.match(module,/警局核備字號/);
   assert.match(module,/data-police-select/);
   assert.match(module,/data-police-print-one/);
   assert.match(module,/printSelectedRows/);

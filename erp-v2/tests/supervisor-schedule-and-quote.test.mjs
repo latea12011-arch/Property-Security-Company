@@ -26,7 +26,7 @@ test('督導檢視顯示所選案場整月全員班表，排班編輯維持不�
   assert.match(css,/\.supervisor-month-cell/);
   assert.match(css,/\.supervisor-scope-switch/);
   assert.match(css,/\.mobile-staff-site/);
-  assert.match(html,/assets\/app\.js\?v=121/);
+  assert.match(html,/assets\/app\.js\?v=122/);
   assert.match(css,/\.quote-type-options/);
   assert.match(html,/assets\/app\.css\?v=73/);
 });

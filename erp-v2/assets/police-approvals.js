@@ -18,7 +18,7 @@
     approved: '核備通過',
     rejected: '不予核備'
   };
-  const documentPrefix = '紘嘉(核)字號';
+  const documentPrefix = '桃警刑字';
   const mainDemoKey = 'hongjia_erp_demo_v2';
   let employees = [];
   let approvals = [];
@@ -34,7 +34,7 @@
   const documentNumberOnly = value => String(value || '').replace(/\D/g, '');
   const fullDocumentNumber = value => {
     const number = documentNumberOnly(value);
-    return number ? `${documentPrefix} ${number}` : '—';
+    return number ? `${documentPrefix}第${number}號` : '—';
   };
 
   async function load() {
@@ -160,7 +160,7 @@
           </select></label>
           <label>送件／核備警局<input name="police_station" placeholder="例如：八德分局"></label>
           <label>送件日期<input name="submitted_date" type="date"></label>
-          <label>公司核備字號<div class="police-document-number-control"><span>${documentPrefix}</span><input name="document_no" inputmode="numeric" pattern="[0-9]*" placeholder="請填號碼，例如 000001"></div><small>只需輸入後方號碼，列印時會自動顯示完整字號。</small></label>
+          <label>警局核備字號<div class="police-document-number-control"><span>${documentPrefix}第</span><input name="document_no" inputmode="numeric" pattern="[0-9]*" placeholder="請填號碼，例如 000001"><span>號</span></div><small>只需輸入中間號碼，列印時會自動顯示完整字號。</small></label>
           <label>核備結果日期<input name="approval_date" type="date"></label>
           <label class="wide">備註／補件內容<textarea name="note"></textarea></label>
         </div>
@@ -237,7 +237,7 @@
     const frame = document.createElement('iframe');
     frame.style.cssText = 'position:fixed;width:1px;height:1px;right:0;bottom:0;border:0;opacity:0;pointer-events:none';
     document.body.appendChild(frame);
-    frame.srcdoc = `<!doctype html><html lang="zh-TW"><head><meta charset="utf-8"><title>警局核備清冊</title><style>@page{size:A4 landscape;margin:0}body{font-family:"Microsoft JhengHei",sans-serif;color:#16324f;margin:0;padding:10mm;box-sizing:border-box}h1{text-align:center;margin:0 0 8px}.meta{text-align:right;margin:0 0 14px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #8091a0;padding:8px;font-size:12px;text-align:center}th{background:#eaf0f4}.document-no{font-weight:700;white-space:nowrap}</style></head><body><h1>紘嘉物業保全－警局核備清冊</h1><p class="meta">列印日期：${new Date().toLocaleDateString('zh-TW')}　｜　共 ${printableRows.length} 筆</p><table><thead><tr><th>工號</th><th>姓名</th><th>職稱</th><th>狀態</th><th>送件警局</th><th>送件日期</th><th>紘嘉(核)字號</th><th>核備日期</th></tr></thead><tbody>${printableRows.map(row => `<tr><td>${esc(row.employee_no)}</td><td>${esc(row.full_name)}</td><td>${esc(row.job_title)}</td><td>${esc(statusLabels[row.status])}</td><td>${esc(row.police_station || '—')}</td><td>${esc(row.submitted_date || '—')}</td><td class="document-no">${esc(fullDocumentNumber(row.document_no))}</td><td>${esc(row.approval_date || '—')}</td></tr>`).join('')}</tbody></table></body></html>`;
+    frame.srcdoc = `<!doctype html><html lang="zh-TW"><head><meta charset="utf-8"><title>警局核備清冊</title><style>@page{size:A4 landscape;margin:0}body{font-family:"Microsoft JhengHei",sans-serif;color:#16324f;margin:0;padding:10mm;box-sizing:border-box}h1{text-align:center;margin:0 0 8px}.meta{text-align:right;margin:0 0 14px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #8091a0;padding:8px;font-size:12px;text-align:center}th{background:#eaf0f4}.document-no{font-weight:700;white-space:nowrap}</style></head><body><h1>紘嘉物業保全－警局核備清冊</h1><p class="meta">列印日期：${new Date().toLocaleDateString('zh-TW')}　｜　共 ${printableRows.length} 筆</p><table><thead><tr><th>工號</th><th>姓名</th><th>職稱</th><th>狀態</th><th>送件警局</th><th>送件日期</th><th>警局核備字號</th><th>核備日期</th></tr></thead><tbody>${printableRows.map(row => `<tr><td>${esc(row.employee_no)}</td><td>${esc(row.full_name)}</td><td>${esc(row.job_title)}</td><td>${esc(statusLabels[row.status])}</td><td>${esc(row.police_station || '—')}</td><td>${esc(row.submitted_date || '—')}</td><td class="document-no">${esc(fullDocumentNumber(row.document_no))}</td><td>${esc(row.approval_date || '—')}</td></tr>`).join('')}</tbody></table></body></html>`;
     frame.onload = () => {
       frame.contentWindow.print();
       setTimeout(() => frame.remove(), 60000);
@@ -266,7 +266,7 @@
             <label>狀態篩選<select id="policeApprovalStatusFilter"><option value="all">全部狀態</option>${Object.entries(statusLabels).map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}</select></label>
             <label>搜尋員工<input id="policeApprovalSearch" type="search" placeholder="工號、姓名、警局或文號"></label>
           </div>
-          <div class="table-wrap"><table><thead><tr><th class="police-select-cell"><input id="policeApprovalSelectAll" type="checkbox" aria-label="選取目前篩選結果"></th><th>工號</th><th>員工</th><th>核備狀態</th><th>送件警局</th><th>送件日期</th><th>紘嘉(核)字號</th><th>核備日期</th><th>操作</th></tr></thead><tbody id="policeApprovalRows"></tbody></table></div>
+          <div class="table-wrap"><table><thead><tr><th class="police-select-cell"><input id="policeApprovalSelectAll" type="checkbox" aria-label="選取目前篩選結果"></th><th>工號</th><th>員工</th><th>核備狀態</th><th>送件警局</th><th>送件日期</th><th>警局核備字號</th><th>核備日期</th><th>操作</th></tr></thead><tbody id="policeApprovalRows"></tbody></table></div>
         </article>`;
       $('#policeApprovalStatusFilter').value = filterStatus;
       $('#policeApprovalStatusFilter').onchange = event => { filterStatus = event.target.value; renderTable(); };
