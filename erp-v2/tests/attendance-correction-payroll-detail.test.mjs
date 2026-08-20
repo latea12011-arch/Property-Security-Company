@@ -5,17 +5,22 @@ import {readFile} from 'node:fs/promises';
 const root=new URL('../',import.meta.url);
 const read=path=>readFile(new URL(path,root),'utf8');
 
-test('補打卡保留並顯示完整異動資訊',async()=>{
-  const[html,module,app]=await Promise.all([read('index.html'),read('assets/attendance-corrections.js'),read('assets/app.js')]);
-  assert.match(html,/attendance-corrections\.js\?v=2/);
-  for(const text of ['補打卡紀錄','原上班','原下班','補登上班','補登下班','原因','操作時間','操作帳號'])assert.match(module,new RegExp(text));
+test('補打卡須申請審核且核准後才更新正式紀錄',async()=>{
+  const[html,module,app,sql]=await Promise.all([read('index.html'),read('assets/attendance-corrections.js'),read('assets/app.js'),read('database/migration-attendance-correction-approval.sql')]);
+  assert.match(html,/attendance-corrections\.js\?v=3/);
+  for(const text of ['補打卡申請與審核','待審核','核准','退回','原上班','原下班','申請上班','申請下班','審核備註'])assert.match(module,new RegExp(text));
   assert.match(module,/from\('attendance_corrections'\)/);
+  assert.match(module,/review_attendance_correction/);
   assert.match(app,/month:state\.attendanceMonth/);
+  assert.match(app,/user:state\.user/);
+  assert.match(sql,/approval_status='pending'/);
+  assert.match(sql,/申請人不可審核自己的補打卡申請/);
+  assert.match(sql,/if decision='approved' then/);
 });
 
 test('薪資明細整合常用獎金稅務及扣款欄位但保留紘嘉版型',async()=>{
   const[html,app,sql]=await Promise.all([read('index.html'),read('assets/app.js'),read('database/migration-payroll-detail-expanded.sql')]);
-  assert.match(html,/assets\/app\.js\?v=124/);
+  assert.match(html,/assets\/app\.js\?v=125/);
   for(const field of ['holiday_overtime_pay','substitute_shift_allowance','attendance_bonus','incentive_bonus','annual_bonus','withholding_tax','supplementary_health_premium','welfare_deduction']){
     assert.match(app,new RegExp(field));assert.match(sql,new RegExp(field));
   }
