@@ -12,13 +12,14 @@ test('員工資料支援出生日期、84-1 審核、批次列印及任職文件
     read('service-worker.js'),
   ]);
   assert.match(html,/pdf-lib@1\.17\.1/);
-  assert.match(html,/employee-batch-actions\.js\?v=1/);
+  assert.match(html,/employee-batch-actions\.js\?v=2/);
   assert.match(app,/\['birth_date','出生年月日','date'\]/);
   assert.match(app,/\['labor_84_1_status','84-1 核備狀態'/);
   assert.match(app,/\['labor_84_1_approval_no','核備文號'/);
-  assert.match(batch,/下載勾選/);
   assert.match(batch,/列印勾選/);
-  assert.match(batch,/birth_date/);
+  assert.doesNotMatch(batch,/employee-batch-download/);
+  for(const field of ['員工姓名','出生年月日','身分證字號','職稱','到職日期','緊急聯絡人','緊急聯絡人電話','警局核備','84-1 核備'])assert.match(batch,new RegExp(field));
+  assert.doesNotMatch(batch,/基本薪資/);
   assert.match(documents,/全選/);
   assert.match(documents,/下載勾選 PDF/);
   assert.match(documents,/列印勾選 PDF/);

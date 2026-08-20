@@ -151,3 +151,11 @@
 .employee-document-dialog::backdrop{background:rgba(12,38,61,.52)}
 .employee-document-checklist{display:grid;gap:10px;margin:16px 0}.employee-document-checklist label,.employee-document-select-all{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#f8fbfd}.employee-document-checklist input,.employee-document-select-all input{width:20px;height:20px}.document-actions{flex-wrap:wrap}.employee-batch-actions{display:flex;gap:8px;flex-wrap:wrap}.print-frame{position:fixed;width:1px;height:1px;right:0;bottom:0;border:0;opacity:0;pointer-events:none}.signature-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:34px}.document-heading{text-align:center;margin-bottom:18px}.document-heading h1{margin:6px 0}.document-heading h2{margin:0;font-size:18px}
 @media(max-width:720px){.employee-batch-actions{width:100%}.employee-batch-actions .btn{flex:1}.document-actions .btn{width:100%}.signature-grid{grid-template-columns:1fr}}
+.supervisor-scope-switch{display:flex;gap:10px;padding:0 24px 14px;flex-wrap:wrap}
+.supervisor-scope-switch button{border:1px solid #cbd9e5;background:#f5f8fb;color:#173b5b;border-radius:10px;padding:10px 16px;font-weight:800;cursor:pointer}
+.supervisor-scope-switch button.active{background:#153b5c;border-color:#153b5c;color:#fff;box-shadow:0 5px 14px rgba(21,59,92,.18)}
+.mobile-staff-site{margin:18px 24px 26px;border:1px solid #cbd9e5;border-radius:14px;background:#fff;overflow:hidden;box-shadow:0 6px 18px rgba(22,50,79,.07)}
+.mobile-staff-site-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 18px;background:#edf5f8;border-bottom:1px solid #cbd9e5}
+.mobile-staff-site-head h4{margin:0;color:#153b5c;font-size:20px}
+.mobile-staff-site-head span{color:#557083;font-weight:700}
+@media(max-width:760px){.supervisor-scope-switch{padding:0 14px 12px}.supervisor-scope-switch button{flex:1;min-width:140px;font-size:16px}.mobile-staff-site{margin:14px 10px 22px}.mobile-staff-site-head{align-items:flex-start;flex-direction:column}.mobile-staff-site-head h4{font-size:22px}.mobile-staff-site-head span{font-size:16px}}

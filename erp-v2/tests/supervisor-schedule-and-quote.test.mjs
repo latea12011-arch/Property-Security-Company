@@ -10,6 +10,10 @@ test('督導檢視顯示所選案場整月全員班表，排班編輯維持不�
   assert.match(app,/id="scheduleEditView">排班編輯/);
   assert.match(app,/id="scheduleSupervisorView">督導檢視/);
   assert.match(app,/function renderSupervisorScheduleMonth/);
+  assert.match(app,/function mobileStaffSupervisorOverview/);
+  assert.match(app,/scheduleSupervisorScope:'site'/);
+  assert.match(app,/id="supervisorMobileScope">機動人員全部案場/);
+  assert.match(app,/employment_type==='mobile'/);
   assert.match(app,/當月份全部執勤人員/);
   assert.match(app,/整月唯讀檢視/);
   assert.doesNotMatch(app,/id="supervisorScheduleDate"/);
@@ -20,9 +24,11 @@ test('督導檢視顯示所選案場整月全員班表，排班編輯維持不�
   assert.match(css,/\.supervisor-month-cell b\{font-size:14px\}/);
   assert.match(app,/scheduleDisplay==='edit'\?`<button class="btn ghost" id="printSiteSchedule"/);
   assert.match(css,/\.supervisor-month-cell/);
-  assert.match(html,/assets\/app\.js\?v=120/);
+  assert.match(css,/\.supervisor-scope-switch/);
+  assert.match(css,/\.mobile-staff-site/);
+  assert.match(html,/assets\/app\.js\?v=121/);
   assert.match(css,/\.quote-type-options/);
-  assert.match(html,/assets\/app\.css\?v=72/);
+  assert.match(html,/assets\/app\.css\?v=73/);
 });
 
 test('正式報價單提供大型用印區並抑制瀏覽器列印網址頁尾',async()=>{
