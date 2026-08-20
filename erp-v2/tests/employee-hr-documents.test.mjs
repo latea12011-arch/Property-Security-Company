@@ -26,7 +26,10 @@ test('員工資料支援出生日期、84-1 審核、批次列印及任職文件
   assert.match(batch,/Math\.ceil\(rows\.length\/3\)/);
   assert.match(batch,/\[0,1,2\]/);
   assert.match(html,/data-view="labor841Approvals">84-1 核備/);
-  assert.match(html,/labor-84-1-approvals\.js\?v=1/);
+  assert.match(html,/labor-84-1-approvals\.js\?v=2/);
+  const labor841=await read('assets/labor-84-1-approvals.js');
+  for(const text of ['列印勾選','下載勾選','data-labor841-print','data-labor841-download','84-1 核備字號','公司發文字號'])assert.match(labor841,new RegExp(text));
+  assert.match(labor841,/application\/msword/);
   assert.match(documents,/全選/);
   assert.match(documents,/下載勾選 PDF/);
   assert.match(documents,/列印勾選 PDF/);
