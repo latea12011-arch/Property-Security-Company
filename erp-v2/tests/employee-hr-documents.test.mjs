@@ -12,7 +12,7 @@ test('員工資料支援出生日期、84-1 審核、批次列印及任職文件
     read('service-worker.js'),
   ]);
   assert.match(html,/pdf-lib@1\.17\.1/);
-  assert.match(html,/employee-batch-actions\.js\?v=3/);
+  assert.match(html,/employee-batch-actions\.js\?v=4/);
   assert.match(app,/\['birth_date','出生年月日','date'\]/);
   assert.match(app,/\['labor_84_1_status','84-1 核備狀態'/);
   assert.match(app,/\['labor_84_1_approval_no','核備文號'/);
@@ -22,7 +22,9 @@ test('員工資料支援出生日期、84-1 審核、批次列印及任職文件
   assert.doesNotMatch(batch,/基本薪資/);
   assert.match(batch,/桃警刑字第/);
   assert.match(batch,/labor_84_1_approval_no/);
-  assert.match(batch,/grid-template-rows:1fr 1fr/);
+  assert.match(batch,/grid-template-rows:repeat\(3,1fr\)/);
+  assert.match(batch,/Math\.ceil\(rows\.length\/3\)/);
+  assert.match(batch,/\[0,1,2\]/);
   assert.match(html,/data-view="labor841Approvals">84-1 核備/);
   assert.match(html,/labor-84-1-approvals\.js\?v=1/);
   assert.match(documents,/全選/);

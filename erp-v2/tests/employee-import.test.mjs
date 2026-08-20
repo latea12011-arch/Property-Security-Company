@@ -32,10 +32,10 @@ test('員工管理提供範本下載、Excel CSV 預覽與批次新增更新', a
   assert.match(importer, /下載結果 CSV/);
   assert.match(importer, /providedEmployeeFields/);
   assert.match(css, /\.employee-import-dialog/);
-  assert.match(worker, /hongjia-erp-v2-134/);
+  assert.match(worker, /hongjia-erp-v2-135/);
   assert.match(worker, /assets\/employee-import\.js/);
   assert.match(worker, /employee-import-template\.xlsx/);
-  assert.match(adminWorker, /hongjia-admin-pwa-v57/);
+  assert.match(adminWorker, /hongjia-admin-pwa-v58/);
   assert.ok(template.byteLength > 10_000);
   assert.equal(template.subarray(0, 2).toString(), 'PK');
 });
