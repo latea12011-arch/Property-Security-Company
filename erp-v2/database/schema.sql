@@ -70,9 +70,14 @@ create table public.schedules (
   work_time_text text,
   created_by uuid references auth.users(id) on delete set null default auth.uid(),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique(employee_id,work_date,start_time)
+  updated_at timestamptz not null default now()
+  -- 實際執勤的唯一時段限制由 schedules_employee_duty_time_unique 部分索引提供，
+  -- 讓機動人員可在多個案場同步標示休假。
 );
+
+create unique index schedules_employee_duty_time_unique
+  on public.schedules(employee_id,work_date,start_time)
+  where shift_type in ('day','night','mobile','special','cash','custom');
 
 create table public.attendance (
   id uuid primary key default gen_random_uuid(),
