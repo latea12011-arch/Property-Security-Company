@@ -162,4 +162,24 @@
 .mobile-staff-site-head h4{margin:0;color:#153b5c;font-size:20px}
 .mobile-staff-site-head span{color:#557083;font-weight:700}
 @media(max-width:760px){.supervisor-scope-switch{padding:0 14px 12px}.supervisor-scope-switch button{flex:1;min-width:140px;font-size:16px}.mobile-staff-site{margin:14px 10px 22px}.mobile-staff-site-head{align-items:flex-start;flex-direction:column}.mobile-staff-site-head h4{font-size:22px}.mobile-staff-site-head span{font-size:16px}}
-.mobile-merged-sheet{margin:18px 24px 26px}.mobile-merged-table td{min-width:118px;vertical-align:top}.mobile-merged-cell{min-height:72px}.mobile-merged-cell+ .mobile-merged-cell{margin-top:5px}.mobile-merged-cell strong{display:block;max-width:106px;overflow:hidden;color:inherit;font-size:12px;line-height:1.25;text-overflow:ellipsis;white-space:nowrap}.mobile-merged-cell b{font-size:13px}@media(max-width:760px){.mobile-merged-sheet{margin:14px 10px 22px}.mobile-merged-table td{min-width:106px}.mobile-merged-cell strong{max-width:94px;font-size:11px}}
+.mobile-merged-sheet{margin:18px 24px 26px}.mobile-merged-table td{min-width:118px;vertical-align:top}.mobile-merged-cell{min-height:72px}.mobile-merged-cell+ .mobile-merged-cell{margin-top:5px}.mobile-merged-cell strong{display:block;max-width:106px;overflow:hidden;color:inherit;font-size:12px;line-height:1.25;text-overflow:ellipsis;white-space:nowrap}.mobile-merged-cell b{font-size:13px}
+@media(max-width:760px){
+  .supervisor-schedule-view{padding-left:5px;padding-right:5px}
+  .supervisor-month-sheet,.mobile-merged-sheet{margin:10px 4px 16px;border-radius:9px}
+  .supervisor-month-sheet .monthly-wrap{max-height:66vh;scroll-snap-type:x proximity}
+  .supervisor-mobile-hint{padding:6px 8px;font-size:11px}
+  .supervisor-month-table .sticky-name{min-width:86px;max-width:86px;padding:5px;font-size:12px;line-height:1.2}
+  .supervisor-month-table .sticky-name small{font-size:9px}
+  .supervisor-month-table th:not(.sticky-name){padding:3px 2px;font-size:11px}
+  .supervisor-month-table th small{font-size:8px}
+  .supervisor-month-table td{min-width:56px;padding:1px}
+  .supervisor-month-cell{gap:1px;min-height:42px;padding:2px;border-radius:6px}
+  .supervisor-month-cell b{font-size:11px;line-height:1.1}
+  .supervisor-month-cell small{font-size:8px;line-height:1.1}
+  .supervisor-month-cell em{font-size:8px}
+  .mobile-merged-table td{min-width:76px}
+  .mobile-merged-cell{min-height:48px}
+  .mobile-merged-cell+ .mobile-merged-cell{margin-top:2px}
+  .mobile-merged-cell strong{max-width:70px;font-size:9px;line-height:1.15}
+  .mobile-merged-cell b{font-size:10px}
+}
