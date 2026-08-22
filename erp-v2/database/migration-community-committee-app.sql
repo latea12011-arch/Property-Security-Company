@@ -43,10 +43,24 @@ alter table public.community_work_logs enable row level security;
 
 drop policy if exists "committee reads own access" on public.community_committee_access;
 create policy "committee reads own access" on public.community_committee_access for select to authenticated
-using (lower(email)=lower(coalesce(auth.jwt()->>'email','')) or public.current_user_role()='admin');
+using (
+  lower(email)=lower(coalesce(auth.jwt()->>'email',''))
+  or public.current_user_role() in ('admin','hr')
+  or public.has_feature_permission('committeeManagement')
+  or public.has_feature_permission('websiteManager')
+);
 drop policy if exists "admin manages committee access" on public.community_committee_access;
 create policy "admin manages committee access" on public.community_committee_access for all to authenticated
-using (public.current_user_role()='admin') with check (public.current_user_role()='admin');
+using (
+  public.current_user_role() in ('admin','hr')
+  or public.has_feature_permission('committeeManagement')
+  or public.has_feature_permission('websiteManager')
+)
+with check (
+  public.current_user_role() in ('admin','hr')
+  or public.has_feature_permission('committeeManagement')
+  or public.has_feature_permission('websiteManager')
+);
 
 drop policy if exists "staff manages own work logs" on public.community_work_logs;
 create policy "staff manages own work logs" on public.community_work_logs for all to authenticated
