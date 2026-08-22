@@ -69,6 +69,7 @@
 .tax-add-option{display:grid;gap:6px}
 .tax-check-row{display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#f5faf9;color:var(--green);font-weight:800}
 .tax-check-row input{width:20px!important;height:20px;margin:0;accent-color:var(--green)}
+.dashboard-notepad{margin-bottom:18px}.notepad-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}.notepad-item{border:1px solid var(--line);border-radius:14px;background:#fff;padding:15px;text-align:left;color:var(--navy)}.notepad-item:hover{border-color:var(--green);box-shadow:0 8px 22px #16324f12}.notepad-item strong{display:block;font-size:16px}.notepad-item p{margin:8px 0;color:var(--text);white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}.notepad-item small{color:var(--muted)}
 @media(max-width:1100px){
   .tender-document-toolbar{grid-template-columns:1fr 1fr}
   .tender-document-toolbar .btn{grid-column:1/-1}

@@ -356,7 +356,8 @@
           if (siteError) throw new Error(`案場指派同步失敗：${siteError.message}`);
         }
       }
-      if (item.password) await invokeAccount(saved, item.password);
+      const accountPassword = item.password || (!item.existingEmployee ? '12345678' : '');
+      if (accountPassword) await invokeAccount(saved, accountPassword);
     } else {
       const employeePayload = item.existingEmployee
         ? Object.fromEntries(Object.entries(item.record).filter(([key]) => item.providedEmployeeFields.has(key)))
@@ -365,7 +366,7 @@
     }
     return {
       status: item.existingEmployee ? '已更新' : '已新增',
-      detail: item.password && ctx.cloudEnabled ? '員工資料與登入帳號皆已完成' : '員工資料已完成',
+      detail: ctx.cloudEnabled && (item.password || !item.existingEmployee) ? `員工資料與登入帳號皆已完成${!item.password ? '（預設密碼 12345678）' : ''}` : '員工資料已完成',
     };
   }
   async function importRows(mode, dialog) {
