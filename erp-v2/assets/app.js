@@ -541,6 +541,7 @@
     }
     $('#dialogTitle').textContent=`${state.editing.id?'編輯':'新增'}${viewInfo[Object.keys(viewInfo).find(k=>viewInfo[k][1]===table)]?.[0]||'資料'}`;
     $('#formFields').innerHTML=fields[table].map(field=>inputFor(field,record)).join('');
+    if(table==='employees')initEmployeeFormFolds();
     if(numberingTargets[table])initNumberSuggestion(table,record);
     initPasswordControl();
     if(table==='employees'){initEmployeeIdentityUpload(record?.id_document_path||'');initLicensePicker();initSalaryPaymentMethod();initAutomaticLeaveRates('payroll_');initAutomaticInsuranceRates('payroll_');}
@@ -550,6 +551,22 @@
     if(table==='leave_requests') initLeaveBalanceInfo();
     if(table==='employee_payroll_profiles'){initAutomaticLeaveRates();initAutomaticInsuranceRates();}
     $('#formMessage').textContent=''; $('#recordDialog').showModal();
+  }
+
+  function initEmployeeFormFolds(){
+    const host=$('#formFields'),definitions=fields.employees,children=[...host.children];if(!host||children.length!==definitions.length)return;
+    const groups=[
+      ['basic','基本資料與證件','姓名、聯絡方式、身分證、地址及交通資料',true],
+      ['employment','任職、案場與到職文件','職稱、身分類別、排班案場、良民證及體檢資料',false],
+      ['police','警局核備','送件警局、核備字號與核備結果',false],
+      ['labor841','84-1 核備','主管機關送審及核備資料',false],
+      ['payroll','薪資、保險與匯款','月薪、勞健保、銀行帳戶及特休試算',false],
+      ['account','登入、權限與狀態','員工端密碼、ERP 權限及在職狀態',false]
+    ],containers={};host.innerHTML='';
+    groups.forEach(([key,title,help,open])=>{const details=document.createElement('details');details.className='employee-form-fold wide';details.open=open;details.innerHTML=`<summary><span><strong>${title}</strong><small>${help}</small></span><b aria-hidden="true">⌄</b></summary><div class="employee-form-fold-content"></div>`;host.appendChild(details);containers[key]=details.querySelector('.employee-form-fold-content')});
+    const category=name=>name==='initial_password'||['role','feature_permissions','status'].includes(name)?'account':name.startsWith('police_')?'police':name.startsWith('labor_84_1')?'labor841':name==='payroll_section'||name.startsWith('payroll_')||['salary_payment_method','bank_code','bank_account_no','bank_fee_mode','annual_leave_entitlement_hours','annual_leave_used_hours','annual_leave_hours','annual_leave_period_start','annual_leave_period_end'].includes(name)?'payroll':['police_clearance_status','medical_exam_status','medical_exam_date','emergency_contact_name','emergency_contact_phone','hire_date','labor_health_insurance_enroll_date','employment_type','assigned_sites','job_title','standard_daily_hours','cash_shift_default_amount'].includes(name)?'employment':'basic';
+    definitions.forEach((definition,index)=>containers[category(definition[0])].appendChild(children[index]));
+    host.querySelectorAll('.form-section-title').forEach(section=>section.hidden=true);
   }
 
   function numberPattern(rule){const prefix=String(rule?.prefix||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');return new RegExp(`^${prefix}(\\d{${Math.max(1,Math.min(10,Number(rule?.digits||3)))}})$`,'i');}
