@@ -23,11 +23,10 @@
         button.disabled=true;
         try{
           const client=window.ERP_CLIENT,id=button.dataset.deleteCommittee;
-          const itemResult=await client.from('community_committee_items').delete().eq('access_id',id);
-          if(itemResult.error&&!/does not exist|schema cache/i.test(itemResult.error.message))throw itemResult.error;
-          const{error}=await client.from('community_committee_access').delete().eq('id',id);
+          const{data,error}=await client.functions.invoke('quick-worker',{body:{action:'delete_committee_permanently',access_id:id,confirmation_email:email}});
           if(error)throw error;
-          alert('管委會帳號與社區授權已永久刪除。');
+          if(!data?.ok)throw new Error(data?.error||'刪除失敗');
+          alert('管委會授權、相關資料、登入帳號及登入工作階段已永久刪除。');
           await window.renderCommitteeManagement();
         }catch(error){
           alert(`刪除失敗：${error.message}`);

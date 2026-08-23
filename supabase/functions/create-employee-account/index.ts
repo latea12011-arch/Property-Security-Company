@@ -25,6 +25,60 @@ Deno.serve(async (req) => {
     if (profileError || !['admin', 'hr'].includes(profile?.role)) throw new Error('只有系統管理員或人事人員可以執行此操作')
 
     const body = await req.json()
+    if (body?.action === 'invite_committee') {
+      const accessId = String(body.access_id || '')
+      const requestedEmail = String(body.email || '').trim().toLowerCase()
+      const redirectTo = String(body.redirect_to || '').trim()
+      if (!accessId || !requestedEmail || !redirectTo.startsWith('https://')) throw new Error('管委會帳號或返回網址不正確')
+      const admin = createClient(url, serviceKey)
+      const { data: access, error: accessError } = await admin.from('community_committee_access').select('id,email,member_name,committee_role,site_id,is_active').eq('id', accessId).single()
+      if (accessError || !access || !access.is_active || access.email.trim().toLowerCase() !== requestedEmail) throw new Error('找不到有效的管委會社區授權')
+      let existingUserId: string | null = null
+      for (let page = 1; page <= 10 && !existingUserId; page += 1) {
+        const { data: users, error: listError } = await admin.auth.admin.listUsers({ page, perPage: 1000 })
+        if (listError) throw listError
+        existingUserId = users.users.find((item) => item.email?.toLowerCase() === requestedEmail)?.id || null
+        if (users.users.length < 1000) break
+      }
+      if (existingUserId) {
+        const { error } = await admin.auth.resetPasswordForEmail(requestedEmail, { redirectTo })
+        if (error) throw new Error(`設定信寄送失敗：${error.message}`)
+      } else {
+        const { error } = await admin.auth.admin.inviteUserByEmail(requestedEmail, { redirectTo, data: { member_name: access.member_name, committee_role: access.committee_role, site_id: access.site_id } })
+        if (error) throw new Error(`邀請信寄送失敗：${error.message}`)
+      }
+      return json({ ok: true, mail_action: existingUserId ? 'recovery' : 'invite' })
+    }
+
+    if (body?.action === 'delete_committee_permanently') {
+      if (profile?.role !== 'admin') throw new Error('只有系統管理員可以永久刪除管委會帳號')
+      const accessId = String(body.access_id || '')
+      const confirmationEmail = String(body.confirmation_email || '').trim().toLowerCase()
+      if (!accessId || !confirmationEmail) throw new Error('缺少刪除確認資料')
+      const admin = createClient(url, serviceKey)
+      const { data: access, error: accessError } = await admin.from('community_committee_access').select('id,email,member_name').eq('id', accessId).single()
+      if (accessError || !access) throw new Error('找不到指定的管委會帳號')
+      if (access.email.trim().toLowerCase() !== confirmationEmail) throw new Error('Email 確認不一致，已取消刪除')
+      let deletedAuthUser = false
+      for (let page = 1; page <= 10; page += 1) {
+        const { data: users, error: listError } = await admin.auth.admin.listUsers({ page, perPage: 1000 })
+        if (listError) throw listError
+        const authUser = users.users.find((item) => item.email?.toLowerCase() === confirmationEmail)
+        if (authUser) {
+          const { error: authDeleteError } = await admin.auth.admin.deleteUser(authUser.id)
+          if (authDeleteError) throw new Error(`登入帳號刪除失敗：${authDeleteError.message}`)
+          deletedAuthUser = true
+          break
+        }
+        if (users.users.length < 1000) break
+      }
+      const itemDelete = await admin.from('community_committee_items').delete().eq('access_id', accessId)
+      if (itemDelete.error && !['42P01','PGRST205'].includes(itemDelete.error.code || '')) throw new Error(`登入帳號已刪除，但建議事項清除失敗：${itemDelete.error.message}`)
+      const { error: accessDeleteError } = await admin.from('community_committee_access').delete().eq('id', accessId)
+      if (accessDeleteError) throw new Error(`登入帳號已刪除，但社區授權清除失敗：${accessDeleteError.message}`)
+      return json({ ok: true, email: confirmationEmail, member_name: access.member_name, deleted_auth_user: deletedAuthUser })
+    }
+
     if (body?.action === 'geocode_address') {
       const address = String(body.address || '').trim()
       if (address.length < 3 || address.length > 200) throw new Error('請輸入完整地址（3 至 200 個字）')

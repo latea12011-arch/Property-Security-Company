@@ -1,0 +1,13 @@
+select,textarea{width:100%;border:1px solid #cbd9e2;border-radius:12px;padding:13px;background:#fff;font:inherit}
+textarea{resize:vertical}
+#committeeItemForm{display:grid;gap:14px}
+#itemMessage{color:#087667}
+.work-log-photo{display:block;width:min(320px,100%);margin-top:12px;border-radius:12px}
+nav button{width:min(180px,25%)}
+.password-setup{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px;background:linear-gradient(145deg,#e5f3f2,#edf2f7)}
+.password-setup[hidden]{display:none!important}
+.password-setup article{width:min(420px,100%);padding:32px;border-radius:28px;background:#fff;box-shadow:0 25px 70px #173b4d26}
+.password-setup h2{margin:14px 0 8px;font-size:27px}
+.password-setup form{display:grid;gap:15px;margin-top:22px}
+#passwordSetupMessage{min-height:24px;color:#ba3838}
+@media(max-width:600px){.password-setup{padding:18px}.password-setup article{padding:26px 22px}}
