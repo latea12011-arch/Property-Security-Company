@@ -567,23 +567,17 @@
       ['payroll','薪資、保險與匯款','月薪、勞健保、銀行帳戶及特休試算',false],
       ['account','登入、權限與狀態','員工端密碼、ERP 權限及在職狀態',false]
     ],containers={};host.innerHTML='';
-    groups.forEach(([key,title,help,open])=>{const details=document.createElement('details');details.className='employee-form-fold wide';details.open=open;details.innerHTML=`<summary><span><strong>${title}</strong><small>${help}</small></span><b aria-hidden="true">⌄</b></summary><div class="employee-form-fold-content"></div>`;host.appendChild(details);containers[key]=details.querySelector('.employee-form-fold-content')});
+    groups.forEach(([key,title,help,open])=>{const section=document.createElement('section');section.className=`employee-form-fold wide${open?' is-open':''}`;section.innerHTML=`<button type="button" class="employee-form-fold-toggle" aria-expanded="${open}"><span><strong>${title}</strong><small>${help}</small></span><b aria-hidden="true">⌄</b></button><div class="employee-form-fold-content" ${open?'':'hidden'}></div>`;host.appendChild(section);containers[key]=section.querySelector('.employee-form-fold-content')});
     const category=name=>name==='initial_password'||['role','feature_permissions','status'].includes(name)?'account':name.startsWith('police_')?'police':name.startsWith('labor_84_1')?'labor841':name==='payroll_section'||name.startsWith('payroll_')||['salary_payment_method','bank_code','bank_account_no','bank_fee_mode','annual_leave_entitlement_hours','annual_leave_used_hours','annual_leave_hours','annual_leave_period_start','annual_leave_period_end'].includes(name)?'payroll':['police_clearance_status','medical_exam_status','medical_exam_date','emergency_contact_name','emergency_contact_phone','hire_date','labor_health_insurance_enroll_date','employment_type','assigned_sites','job_title','standard_daily_hours','cash_shift_default_amount'].includes(name)?'employment':'basic';
     definitions.forEach((definition,index)=>containers[category(definition[0])].appendChild(children[index]));
     host.querySelectorAll('.form-section-title').forEach(section=>section.hidden=true);
-    host.querySelectorAll('.employee-form-fold>summary').forEach(summary=>{
-      summary.setAttribute('role','button');
-      summary.setAttribute('tabindex','0');
-      const toggle=event=>{
-        event.preventDefault();
-        event.stopPropagation();
-        const details=summary.closest('details');
-        details.open=!details.open;
-        summary.setAttribute('aria-expanded',String(details.open));
-      };
-      summary.setAttribute('aria-expanded',String(summary.closest('details').open));
-      summary.addEventListener('click',toggle,{passive:false});
-      summary.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' ')toggle(event)});
+    host.querySelectorAll('.employee-form-fold-toggle').forEach(button=>{
+      button.addEventListener('click',()=>{
+        const section=button.closest('.employee-form-fold'),content=section.querySelector('.employee-form-fold-content'),open=!section.classList.contains('is-open');
+        section.classList.toggle('is-open',open);
+        content.hidden=!open;
+        button.setAttribute('aria-expanded',String(open));
+      });
     });
   }
 
