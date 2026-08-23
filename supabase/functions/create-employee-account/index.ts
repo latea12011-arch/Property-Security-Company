@@ -41,6 +41,11 @@ Deno.serve(async (req) => {
         if (users.users.length < 1000) break
       }
       if (existingUserId) {
+        const [{ data: erpProfile }, { data: erpEmployee }] = await Promise.all([
+          admin.from('profiles').select('id,role').eq('id', existingUserId).maybeSingle(),
+          admin.from('employees').select('id,employee_no,full_name').eq('user_id', existingUserId).maybeSingle(),
+        ])
+        if (erpProfile || erpEmployee) throw new Error('此 Email 已是 ERP 管理員或員工登入帳號。為避免密碼互相覆蓋，請替管委會委員使用不同 Email。')
         const { error } = await admin.auth.resetPasswordForEmail(requestedEmail, { redirectTo })
         if (error) throw new Error(`設定信寄送失敗：${error.message}`)
       } else {
@@ -65,9 +70,15 @@ Deno.serve(async (req) => {
         if (listError) throw listError
         const authUser = users.users.find((item) => item.email?.toLowerCase() === confirmationEmail)
         if (authUser) {
-          const { error: authDeleteError } = await admin.auth.admin.deleteUser(authUser.id)
-          if (authDeleteError) throw new Error(`登入帳號刪除失敗：${authDeleteError.message}`)
-          deletedAuthUser = true
+          const [{ data: erpProfile }, { data: erpEmployee }] = await Promise.all([
+            admin.from('profiles').select('id,role').eq('id', authUser.id).maybeSingle(),
+            admin.from('employees').select('id,employee_no,full_name').eq('user_id', authUser.id).maybeSingle(),
+          ])
+          if (!erpProfile && !erpEmployee) {
+            const { error: authDeleteError } = await admin.auth.admin.deleteUser(authUser.id)
+            if (authDeleteError) throw new Error(`登入帳號刪除失敗：${authDeleteError.message}`)
+            deletedAuthUser = true
+          }
           break
         }
         if (users.users.length < 1000) break
