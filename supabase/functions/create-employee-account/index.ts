@@ -83,11 +83,21 @@ Deno.serve(async (req) => {
         }
         if (users.users.length < 1000) break
       }
-      const itemDelete = await admin.from('community_committee_items').delete().eq('access_id', accessId)
+      // 同一個 Email 可能因重複指派而存在多筆社區授權。永久刪除必須一次
+      // 清乾淨，否則使用者重新登入後仍會命中另一筆授權。
+      const { data: emailAccessRows, error: emailAccessError } = await admin
+        .from('community_committee_access')
+        .select('id')
+        .ilike('email', confirmationEmail)
+      if (emailAccessError) throw new Error(`查詢同 Email 授權失敗：${emailAccessError.message}`)
+      const accessIds = (emailAccessRows || []).map((row: { id: string }) => row.id)
+      if (!accessIds.includes(accessId)) accessIds.push(accessId)
+
+      const itemDelete = await admin.from('community_committee_items').delete().in('access_id', accessIds)
       if (itemDelete.error && !['42P01','PGRST205'].includes(itemDelete.error.code || '')) throw new Error(`登入帳號已刪除，但建議事項清除失敗：${itemDelete.error.message}`)
-      const { error: accessDeleteError } = await admin.from('community_committee_access').delete().eq('id', accessId)
+      const { error: accessDeleteError } = await admin.from('community_committee_access').delete().in('id', accessIds)
       if (accessDeleteError) throw new Error(`登入帳號已刪除，但社區授權清除失敗：${accessDeleteError.message}`)
-      return json({ ok: true, email: confirmationEmail, member_name: access.member_name, deleted_auth_user: deletedAuthUser })
+      return json({ ok: true, email: confirmationEmail, member_name: access.member_name, deleted_auth_user: deletedAuthUser, deleted_access_count: accessIds.length })
     }
 
     if (body?.action === 'geocode_address') {
