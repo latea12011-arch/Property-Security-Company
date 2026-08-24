@@ -47,6 +47,8 @@ test('請假審核可列印精簡 A5 請假單',async()=>{
   assert.match(app,/function printLeaveRequest/);
   assert.match(app,/@page\{size:A5 portrait/);
   assert.match(app,/請假申請單/);
+  assert.match(app,/frame\.contentWindow\.print\(\)/);
+  assert.doesNotMatch(app,/printLeaveRequest[\s\S]{0,500}window\.open/);
   assert.match(app,/table==='leave_requests'\?printLeaveRequest/);
   assert.match(app,/\['employees','leave_requests','payroll_records'/);
 });
