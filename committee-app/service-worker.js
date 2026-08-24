@@ -1,4 +1,4 @@
-const CACHE='hongjia-committee-v3';
+const CACHE='hongjia-committee-v4';
 const SHELL=['./','./index.html','./app.css','./extras.css','./app.js','./manifest.json','../erp-v2/config.js'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)));self.skipWaiting()});
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('hongjia-committee-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
