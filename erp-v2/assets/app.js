@@ -438,6 +438,9 @@
     await loadRelations(); const table=viewInfo[view][1];
     if(cloudEnabled&&table==='employees'){const{error}=await client.rpc('refresh_all_annual_leave_balances');if(error)throw error;await loadRelations();}
     let rows=table==='inventory_items'?state.relations.inventory_items:await db.list(table);
+    // ERP 內部記事與行事曆的舊資料曾暫存在 announcements。
+    // 公告管理只顯示正式公告，避免管理者誤刪內部工作資料。
+    if(table==='announcements')rows=rows.filter(row=>!['ERP_NOTEPAD','ERP_CALENDAR'].includes(row.publisher));
     if(table==='employees'){
       let approvalRows=[];
       if(cloudEnabled&&!window.ERP_DEMO_MODE){const{data,error}=await client.from('employee_police_approvals').select('*');if(error)throw error;approvalRows=data||[];}
