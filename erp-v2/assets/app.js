@@ -377,7 +377,7 @@
       @media print{.resume-form h2{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
     </style>
     <section class="resume-form">
-      <p class="resume-note"><strong>應徵者填寫區：</strong>請由前來面試的人員本人填寫；面試階段不需填寫銀行帳號、薪資或勞健保加保資料。</p>
+      <p class="resume-note"><strong>應徵者填寫區：</strong>請由前來面試的人員本人填寫；面試階段僅需填寫期望薪資，不需填寫銀行帳號、正式薪資或勞健保加保資料。</p>
       <h2>一、應徵與基本資料</h2>
       <table class="basic-info">
         <colgroup><col style="width:11%"><col style="width:18%"><col style="width:11%"><col style="width:18%"><col style="width:11%"><col style="width:13%"><col style="width:18%"></colgroup>
@@ -393,6 +393,7 @@
         <tr><th>希望身分類別</th><td colspan="5" class="check-line">□ 正職人員　□ 機動人員　□ 內部人員　□ 兼職人員　□ 現金班人員　□ 臨時／支援人員</td></tr>
         <tr><th>可配合班別</th><td colspan="5" class="check-line">□ 日班　□ 夜班　□ 輪班　□ 假日　□ 現金班　□ 臨時支援　□ 其他：________________</td></tr>
         <tr><th>可到職日期</th><td></td><th>希望服務區域／案場</th><td colspan="3"></td></tr>
+        <tr><th>期望薪資</th><td colspan="5">新臺幣　　　　　　　　　元／月　　□ 可面議</td></tr>
         <tr><th>交通方式</th><td colspan="2">□ 步行　□ 自行車　□ 機車　□ 汽車　□ 大眾運輸　□ 其他</td><th>駕照類別</th><td colspan="2">________________________</td></tr>
         <tr><th>總幹事證號</th><td colspan="2"></td><th>其他專業證照</th><td colspan="2"></td></tr>
         <tr><th>良民證繳交</th><td colspan="5" class="check-line">□ 已繳交　□ 尚未繳交　□ 可於錄取後補交</td></tr>
@@ -422,6 +423,7 @@
             <tr><th>面試結果</th><td colspan="3" class="check-line">□ 錄取　□ 備取　□ 不錄取　□ 二次面試</td></tr>
             <tr><th>建議職稱</th><td></td><th>建議身分類別</th><td></td></tr>
             <tr><th>建議案場／部門</th><td></td><th>預計到職日</th><td></td></tr>
+            <tr><th>確認薪資</th><td colspan="3">新臺幣　　　　　　　　　元／月　　□ 月薪　□ 日薪　□ 時薪　□ 其他：____________</td></tr>
             <tr><th>面試評語</th><td colspan="3" class="writing-space"></td></tr>
           </table>
           <div class="signature-row"><span>面試人員：________________</span><span>主管核示：________________</span></div>
