@@ -371,7 +371,7 @@
   function printDocument(title,body,showSignatures=true,headerName='紘嘉物業集團'){const old=$('#printFrame');if(old)old.remove();const frame=document.createElement('iframe');frame.id='printFrame';frame.title='列印文件';frame.style.cssText='position:fixed;width:1px;height:1px;right:0;bottom:0;border:0;opacity:0;pointer-events:none';document.body.appendChild(frame);frame.onload=()=>setTimeout(()=>{frame.contentWindow.focus();frame.contentWindow.print()},150);frame.srcdoc=`<!doctype html><html lang="zh-TW"><head><meta charset="utf-8"><title>${esc(title)}</title><style>@page{size:A4;margin:0}body{font-family:"Microsoft JhengHei",sans-serif;color:#162b3d;margin:0;padding:18mm;box-sizing:border-box}header{text-align:center;border-bottom:2px solid #16324f;padding-bottom:18px;margin-bottom:24px}h1{margin:0 0 8px;font-size:24px;letter-spacing:2px}table{width:100%;border-collapse:collapse}thead{display:table-header-group}tfoot{display:table-footer-group}tr{break-inside:avoid;page-break-inside:avoid}th,td{border:1px solid #bdc9d3;padding:10px;text-align:left;vertical-align:top;overflow-wrap:anywhere;word-break:break-word}.amount{text-align:right}.sign{margin-top:70px;display:flex;justify-content:space-between;break-inside:avoid;page-break-inside:avoid}.print-meta{text-align:right;color:#53697b;font-size:12px}.site-print-list{font-size:11px}.site-print-list th,.site-print-list td{padding:7px}.certificate-meta{text-align:right;font-size:12px;color:#53697b}.certificate-copy{font-size:17px;line-height:2.25;margin:38px 22px}.certificate-copy p{text-align:justify}.certificate-footer{display:grid;grid-template-columns:1fr 1.35fr;gap:34px;align-items:end;margin-top:48px}.certificate-stamp{height:112px;border:2px dashed #9aabb8;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#53697b;letter-spacing:3px}.certificate-seal{text-align:right;line-height:1.9}.certificate-valid{text-align:center;margin-top:28px;padding-top:12px;border-top:1px solid #bdc9d3;color:#53697b;font-size:12px;letter-spacing:3px}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head><body><header><h1>${esc(headerName)}</h1><strong>${esc(title)}</strong></header>${body}${showSignatures?'<div class="sign"><span>公司用印：________________</span><span>員工簽收：________________</span></div>':''}</body></html>`;}
 
   function printApplicantResumeForm(){
-    const workRows=Array.from({length:3},()=>'<tr><td></td><td></td><td></td><td></td><td></td></tr>').join('');
+    const workRows=Array.from({length:2},()=>'<tr><td></td><td></td><td></td><td></td><td></td></tr>').join('');
     const body=`<style>
       .resume-form{font-size:11px;line-height:1.35}.resume-form h2{margin:0 0 7px;padding:5px 9px;background:#eaf1f6;border-left:5px solid #16324f;font-size:14px}.resume-form table{margin-bottom:8px}.resume-form th,.resume-form td{padding:5px 6px}.resume-form th{width:14%;background:#f5f8fa;white-space:nowrap}.resume-form td{height:21px}.resume-form .basic-info th{width:auto}.resume-form .birth-date{white-space:nowrap;letter-spacing:.5px}.resume-form .blank-row td{height:34px}.resume-form .work-history th{width:auto;text-align:center}.resume-form .work-history td{height:34px}.resume-form .check-line{letter-spacing:.3px;line-height:1.65}.resume-form .photo-box{height:104px;text-align:center;color:#718393}.resume-form .page-break{break-before:page;page-break-before:always;padding-top:2mm}.resume-form .resume-note{color:#53697b;font-size:10px;margin:-3px 0 7px}.resume-form .declaration{border:1px solid #bdc9d3;padding:7px 10px;margin-top:7px}.resume-form .signature-row{display:flex;justify-content:space-between;margin-top:16px}.resume-form .company-only{border:2px solid #8da3b5;padding:8px;margin-top:9px}.resume-form .company-only h2{background:#fff4db;border-left-color:#c98b18}.resume-form .writing-space{height:42px}
       @media print{.resume-form h2{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
@@ -381,7 +381,8 @@
       <h2>一、應徵與基本資料</h2>
       <table class="basic-info">
         <colgroup><col style="width:11%"><col style="width:18%"><col style="width:11%"><col style="width:18%"><col style="width:11%"><col style="width:13%"><col style="width:18%"></colgroup>
-        <tr><th>應徵日期</th><td>民國　　年　　月　　日</td><th>應徵職務</th><td colspan="3"></td><td class="photo-box" rowspan="4">二吋照片<br>黏貼處</td></tr>
+        <tr><th>應徵日期</th><td colspan="5" class="birth-date">民國 ______ 年 ______ 月 ______ 日</td><td class="photo-box" rowspan="5">二吋照片<br>黏貼處</td></tr>
+        <tr><th>應徵職位</th><td colspan="5" class="check-line">□ 保全（日班）　□ 保全（夜班）　□ 機動保全（日班）　□ 機動保全（夜班）<br>□ 總幹事　□ 秘書　□ 督導　□ 業務</td></tr>
         <tr><th>姓名</th><td></td><th>性別</th><td>□ 男　□ 女　□ 其他</td><th>出生日期</th><td class="birth-date">民國　　年　　月　　日</td></tr>
         <tr><th>身分證字號</th><td></td><th>聯絡電話</th><td></td><th>Email</th><td></td></tr>
         <tr><th>戶籍地址</th><td colspan="5"></td></tr>
@@ -401,7 +402,7 @@
       </table>
       <h2>三、學歷</h2>
       <table><thead><tr><th>學校名稱</th><th>科系</th><th>就讀期間</th><th>畢業／肄業</th></tr></thead><tbody><tr class="blank-row"><td></td><td></td><td></td><td></td></tr><tr class="blank-row"><td></td><td></td><td></td><td></td></tr></tbody></table>
-      <h2>四、工作經歷（請至少填寫最近三筆）</h2>
+      <h2>四、工作經歷（請填寫最近兩筆）</h2>
       <table class="work-history"><thead><tr><th>公司／單位</th><th>任職期間</th><th>職稱</th><th>工作內容</th><th>離職原因</th></tr></thead><tbody>${workRows}</tbody></table>
       <div class="page-break">
         <h2>五、專長與行政能力</h2>
