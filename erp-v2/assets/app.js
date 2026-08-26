@@ -391,7 +391,6 @@
       </table>
       <h2>二、任職條件與證照</h2>
       <table>
-        <tr><th>希望身分類別</th><td colspan="5" class="check-line">□ 正職人員　□ 機動人員　□ 內部人員　□ 兼職人員　□ 現金班人員　□ 臨時／支援人員</td></tr>
         <tr><th>可配合班別</th><td colspan="5" class="check-line">□ 日班　□ 夜班　□ 輪班　□ 假日　□ 現金班　□ 臨時支援　□ 其他：________________</td></tr>
         <tr><th>可到職日期</th><td></td><th>希望服務區域／案場</th><td colspan="3"></td></tr>
         <tr><th>期望薪資</th><td colspan="5">新臺幣　　　　　　　　　元／月　　□ 可面議</td></tr>
