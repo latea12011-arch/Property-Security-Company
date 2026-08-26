@@ -380,17 +380,17 @@
       <p class="resume-note"><strong>應徵者填寫區：</strong>請由前來面試的人員本人填寫；面試階段僅需填寫期望薪資，不需填寫銀行帳號、正式薪資或勞健保加保資料。</p>
       <h2>一、基本資料</h2>
       <table class="basic-info">
-        <colgroup><col style="width:11%"><col style="width:18%"><col style="width:11%"><col style="width:18%"><col style="width:11%"><col style="width:13%"><col style="width:18%"></colgroup>
-        <tr><th>應徵日期</th><td colspan="2" class="birth-date">民國 ____ 年 ____ 月 ____ 日</td><th>期望薪資</th><td colspan="2">NT$ ______________／月　□ 可面議</td><td class="photo-box" rowspan="7">二吋照片<br>黏貼處</td></tr>
+        <colgroup><col style="width:12%"><col style="width:21%"><col style="width:12%"><col style="width:21%"><col style="width:12%"><col style="width:22%"></colgroup>
+        <tr><th>應徵日期</th><td colspan="2" class="birth-date">民國 ____ 年 ____ 月 ____ 日</td><th>期望薪資</th><td colspan="2">NT$ ______________／月　□ 可面議</td></tr>
         <tr><th>應徵職位</th><td colspan="5" class="check-line">□ 保全　□ 機動保全　□ 行政保全　□ 總幹事　□ 秘書　□ 督導　□ 業務</td></tr>
         <tr><th>可配合班別</th><td colspan="5" class="check-line">□ 日班　□ 夜班　□ 輪班　□ 假日　□ 現金班　□ 臨時支援　□ 其他：________________</td></tr>
         <tr><th>面試來源</th><td colspan="5" class="check-line">□ 員工介紹　□ 人力銀行　□ 官方網站　□ 其他管道：________________</td></tr>
         <tr><th>姓名</th><td></td><th>性別</th><td>□ 男　□ 女　□ 其他</td><th>出生日期</th><td class="birth-date">民國　　年　　月　　日</td></tr>
         <tr><th>身分證字號</th><td></td><th>聯絡電話</th><td></td><th>Email</th><td></td></tr>
         <tr><th>戶籍地址</th><td colspan="5"></td></tr>
-        <tr><th>現居地址</th><td colspan="6"></td></tr>
-        <tr><th>緊急聯絡人</th><td></td><th>關係</th><td></td><th>聯絡電話</th><td colspan="2"></td></tr>
-        <tr><th>身體狀況</th><td colspan="6" class="check-line">□ 良好　□ 普通　□ 有需注意之健康狀況，說明：________________________________________</td></tr>
+        <tr><th>現居地址</th><td colspan="5"></td></tr>
+        <tr><th>緊急聯絡人</th><td></td><th>關係</th><td></td><th>聯絡電話</th><td></td></tr>
+        <tr><th>身體狀況</th><td colspan="5" class="check-line">□ 良好　□ 普通　□ 有需注意之健康狀況，說明：________________________________________</td></tr>
       </table>
       <h2>二、任職期許或其他</h2>
       <table>
