@@ -58,8 +58,8 @@
       ['bank_code','銀行類別','select',false,bankOptions],
       ['bank_account_no','銀行帳戶','text'],
       ['bank_fee_mode','匯款手續費方式','radio',true,[['company_bank','本公司銀行（手續費 0 元）'],['other_bank_employee','非本公司銀行（手續費由員工負擔）']]],
-      ['annual_leave_entitlement_hours','本期特休總時數（自動）','readonly'],['annual_leave_used_hours','本期已休時數（自動）','readonly'],['annual_leave_hours','本期剩餘時數（自動）','readonly'],
-      ['annual_leave_period_start','特休期間開始（自動）','readonly'],['annual_leave_period_end','特休期間結束（自動）','readonly'],
+      ['annual_leave_entitlement_hours','本年度特休總時數（每年重算）','readonly'],['annual_leave_used_hours','本年度已休時數（自動）','readonly'],['annual_leave_hours','本年度剩餘時數（自動）','readonly'],
+      ['annual_leave_period_start','本年度特休開始（自動）','readonly'],['annual_leave_period_end','本年度特休截止（自動）','readonly'],
       ['role','系統權限','select',true,[['guard','一般員工'],['site_manager','案場主管'],['hr','人事／行政'],['admin','系統管理員']]],
       ['feature_permissions','可使用的後台功能','feature-picker'],
       ['status','狀態','select',true,[['active','在職'],['inactive','離職／停用']]]
@@ -171,7 +171,7 @@
   };
 
   const columns = {
-    employees: [['employee_no','編號'],['full_name','姓名'],['birth_date','出生年月日'],['highest_education','最高學歷'],['job_title','職稱'],['police_clearance_status','良民證'],['medical_exam_status','體檢報告'],['medical_exam_date','體檢日期'],['police_approval_status','警局核備'],['labor_84_1_status','84-1 核備'],['hire_date','到職日'],['cash_shift_default_amount','現金班日薪'],['annual_leave_entitlement_hours','本期特休'],['annual_leave_used_hours','已休'],['annual_leave_hours','剩餘'],['annual_leave_period_end','本期截止'],['status','狀態']],
+    employees: [['employee_no','編號'],['full_name','姓名'],['birth_date','出生年月日'],['highest_education','最高學歷'],['job_title','職稱'],['police_clearance_status','良民證'],['medical_exam_status','體檢報告'],['medical_exam_date','體檢日期'],['police_approval_status','警局核備'],['labor_84_1_status','84-1 核備'],['hire_date','到職日'],['cash_shift_default_amount','現金班日薪'],['annual_leave_entitlement_hours','年度特休'],['annual_leave_used_hours','年度已休'],['annual_leave_hours','年度剩餘'],['annual_leave_period_end','年度截止'],['status','狀態']],
     sites: [['code','代碼'],['name','案場'],['community_tax_id','社區統編'],['community_phone','社區電話'],['acquisition_source','案場來源'],['referrer_name','介紹人／合作來源'],['chairman_name','主委'],['household_count','戶數'],['contract_end_date','合約到期'],['renewal_status','續約進度'],['status','狀態']],
     schedules: [['work_date','日期'],['employee_id','員工'],['site_id','案場'],['shift_type','班別'],['start_time','時間']],
     attendance: [['work_date','日期'],['employee_id','員工'],['site_id','案場'],['clock_in','上班'],['clock_out','下班'],['status','狀態']],
@@ -438,7 +438,7 @@
 
   async function renderTable(view) {
     await loadRelations(); const table=viewInfo[view][1];
-    if(cloudEnabled&&table==='employees'){const{error}=await client.rpc('refresh_all_annual_leave_balances');if(error)throw error;await loadRelations();}
+    if(cloudEnabled&&['employees','leave_requests'].includes(table)){const{error}=await client.rpc('refresh_all_annual_leave_balances');if(error)throw error;await loadRelations();}
     let rows=table==='inventory_items'?state.relations.inventory_items:await db.list(table);
     // ERP 內部記事與行事曆的舊資料曾暫存在 announcements。
     // 公告管理只顯示正式公告，避免管理者誤刪內部工作資料。
@@ -529,7 +529,7 @@
       if(type.startsWith('relation:')) { const relation=type.split(':')[1]; choices=state.relations[relation].map(row=>[row.id,relation==='inventory_items'?`${row.item_code}－${row.item_name}（可借 ${row.available_stock} ${row.unit||''}）`:row.full_name||row.name||row.item_name]); }
       return `<label>${label}<select name="${name}" ${required?'required':''}><option value="">請選擇</option>${(choices||[]).map(([v,t])=>`<option value="${esc(v)}" ${String(v)===String(value)?'selected':''}>${esc(t)}</option>`).join('')}</select></label>`;
     }
-    if(type==='readonly') return `<label>${label}<input name="${name}" type="text" value="${esc(value)}" readonly tabindex="-1"><small class="muted">依到職日、標準每日工時與已核准特休自動計算</small></label>`;
+    if(type==='readonly') return `<label>${label}<input name="${name}" type="text" value="${esc(value)}" readonly tabindex="-1"><small class="muted">依到職週年與本年度已核准特休自動重算；前年度餘額不累計，歷史紀錄仍保留</small></label>`;
     return `<label>${label}<input name="${name}" type="${type}" value="${esc(value)}" ${type==='number'?'step="any"':''} ${required?'required':''}></label>`;
   }
 
