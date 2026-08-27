@@ -17,9 +17,20 @@ async function enable(){
   const permission=await Notification.requestPermission();if(permission!=='granted')throw Error('您尚未允許通知權限');
   await saveSubscription();await load();return true;
 }
-async function showLocal(item){if(Notification.permission!=='granted')return;const registration=await navigator.serviceWorker.ready;await registration.showNotification(item.title,{body:item.body,icon:'assets/employee-icon-v2-192.png',badge:'assets/employee-icon-v2-192.png',tag:item.id,data:{url:item.target_url}})}
+function employeeTarget(targetUrl){
+  if(mode!=='employee')return targetUrl;
+  try{const url=new URL(targetUrl||'',location.href),tab=url.searchParams.get('tab');return tab&&document.getElementById(tab)?`./mobile.html?tab=${encodeURIComponent(tab)}`:'./mobile.html'}catch{return './mobile.html'}
+}
+function openEmployeeTarget(targetUrl){
+  if(mode!=='employee')return false;
+  let tab='';try{tab=new URL(targetUrl||'',location.href).searchParams.get('tab')||''}catch{}
+  const tabButton=tab?document.querySelector(`[data-tab="${CSS.escape(tab)}"]`):null;
+  if(tabButton&&document.getElementById(tab)){tabButton.click();history.replaceState(null,'',`${location.pathname}?tab=${encodeURIComponent(tab)}`)}
+  return true;
+}
+async function showLocal(item){if(Notification.permission!=='granted')return;const registration=await navigator.serviceWorker.ready;await registration.showNotification(item.title,{body:item.body,icon:'assets/employee-icon-v2-192.png',badge:'assets/employee-icon-v2-192.png',tag:item.id,data:{url:employeeTarget(item.target_url)}})}
 const notificationItem=item=>`<button type="button" class="notification-inbox-item ${item.read_at?'':'unread'}" data-notification-id="${item.id}"><strong>${esc(item.title)}</strong><span>${esc(item.body)}</span><small>${new Date(item.created_at).toLocaleString('zh-TW')}</small></button>`;
-function bindNotificationItems(rows){target.querySelectorAll('[data-notification-id]').forEach(button=>button.onclick=async()=>{const item=rows.find(row=>row.id===button.dataset.notificationId);await client.from('app_notifications').update({read_at:new Date().toISOString()}).eq('id',item.id);if(item.target_url)location.href=item.target_url;else load()})}
+function bindNotificationItems(rows){target.querySelectorAll('[data-notification-id]').forEach(button=>button.onclick=async()=>{const item=rows.find(row=>row.id===button.dataset.notificationId);if(!item)return;await client.from('app_notifications').update({read_at:new Date().toISOString()}).eq('id',item.id);item.read_at=new Date().toISOString();button.classList.remove('unread');if(openEmployeeTarget(item.target_url)){load();return}if(item.target_url)location.href=item.target_url;else load()})}
 function employeePreviewRows(rows){const seen=new Set();return rows.filter(item=>{const key=`${item.notification_type||''}|${item.title||''}|${item.body||''}`;if(seen.has(key))return false;seen.add(key);return true})}
 function renderEmployee(rows){if(!rows.length){target.innerHTML='<div class="empty">目前沒有通知</div>';return}const expanded=target.dataset.expanded==='true',preview=employeePreviewRows(rows),visible=expanded?rows:preview.slice(0,3),unread=rows.filter(item=>!item.read_at).length;target.innerHTML=`<div class="employee-notification-summary"><span>${expanded?'全部通知':'最近通知'}</span><small>${unread?`${unread} 則未讀 · `:''}共 ${rows.length} 則</small></div>${visible.map(notificationItem).join('')}${rows.length>visible.length||expanded?`<button type="button" class="employee-notification-toggle" data-notification-toggle>${expanded?'收合通知':`查看全部通知（${rows.length}）`}</button>`:''}`;bindNotificationItems(rows);target.querySelector('[data-notification-toggle]')?.addEventListener('click',()=>{target.dataset.expanded=expanded?'false':'true';renderEmployee(rows)})}
 function render(rows){if(!target)return;if(mode==='employee'){renderEmployee(rows);return}target.innerHTML=rows.length?rows.map(notificationItem).join(''):'<div class="empty">目前沒有通知</div>';bindNotificationItems(rows)}
