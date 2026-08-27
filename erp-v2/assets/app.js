@@ -688,9 +688,10 @@
         const accountError=error?await edgeFunctionErrorMessage(error):data?.ok?'':data?.error||'登入帳號建立失敗';
         if(accountError){$('#recordDialog').close();await renderCurrent();showNotice(`員工資料已儲存，但登入帳號建立失敗：${accountError}`,'error');return}
       }
-      if(cloudEnabled&&table==='announcements'&&saved.is_active)window.HongJiaPush?.dispatch();
+      let announcementPushed=null;
+      if(cloudEnabled&&table==='announcements'&&saved.is_active)announcementPushed=await window.HongJiaPush?.dispatch();
       if(cloudEnabled&&table==='leave_requests'&&['approved','rejected'].includes(saved.status))window.HongJiaPush?.dispatch();
-      $('#recordDialog').close(); await renderCurrent(); showNotice(table==='employees'&&initialPassword?'員工與登入帳號已建立。':'資料已儲存。','success');
+      $('#recordDialog').close(); await renderCurrent(); showNotice(table==='employees'&&initialPassword?'員工與登入帳號已建立。':table==='announcements'&&saved.is_active?(announcementPushed===false?'公告已發布；手機推播暫未成功，請稍後重新儲存或發布。':'公告已發布，已立即送出員工手機通知。'):'資料已儲存。',announcementPushed===false?'error':'success');
     }
     catch(error) { $('#formMessage').textContent=`儲存失敗：${error.message}`; }
     finally { $('#saveButton').disabled=false; }
@@ -828,9 +829,9 @@
   }
   function importedDay(header,range){const text=String(header??'').trim(),match=text.match(/(?:(\d{1,2})\s*[月\/.-])?\s*(\d{1,2})\s*日?/);if(!match)return 0;const month=match[1]?Number(match[1]):range.m,day=Number(match[2]);return month===range.m&&day>=1&&day<=range.days?day:0;}
   async function importSiteScheduleFile(file,employees,site){
-    if(!file)return;if(!window.XLSX)return showNotice('Excel 匯入元件載入失敗，請確認網路後重新整理。','error');
+    if(!file)return;
     try{
-      const workbook=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:false}),sheet=workbook.Sheets[workbook.SheetNames[0]],grid=XLSX.utils.sheet_to_json(sheet,{header:1,raw:false,defval:''}),range=monthRange(state.scheduleMonth),headerIndex=grid.findIndex(row=>row.some(cell=>String(cell).trim()==='工號')&&row.some(cell=>String(cell).trim()==='姓名'));
+      const XLSX=await window.ERP_LAZY_LIBS.xlsx(),workbook=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:false}),sheet=workbook.Sheets[workbook.SheetNames[0]],grid=XLSX.utils.sheet_to_json(sheet,{header:1,raw:false,defval:''}),range=monthRange(state.scheduleMonth),headerIndex=grid.findIndex(row=>row.some(cell=>String(cell).trim()==='工號')&&row.some(cell=>String(cell).trim()==='姓名'));
       if(headerIndex<0)throw Error('找不到「工號、姓名」標題列，請使用系統下載的範本。');
       const metaSite=grid.find(row=>String(row[0]).trim()==='案場')?.[1];if(metaSite&&String(metaSite).trim()!==String(site?.name||'').trim())throw Error(`檔案案場為「${metaSite}」，目前選擇的是「${site?.name}」。`);
       const metaMonth=String(grid.find(row=>String(row[0]).trim()==='月份')?.[1]||''),metaMatch=metaMonth.match(/(\d{4}).*?(\d{1,2})/);if(metaMatch&&(Number(metaMatch[1])!==range.y||Number(metaMatch[2])!==range.m))throw Error(`檔案月份為 ${metaMatch[1]} 年 ${metaMatch[2]} 月，請切換到正確月份後再匯入。`);

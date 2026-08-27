@@ -258,11 +258,11 @@
     return records;
   }
   async function readFile(file) {
-    if (!window.XLSX) throw new Error('Excel 元件尚未載入，請重新整理後再試。');
-    const workbook = window.XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: false });
+    const XLSX = await window.ERP_LAZY_LIBS.xlsx();
+    const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: false });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     if (!sheet) throw new Error('檔案內沒有工作表。');
-    return window.XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
+    return XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
   }
   function ensureDialog() {
     let dialog = document.querySelector('#employeeImportDialog');
