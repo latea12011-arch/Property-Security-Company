@@ -24,6 +24,7 @@ create table public.employees (
   highest_education text,
   job_title text not null default '保全員',
   phone text,
+  emergency_contact_relationship text,
   role public.app_role not null default 'guard',
   status public.record_status not null default 'active',
   created_at timestamptz not null default now(),

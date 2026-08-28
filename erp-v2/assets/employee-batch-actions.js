@@ -1,6 +1,6 @@
 (()=>{'use strict';
   const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-  const fields=[['full_name','員工姓名'],['birth_date','出生年月日'],['national_id','身分證字號'],['job_title','職稱'],['hire_date','到職日期'],['emergency_contact_name','緊急聯絡人'],['emergency_contact_phone','緊急聯絡人電話'],['police_approval_status','警局核備'],['labor_84_1_status','84-1 核備']];
+  const fields=[['full_name','員工姓名'],['birth_date','出生年月日'],['national_id','身分證字號'],['job_title','職稱'],['hire_date','到職日期'],['emergency_contact_name','緊急聯絡人'],['emergency_contact_relationship','關係'],['emergency_contact_phone','緊急聯絡人電話'],['police_approval_status','警局核備'],['labor_84_1_status','84-1 核備']];
   const status=value=>({not_submitted:'未送件',submitted:'已送件',supplement_required:'補件中',approved:'核備通過',rejected:'不予核備'})[value]||value||'—';
   const policeNo=value=>{const raw=String(value||'').trim();if(!raw)return'';return /[\u4e00-\u9fff]/.test(raw)?raw:`桃警刑字第${raw.replace(/\D/g,'')}號`};
   const value=(row,key)=>key==='police_approval_status'?`${status(row[key])}${policeNo(row.police_document_no)?`（${policeNo(row.police_document_no)}）`:''}`:key==='labor_84_1_status'?`${status(row[key])}${row.labor_84_1_approval_no?`（${row.labor_84_1_approval_no}）`:''}`:row[key]||'—';
