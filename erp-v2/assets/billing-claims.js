@@ -84,7 +84,7 @@
     await render();
   }
 
-  function claimBody(row){
+  function claimCopy(row,copyLabel){
     const company=companies[row.issuer_company]||companies.security;
     const items=[
       ['保全服務費',row.security_fee],
@@ -96,8 +96,8 @@
     const taxRows=row.tax_mode==='tax_excluded'
       ?`<tr><th>未稅小計</th><td>NT$ ${money(row.subtotal)}</td></tr><tr><th>營業稅（外加 5%）</th><td>NT$ ${money(row.tax_amount)}</td></tr>`
       :'';
-    return`<section class="claim-page">
-      <header><h1>${esc(company.name)}</h1><p>統一編號：${esc(company.taxId)}　電話：03-283-0453</p><h2>社區服務費請款單</h2></header>
+    return`<article class="claim-copy">
+      <header><div><h1>${esc(company.name)}</h1><p>統一編號：${esc(company.taxId)}　電話：03-283-0453</p></div><h2>社區服務費請款單</h2><strong class="copy-label">${esc(copyLabel)}</strong></header>
       <div class="claim-meta"><p><b>請款單號</b>${esc(row.claim_no||'自動編號')}</p><p><b>請款日期</b>${esc(row.issue_date||'')}</p><p><b>請款月份</b>${esc(row.billing_month||'')}</p><p><b>付款期限</b>${esc(row.due_date||'')}</p></div>
       <table class="community"><tr><th>請款對象</th><td>${esc(row.community_name||'')}</td><th>統一編號</th><td>${esc(row.community_tax_id||'—')}</td></tr><tr><th>社區電話</th><td>${esc(row.community_phone||'—')}</td><th>案場代碼</th><td>${esc(row.site_code||'—')}</td></tr><tr><th>社區地址</th><td colspan="3">${esc(row.community_address||'')}</td></tr><tr><th>服務期間</th><td colspan="3">${esc(row.service_period_start||'—')} 至 ${esc(row.service_period_end||'—')}</td></tr></table>
       <table class="items"><thead><tr><th>請款項目</th><th>金額</th></tr></thead><tbody>${items.map(([label,amount])=>`<tr><td>${esc(label)}</td><td>NT$ ${money(amount)}</td></tr>`).join('')}${taxRows}<tr class="total"><th>本期請款總額</th><td>NT$ ${money(row.total_amount)}</td></tr></tbody></table>
@@ -107,12 +107,16 @@
         ${row.payment_bank||row.payment_account_name||row.payment_account_no?`<section class="payment"><h3>匯款資訊</h3><p><span>銀行：${esc(row.payment_bank||'—')}</span><span>戶名：${esc(row.payment_account_name||'—')}</span><span>帳號：${esc(row.payment_account_no||'—')}</span></p></section>`:''}
         <footer><div>經辦：________________</div><div>會計：________________</div><div>公司章：________________</div></footer>
       </div>
-    </section>`;
+    </article>`;
+  }
+
+  function claimBody(row){
+    return`<section class="claim-page">${claimCopy(row,'收執聯')}<div class="cut-line"><span>✂</span></div>${claimCopy(row,'存根聯')}</section>`;
   }
 
   function documentHtml(rows){
     return`<!doctype html><html lang="zh-TW"><head><meta charset="utf-8"><title>社區請款單</title><style>
-      @page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;font-family:"Microsoft JhengHei",sans-serif;color:#142d44;background:#fff}.claim-page{min-height:297mm;padding:12mm;break-after:page}.claim-page:last-child{break-after:auto}header{text-align:center;border-bottom:3px solid #16324f;padding-bottom:12px;margin-bottom:18px}header h1{font-size:22px;margin:0 0 5px}header h2{font-size:27px;letter-spacing:8px;margin:16px 0 3px}header p{margin:0;font-size:12px}.claim-meta{display:grid;grid-template-columns:1fr 1fr;gap:7px 22px;margin-bottom:14px}.claim-meta p{display:grid;grid-template-columns:90px 1fr;margin:0;border-bottom:1px solid #aebdca;padding:6px}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{border:1px solid #8fa2b3;padding:9px;text-align:left}.community th{width:16%;background:#eef3f6}.items th:last-child,.items td:last-child{text-align:right;width:28%}.items thead th{background:#16324f;color:#fff}.items .total{font-size:18px;background:#edf7f3}.tax-note{text-align:right;color:#526778}.payment,.notes{border:1px solid #aebdca;padding:12px;margin-top:12px}.payment h3{margin:0 0 7px}.payment p{display:grid;grid-template-columns:1fr 1fr;gap:5px 18px;margin:0;white-space:normal}.payment p span:last-child{grid-column:1/-1;overflow-wrap:anywhere}.notes{margin:0;white-space:pre-wrap}.claim-bottom{break-inside:avoid;page-break-inside:avoid}.claim-bottom .payment{break-inside:avoid;page-break-inside:avoid}footer{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:68px;text-align:center;break-inside:avoid;page-break-inside:avoid}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}.claim-page{padding:12mm}}
+      @page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;font-family:"Microsoft JhengHei",sans-serif;color:#142d44;background:#fff;font-size:9px}.claim-page{height:297mm;padding:6mm 8mm;break-after:page;overflow:hidden}.claim-page:last-child{break-after:auto}.claim-copy{height:140mm;border:1px solid #8fa2b3;padding:4mm 5mm;overflow:hidden}header{display:grid;grid-template-columns:1.25fr 1fr auto;align-items:center;gap:9px;border-bottom:2px solid #16324f;padding-bottom:4px;margin-bottom:5px}header h1{font-size:13px;margin:0 0 2px}header h2{font-size:16px;letter-spacing:3px;margin:0;text-align:center}header p{margin:0;font-size:8px}.copy-label{font-size:13px;border:2px solid #16324f;border-radius:5px;padding:4px 7px;white-space:nowrap}.claim-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:3px 9px;margin-bottom:4px}.claim-meta p{display:grid;grid-template-columns:auto 1fr;gap:4px;margin:0;border-bottom:1px solid #aebdca;padding:2px}.claim-meta b{white-space:nowrap}table{width:100%;border-collapse:collapse;margin:4px 0}th,td{border:1px solid #8fa2b3;padding:2.5px 4px;text-align:left;line-height:1.2}.community th{width:13%;background:#eef3f6;white-space:nowrap}.items th:last-child,.items td:last-child{text-align:right;width:25%}.items thead th{background:#16324f;color:#fff}.items .total{font-size:11px;background:#edf7f3}.tax-note{text-align:right;color:#526778;margin:2px 0}.payment,.notes{border:1px solid #aebdca;padding:4px 6px;margin-top:4px}.payment h3{display:inline;margin:0 8px 0 0;font-size:9px}.payment p{display:inline;margin:0;white-space:normal}.payment p span{margin-right:12px}.payment p span:last-child{overflow-wrap:anywhere}.notes{margin:3px 0 0;white-space:pre-wrap;line-height:1.2}.claim-bottom{break-inside:avoid;page-break-inside:avoid}.claim-bottom .payment{break-inside:avoid;page-break-inside:avoid}footer{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:11px;text-align:center;break-inside:avoid;page-break-inside:avoid}.cut-line{height:5mm;border-top:1px dashed #687b8c;margin-top:2.5mm;position:relative}.cut-line span{position:absolute;top:-8px;left:4px;background:#fff;padding:0 4px;color:#687b8c}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
     </style></head><body>${rows.map(claimBody).join('')}</body></html>`;
   }
 
