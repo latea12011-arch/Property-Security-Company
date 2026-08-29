@@ -1,5 +1,5 @@
-const EMPLOYEE_CACHE='hongjia-employee-pwa-v17';
-const EMPLOYEE_SHELL=['./mobile.html','./favicon-v2.ico','./config.js','./mobile-manifest-v2.json','./assets/mobile.css','./assets/mobile-enhancements.css','./assets/mobile.js','./assets/push-notifications.js','./assets/company-logo.png','./assets/employee-icon-v2-192.png','./assets/employee-icon-v2-512.png','./assets/employee-icon-v2-maskable.png'];
+const EMPLOYEE_CACHE='hongjia-employee-pwa-v18';
+const EMPLOYEE_SHELL=['./mobile.html','./favicon-v2.ico','./config.js','./mobile-manifest-v2.json','./assets/mobile.css','./assets/mobile-enhancements.css','./assets/mobile.js','./assets/bank-master.js','./assets/push-notifications.js','./assets/company-logo.png','./assets/employee-icon-v2-192.png','./assets/employee-icon-v2-512.png','./assets/employee-icon-v2-maskable.png'];
 
 self.addEventListener('install',event=>{event.waitUntil(caches.open(EMPLOYEE_CACHE).then(cache=>cache.addAll(EMPLOYEE_SHELL)));self.skipWaiting()});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('hongjia-employee-pwa-')&&key!==EMPLOYEE_CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()))});
