@@ -1,4 +1,4 @@
-const CACHE='hongjia-standalone-employee-v5';
+const CACHE='hongjia-standalone-employee-v6';
 const SHELL=['./','./index.html','./manifest.json','../erp-v2/mobile.html','../erp-v2/config.js','../erp-v2/assets/mobile.css','../erp-v2/assets/mobile-enhancements.css','../erp-v2/assets/mobile.js','../erp-v2/assets/company-logo.png','../erp-v2/assets/employee-icon-v2-192.png','../erp-v2/assets/employee-icon-v2-512.png','../erp-v2/assets/employee-icon-v2-maskable.png'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)));self.skipWaiting()});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('hongjia-standalone-employee-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()))});

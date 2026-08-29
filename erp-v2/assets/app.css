@@ -188,3 +188,7 @@
   .mobile-merged-cell b{font-size:10px}
 }
 .erp-message-dialog{width:min(480px,calc(100vw - 32px));border:0;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(12,38,61,.3);color:#122f49}.erp-message-dialog::backdrop{background:rgba(10,27,43,.55)}.erp-message-dialog form{padding:26px}.erp-message-brand{color:#078b79;font-size:12px;font-weight:800;letter-spacing:.14em}.erp-message-dialog h3{font-size:24px;margin:10px 0}.erp-message-dialog p{white-space:pre-wrap;line-height:1.7;margin:0 0 20px}.erp-message-input{width:100%;box-sizing:border-box;padding:14px;border:1px solid #b9cbd7;border-radius:12px;font-size:16px}.erp-message-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px}
+/* 現金班的領取狀態僅在 ERP 領取單審核頁顯示，排班畫面不顯示。 */
+.paid-lock,
+.supervisor-month-cell em,
+.cash-shift-summary{display:none!important}
