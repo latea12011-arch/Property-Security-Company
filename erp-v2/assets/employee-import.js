@@ -197,6 +197,9 @@
       const medicalStatus = mapped(get('medical_exam_status'), submittedMap, 'not_submitted', '體檢報告', errors);
       const medicalDate = dateValue(get('medical_exam_date'), '健康檢查日期', errors);
       if (medicalStatus === 'submitted' && !medicalDate) errors.push('體檢報告為已繳交時，必須填健康檢查日期');
+      const bankText = get('bank_code');
+      const resolvedBank = bankText ? window.BankMaster?.resolve(bankText) : null;
+      if (bankText && !resolvedBank) errors.push(`銀行代碼或名稱無法辨識：${bankText}`);
       const assignedSitesProvided = map.assigned_sites != null && get('assigned_sites') !== '';
       const providedEmployeeFields = new Set(Object.keys(HEADER_ALIASES).filter(key =>
         !['initial_password', 'assigned_sites', ...payrollFields].includes(key)
@@ -232,8 +235,8 @@
         standard_daily_hours: numberValue(get('standard_daily_hours'), '標準每日工時', errors, 8),
         cash_shift_default_amount: numberValue(get('cash_shift_default_amount'), '現金班日薪', errors, 0),
         salary_payment_method: mapped(get('salary_payment_method'), paymentMap, 'bank_transfer', '薪資發放方式', errors),
-        bank_code: get('bank_code') || null,
-        bank_account_no: get('bank_account_no') || null,
+        bank_code: resolvedBank ? String(resolvedBank.code) : null,
+        bank_account_no: get('bank_account_no') ? String(get('bank_account_no')) : null,
         bank_fee_mode: mapped(get('bank_fee_mode'), feeMap, 'company_bank', '銀行手續費模式', errors),
       };
       if (password && record.status !== 'active') errors.push('有填初始密碼時，在職狀態必須為「在職」');
