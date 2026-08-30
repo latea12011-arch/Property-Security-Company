@@ -24,12 +24,17 @@ test('ERP 借支列印套用簽核式申請單並載入新版快取',async()=>{
   const[app,index,mobileHtml,adminWorker,employeeWorker]=await Promise.all([
     read('assets/app.js'),read('index.html'),read('mobile.html'),read('admin-service-worker.js'),read('employee-service-worker.js')
   ]);
-  for(const label of ['借支申請單','提示／核准','總管理處審核','勤務主管審核','付款記錄','核辦情況'])assert.match(app,new RegExp(label));
+  for(const label of ['借支申請單','提示／核准','總管理處審核','勤務主管審核','付款紀錄'])assert.match(app,new RegExp(label));
+  const advance=app.slice(app.indexOf('function printAdvance(row)'),app.indexOf('function printCashReceipt('));
+  assert.equal((advance.match(/class="sheet"/g)||[]).length,2);
+  assert.equal((advance.match(/<h3>付款紀錄<\/h3>/g)||[]).length,2);
+  assert.doesNotMatch(advance,/class="payment-record"|核辦情況|付款記錄/);
+  assert.match(advance,/grid-template-rows:136mm 6mm 136mm/);
   assert.match(app,/function printAdvance\(row\)/);
   assert.match(app,/frame\.contentWindow\.print\(\)/);
-  assert.match(index,/assets\/app\.js\?v=159/);
+  assert.match(index,/assets\/app\.js\?v=160/);
   assert.match(mobileHtml,/mobile-enhancements\.css\?v=15/);
   assert.match(mobileHtml,/assets\/mobile\.js\?v=38/);
-  assert.match(adminWorker,/hongjia-admin-pwa-v100/);
+  assert.match(adminWorker,/hongjia-admin-pwa-v101/);
   assert.match(employeeWorker,/hongjia-employee-pwa-v28/);
 });

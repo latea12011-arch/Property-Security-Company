@@ -61,5 +61,5 @@ test('ERP 載入新版請款版型與管理端快取',async()=>{
     readFile(new URL('../admin-service-worker.js',import.meta.url),'utf8')
   ]);
   assert.match(index,/billing-claims\.js\?v=14/);
-  assert.match(worker,/hongjia-admin-pwa-v100/);
+  assert.match(worker,/hongjia-admin-pwa-v101/);
 });
