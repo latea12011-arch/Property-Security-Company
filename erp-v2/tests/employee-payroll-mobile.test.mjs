@@ -5,10 +5,11 @@ import {readFile} from 'node:fs/promises';
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
 test('員工端可查詢本人已確認或已發薪的完整薪資明細',async()=>{
-  const [mobile,html,sql]=await Promise.all([
+  const [mobile,html,sql,recentAccessSql]=await Promise.all([
     read('assets/mobile.js'),
     read('mobile.html'),
-    read('database/migration-security-audit.sql')
+    read('database/migration-security-audit.sql'),
+    read('database/migration-employee-recent-payroll-access.sql')
   ]);
   assert.match(mobile,/ensurePayrollUI/);
   assert.match(mobile,/dataset\.moreTab='payrollTab'/);
@@ -21,6 +22,14 @@ test('員工端可查詢本人已確認或已發薪的完整薪資明細',async(
   assert.match(mobile,/payrollWatermarks/);
   assert.match(mobile,/setupPayrollPrivacy/);
   assert.match(mobile,/visibilitychange/);
+  assert.match(mobile,/帳戶末五碼/);
+  assert.match(mobile,/\.gte\('payroll_month',payrollMonth\(-2\)\)/);
+  assert.match(mobile,/\.lte\('payroll_month',payrollMonth\(\)\)/);
+  assert.match(mobile,/\.limit\(3\)/);
+  assert.match(mobile,/本系統提供近期薪資明細線上查詢；如需申請其他月份薪資明細，請洽公司辦理/);
   assert.match(sql,/employee_id=public\.current_employee_id\(\)/);
-  assert.match(html,/assets\/mobile\.js\?v=30/);
+  assert.match(recentAccessSql,/status in \('confirmed', 'paid'\)/);
+  assert.match(recentAccessSql,/interval '2 months'/);
+  assert.match(recentAccessSql,/public\.has_feature_permission\('payroll'\)/);
+  assert.match(html,/assets\/mobile\.js\?v=31/);
 });
