@@ -1,5 +1,5 @@
 // Previous caches: hongjia-erp-v2-102, hongjia-erp-v2-103, hongjia-erp-v2-104.
-const CACHE = 'hongjia-erp-v2-160';
+const CACHE = 'hongjia-erp-v2-161';
 // 舊版會在安裝時一次下載所有 PDF、Excel 與大型圖片，造成第一次開啟明顯卡頓。
 // 只保留啟動畫面必需資源，其他功能首次使用時再快取。
 const SHELL = ['./','index.html','mobile.html','favicon-v2.ico','config.js','manifest-v2.json','mobile-manifest-v2.json','assets/app.css','assets/app.js','assets/lazy-libs.js','assets/mobile.css','assets/mobile-enhancements.css','assets/mobile.js','assets/company-logo.png','assets/erp-icon-v2-192.png','assets/employee-icon-v2-192.png'];

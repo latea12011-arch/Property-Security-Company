@@ -388,7 +388,7 @@
         if(!data)throw new Error('找不到這筆現金班，或目前帳號沒有審核權限');
       }
       showNotice('現金班領取單已由 ERP 審核通過。','success');
-      await renderCashReceipts();
+      await renderCurrent();
     }catch(error){showNotice(`審核失敗：${error.message}`,'error')}
   }
   function decorateCashReceiptApprovals(){
