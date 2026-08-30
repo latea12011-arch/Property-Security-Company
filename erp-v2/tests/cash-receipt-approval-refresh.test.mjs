@@ -13,5 +13,5 @@ test('現金班審核後完整重載並保留其他待審核操作',async()=>{
   assert.match(app,/state\.cashReceiptMonth/);
   assert.match(app,/state\.cashReceiptSite/);
   assert.match(app,/state\.cashReceiptEmployee/);
-  assert.match(html,/assets\/app\.js\?v=157/);
+  assert.match(html,/assets\/app\.js\?v=158/);
 });
