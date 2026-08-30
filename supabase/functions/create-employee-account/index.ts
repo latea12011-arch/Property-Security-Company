@@ -190,16 +190,47 @@ Deno.serve(async (req) => {
         if (users.users.length < 1000) break
       }
     }
+    let releasedEmployeeId: string | null = null
+    if (authUserId) {
+      const { data: linkedEmployee, error: linkedEmployeeError } = await admin
+        .from('employees')
+        .select('id,employee_no,full_name,status')
+        .eq('user_id', authUserId)
+        .neq('id', employee.id)
+        .maybeSingle()
+      if (linkedEmployeeError) throw linkedEmployeeError
+      if (linkedEmployee) {
+        const sameEmployeeNo = String(linkedEmployee.employee_no || '').trim().toUpperCase() === employee.employee_no.trim().toUpperCase()
+        const staleLink = sameEmployeeNo && String(linkedEmployee.status || '').toLowerCase() !== 'active'
+        if (!staleLink) {
+          const owner = `${linkedEmployee.employee_no || '未編號'} ${linkedEmployee.full_name || '未命名員工'}`.trim()
+          throw new Error(`此登入帳號已綁定其他員工（${owner}），未變更任何人的密碼。請先確認員工編號或解除原帳號連結`)
+        }
+        const { error: releaseError } = await admin
+          .from('employees')
+          .update({ user_id: null })
+          .eq('id', linkedEmployee.id)
+          .eq('user_id', authUserId)
+        if (releaseError) throw new Error(`舊員工帳號連結解除失敗：${releaseError.message}`)
+        releasedEmployeeId = linkedEmployee.id
+      }
+    }
     if (authUserId) {
       const { error } = await admin.auth.admin.updateUserById(authUserId, { password, email, email_confirm: true, ban_duration: 'none', user_metadata: { full_name: employee.full_name } })
-      if (error) throw error
+      if (error) {
+        if (releasedEmployeeId) await admin.from('employees').update({ user_id: authUserId }).eq('id', releasedEmployeeId)
+        throw error
+      }
     } else {
       const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: employee.full_name } })
       if (error) throw error
       authUserId = data.user.id
     }
     const { error: linkError } = await admin.from('employees').update({ user_id: authUserId, status: 'active' }).eq('id', employee.id)
-    if (linkError) throw linkError
+    if (linkError) {
+      if (releasedEmployeeId) await admin.from('employees').update({ user_id: authUserId }).eq('id', releasedEmployeeId)
+      throw new Error(linkError.code === '23505' ? '此登入帳號已被其他員工使用，請確認員工編號或先解除原帳號連結' : linkError.message)
+    }
     return json({ ok: true, user_id: authUserId })
   } catch (error) {
     const message = error instanceof Error ? error.message : typeof error === 'object' ? JSON.stringify(error) : String(error || '發生未知錯誤')
