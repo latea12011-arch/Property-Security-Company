@@ -9,8 +9,8 @@ test('員工今日頁顯示案場天氣與定位備援',async()=>{
   assert.match(html,/id="weatherCard"/);
   assert.match(html,/id="weatherUseLocation"/);
   assert.match(html,/home-hero[\s\S]*id="weatherCard"[\s\S]*duty-card/);
-  assert.match(html,/mobile-enhancements\.css\?v=12/);
-  assert.match(html,/assets\/mobile\.js\?v=35/);
+  assert.match(html,/mobile-enhancements\.css\?v=13/);
+  assert.match(html,/assets\/mobile\.js\?v=36/);
   assert.match(js,/api\.open-meteo\.com\/v1\/forecast/);
   assert.match(js,/forecast_days:'1'/);
   assert.doesNotMatch(js,/class="weather-days"/);
@@ -28,7 +28,7 @@ test('員工 PWA 更新快取版本',async()=>{
     readFile(new URL('../../employee-app/service-worker.js',import.meta.url),'utf8'),
     readFile(new URL('../../employee-app/index.html',import.meta.url),'utf8')
   ]);
-  assert.match(worker,/hongjia-employee-pwa-v25/);
-  assert.match(standalone,/hongjia-standalone-employee-v15/);
-  assert.match(index,/employee-app-v15/);
+  assert.match(worker,/hongjia-employee-pwa-v26/);
+  assert.match(standalone,/hongjia-standalone-employee-v16/);
+  assert.match(index,/employee-app-v16/);
 });
