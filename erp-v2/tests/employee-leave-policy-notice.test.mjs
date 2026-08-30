@@ -4,25 +4,21 @@ import {readFile} from 'node:fs/promises';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
-test('員工今日頁顯示案場天氣與定位備援',async()=>{
+test('事假與病假顯示自訂提前告知提醒',async()=>{
   const[html,js,css]=await Promise.all([read('mobile.html'),read('assets/mobile.js'),read('assets/mobile-enhancements.css')]);
-  assert.match(html,/id="weatherCard"/);
-  assert.match(html,/id="weatherUseLocation"/);
-  assert.match(html,/home-hero[\s\S]*id="weatherCard"[\s\S]*duty-card/);
+  assert.match(js,/N＋2 天/);
+  assert.match(js,/開始日前至少 2 天/);
+  assert.match(js,/N＋12H/);
+  assert.match(js,/開始前至少 12 小時/);
+  assert.match(js,/showLeavePolicyNotice/);
+  assert.match(js,/如遇突發或緊急狀況，仍可送出申請/);
+  assert.match(css,/\.leave-policy-backdrop/);
+  assert.match(css,/\.leave-policy-dialog/);
   assert.match(html,/mobile-enhancements\.css\?v=12/);
   assert.match(html,/assets\/mobile\.js\?v=35/);
-  assert.match(js,/api\.open-meteo\.com\/v1\/forecast/);
-  assert.match(js,/forecast_days:'1'/);
-  assert.doesNotMatch(js,/class="weather-days"/);
-  assert.match(js,/timezone:'Asia\/Taipei'/);
-  assert.match(js,/row\.sites\?\.latitude/);
-  assert.match(js,/20\*60\*1000/);
-  assert.match(js,/await position\(\)/);
-  assert.match(css,/\.hero-weather-current/);
-  assert.match(css,/\.hero-weather-today/);
 });
 
-test('員工 PWA 更新快取版本',async()=>{
+test('員工 PWA 使用新的快取版本',async()=>{
   const[worker,standalone,index]=await Promise.all([
     read('employee-service-worker.js'),
     readFile(new URL('../../employee-app/service-worker.js',import.meta.url),'utf8'),
