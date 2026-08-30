@@ -30,11 +30,14 @@ test('ERP 借支列印套用簽核式申請單並載入新版快取',async()=>{
   assert.equal((advance.match(/<h3>付款紀錄<\/h3>/g)||[]).length,2);
   assert.doesNotMatch(advance,/class="payment-record"|核辦情況|付款記錄/);
   assert.match(advance,/grid-template-rows:136mm 6mm 136mm/);
+  assert.match(advance,/width:210mm;height:297mm;margin:0 auto;padding:9\.5mm 8mm/);
+  assert.equal((advance.match(/class="applicant-signature"/g)||[]).length,2);
+  assert.match(advance,/width:58mm;height:16mm/);
   assert.match(app,/function printAdvance\(row\)/);
   assert.match(app,/frame\.contentWindow\.print\(\)/);
-  assert.match(index,/assets\/app\.js\?v=160/);
+  assert.match(index,/assets\/app\.js\?v=161/);
   assert.match(mobileHtml,/mobile-enhancements\.css\?v=15/);
   assert.match(mobileHtml,/assets\/mobile\.js\?v=38/);
-  assert.match(adminWorker,/hongjia-admin-pwa-v101/);
+  assert.match(adminWorker,/hongjia-admin-pwa-v102/);
   assert.match(employeeWorker,/hongjia-employee-pwa-v28/);
 });
