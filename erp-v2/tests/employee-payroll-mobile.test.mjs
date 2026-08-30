@@ -31,5 +31,5 @@ test('員工端可查詢本人已確認或已發薪的完整薪資明細',async(
   assert.match(recentAccessSql,/status in \('confirmed', 'paid'\)/);
   assert.match(recentAccessSql,/interval '2 months'/);
   assert.match(recentAccessSql,/public\.has_feature_permission\('payroll'\)/);
-  assert.match(html,/assets\/mobile\.js\?v=31/);
+  assert.match(html,/assets\/mobile\.js\?v=32/);
 });
