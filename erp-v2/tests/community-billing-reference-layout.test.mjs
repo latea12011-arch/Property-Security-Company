@@ -40,6 +40,9 @@ test('社區請款單採參考服務單的上下聯版面',async()=>{
   assert.match(html,/\.copy-label\{[^}]*border:0;border-left:1\.8px solid #000/);
   assert.match(html,/\.item-list li\{[^}]*border-bottom:1\.2px solid #000/);
   assert.doesNotMatch(html,/border-bottom:1px dotted/);
+  assert.match(html,/\.summary-info\{[^}]*font-size:12\.5px/);
+  assert.match(html,/\.payment p:first-child,\.payment p:nth-child\(2\)\{grid-column:1\/-1\}/);
+  assert.match(html,/\.payment p:nth-child\(2\)\{white-space:nowrap\}/);
   assert.match(html,/font-size:12\.5px/);
   assert.match(html,/@page\{size:A4 portrait/);
   assert.match(html,/height:140\.5mm/);
@@ -57,6 +60,6 @@ test('ERP 載入新版請款版型與管理端快取',async()=>{
     readFile(new URL('../index.html',import.meta.url),'utf8'),
     readFile(new URL('../admin-service-worker.js',import.meta.url),'utf8')
   ]);
-  assert.match(index,/billing-claims\.js\?v=13/);
-  assert.match(worker,/hongjia-admin-pwa-v98/);
+  assert.match(index,/billing-claims\.js\?v=14/);
+  assert.match(worker,/hongjia-admin-pwa-v99/);
 });
