@@ -365,13 +365,14 @@
 *{box-sizing:border-box}
 body{font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif;color:#111;margin:0;font-size:10pt;line-height:1.45}
 .sheet{width:190mm;margin:0 auto;border:0.35mm solid #222}
-.title-row{border-bottom:0.3mm solid #222;padding:2mm 3mm 1mm}
+.title-row{padding:2mm 3mm 1mm}
 .title-row h1{text-align:center;font-size:20pt;line-height:1.15;letter-spacing:.24em;margin:0 0 1mm;padding-left:.24em}
 .title-meta{display:flex;justify-content:space-between;gap:4mm;font-size:8.5pt;line-height:1.3}
 .hint{font-size:8pt;line-height:1.3;margin:.5mm 0 0;color:#444}
-table{width:100%;border-collapse:collapse;table-layout:fixed}
+table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
 .employee-grid col.label-col{width:28mm}
 .employee-grid th,.employee-grid td{border-right:0.25mm solid #222;border-bottom:0.25mm solid #222;padding:1mm 2mm;text-align:left;vertical-align:middle;height:7mm;overflow-wrap:anywhere}
+.employee-grid tr:first-child>*{border-top:0.3mm solid #222}
 .employee-grid tr>*:last-child{border-right:0}
 .employee-grid th{font-size:9.5pt;font-weight:700;text-align:center;background:#f6f6f6}
 .employee-grid td{font-size:10.5pt}

@@ -26,6 +26,8 @@ test('離職證明採 A4 單頁、統一欄寬與可黏貼實體身分證尺寸'
   assert.match(html,/font-size:10pt;line-height:1\.45/);
   assert.match(html,/grid-template-columns:28mm minmax\(0,1fr\)/);
   assert.match(html,/class="label-col"/);
+  assert.match(html,/border-collapse:separate;border-spacing:0/);
+  assert.match(html,/\.employee-grid tr:first-child>\*\{border-top:0\.3mm solid #222\}/);
   assert.match(html,/height:55mm/);
   assert.equal((html.match(/class="id-copy"/g)||[]).length,2);
   assert.match(html,/width:62mm;height:8mm/);
