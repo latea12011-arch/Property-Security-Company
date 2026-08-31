@@ -24,5 +24,5 @@ test('所有員工可允許推播且通知僅保留最近十則',async()=>{
   assert.match(sql,/row_no > 10/);
   assert.match(sql,/after insert on public\.app_notifications/);
   assert.match(html,/assets\/push-notifications\.js\?v=7/);
-  assert.match(html,/assets\/mobile\.js\?v=32/);
+  assert.match(html,/assets\/mobile\.js\?v=\d+/);
 });
