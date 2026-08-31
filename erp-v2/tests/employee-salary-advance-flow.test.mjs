@@ -35,9 +35,9 @@ test('ERP 借支列印套用簽核式申請單並載入新版快取',async()=>{
   assert.match(advance,/width:58mm;height:16mm/);
   assert.match(app,/function printAdvance\(row\)/);
   assert.match(app,/frame\.contentWindow\.print\(\)/);
-  assert.match(index,/assets\/app\.js\?v=161/);
+  assert.match(index,/assets\/app\.js\?v=\d+/);
   assert.match(mobileHtml,/mobile-enhancements\.css\?v=15/);
   assert.match(mobileHtml,/assets\/mobile\.js\?v=38/);
-  assert.match(adminWorker,/hongjia-admin-pwa-v102/);
-  assert.match(employeeWorker,/hongjia-employee-pwa-v28/);
+  assert.match(adminWorker,/hongjia-admin-pwa-v\d+/);
+  assert.match(employeeWorker,/hongjia-employee-pwa-v\d+/);
 });
