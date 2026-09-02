@@ -658,7 +658,7 @@ table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
     if(table==='employees') {
       const assigned=[],permissions=[];let payrollProfile=null,policeApproval=null;
       if(record?.id&&cloudEnabled&&!window.ERP_DEMO_MODE){const[{data:sites},{data:features},{data:payroll},{data:approval,error:approvalError}]=await Promise.all([client.from('site_assignments').select('site_id').eq('employee_id',record.id),client.from('employee_feature_permissions').select('feature_key').eq('employee_id',record.id),client.from('employee_payroll_profiles').select('*').eq('employee_id',record.id).maybeSingle(),client.from('employee_police_approvals').select('*').eq('employee_id',record.id).maybeSingle()]);if(approvalError)throw approvalError;(sites||[]).forEach(x=>assigned.push(x.site_id));(features||[]).forEach(x=>permissions.push(x.feature_key));payrollProfile=payroll;policeApproval=approval;}
-      if(record?.id&&(!cloudEnabled||window.ERP_DEMO_MODE)){payrollProfile=(demoData().employee_payroll_profiles||[]).find(x=>x.employee_id===record.id)||null;policeApproval=(demoData().employee_police_approvals||[]).find(x=>x.employee_id===record.id)||null;}
+      if(record?.id&&(!cloudEnabled||window.ERP_DEMO_MODE)){(demoData().site_assignments||[]).filter(x=>x.employee_id===record.id).forEach(x=>assigned.push(x.site_id));payrollProfile=(demoData().employee_payroll_profiles||[]).find(x=>x.employee_id===record.id)||null;policeApproval=(demoData().employee_police_approvals||[]).find(x=>x.employee_id===record.id)||null;}
       const inferredRule=!record?.numbering_rule_id&&(state.relations.numbering_rules.find(x=>x.target_type==='employee'&&x.is_active!==false&&x.match_job_title===record?.job_title)||state.relations.numbering_rules.find(x=>x.target_type==='employee'&&x.is_default&&x.is_active!==false));
       record={...(record||{}),numbering_rule_id:record?.numbering_rule_id||inferredRule?.id||'',assigned_sites:assigned,feature_permissions:permissions,police_approval_status:policeApproval?.status??record?.police_approval_status??'not_submitted',police_station:policeApproval?.police_station??record?.police_station??'',police_submitted_date:policeApproval?.submitted_date??record?.police_submitted_date??'',police_document_no:policeApproval?.document_no??record?.police_document_no??'',police_approval_date:policeApproval?.approval_date??record?.police_approval_date??'',police_approval_note:policeApproval?.note??record?.police_approval_note??'',payroll_basic_salary:payrollProfile?.basic_salary??record?.payroll_basic_salary??0,payroll_personal_leave_day_rate:payrollProfile?.personal_leave_day_rate??0,payroll_sick_leave_day_rate:payrollProfile?.sick_leave_day_rate??0,payroll_unpaid_leave_day_rate:payrollProfile?.personal_leave_day_rate??0,payroll_labor_insurance:payrollProfile?.labor_insurance??record?.payroll_labor_insurance??0,payroll_health_insurance:payrollProfile?.health_insurance??record?.payroll_health_insurance??0,payroll_group_insurance:payrollProfile?.group_insurance??record?.payroll_group_insurance??0,payroll_pension_contribution:payrollProfile?.pension_contribution??record?.payroll_pension_contribution??0,payroll_effective_date:payrollProfile?.effective_date??record?.payroll_effective_date??new Date().toISOString().slice(0,10),payroll_note:payrollProfile?.note??record?.payroll_note??''};
     }
@@ -883,6 +883,25 @@ table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
     const total=$('.site-schedule-summary b');if(total)total.textContent=String(employees.length);
     $('#archiveEmployee')?.querySelectorAll('option').forEach(option=>{if(employees.some(x=>x.id===option.value))option.disabled=true});
   }
+  async function ensureScheduleSiteAssignment(employee,site,startDate){
+    const record={employee_id:employee.id,site_id:site.id,start_date:startDate,is_manager:employee.role==='site_manager'};
+    if(window.ERP_DEMO_MODE){
+      const demo=demoData();demo.site_assignments=demo.site_assignments||[];
+      if(!demo.site_assignments.some(x=>x.employee_id===employee.id&&x.site_id===site.id)){demo.site_assignments.push({id:crypto.randomUUID(),...record});localStorage.setItem(demoKey,JSON.stringify(demo));}
+      return;
+    }
+    if(!cloudEnabled)throw Error('尚未連線，無法同步員工可排班案場。');
+    const {data,error}=await client.from('site_assignments').select('id').eq('employee_id',employee.id).eq('site_id',site.id).limit(1);
+    if(error)throw error;if(data?.length)return;
+    const {error:insertError}=await client.from('site_assignments').insert(record);
+    if(insertError){
+      if(insertError.code==='23505'){
+        const check=await client.from('site_assignments').select('id').eq('employee_id',employee.id).eq('site_id',site.id).limit(1);
+        if(!check.error&&check.data?.length)return;
+      }
+      throw insertError;
+    }
+  }
   function installScheduleArchiveTools(employees,site,range){
     const toolbar=$('.site-schedule-toolbar');if(!toolbar)return;
     const monthLabel=document.createElement('label');monthLabel.textContent='排班月份（可選以前月份）';const monthInput=document.createElement('input');monthInput.type='month';monthInput.value=state.scheduleMonth;monthInput.setAttribute('aria-label','排班月份');monthLabel.appendChild(monthInput);toolbar.prepend(monthLabel);
@@ -891,8 +910,20 @@ table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
     const empty=$('.site-scheduler .schedule-empty');if(empty)empty.textContent='此月份尚無排班人員，請使用上方「加入本月班表」或匯入舊班表。';
     const label=document.createElement('label');label.innerHTML=`加入排班人員<select id="archiveEmployee"><option value="">請選擇人員</option>${state.relations.employees.filter(x=>(isHistoricalScheduleMonth()||x.status==='active')&&!employees.some(e=>e.id===x.id)).sort(sortSiteScheduleEmployees).map(x=>`<option value="${esc(x.id)}">${esc(x.employee_no)}－${esc(x.full_name)}${x.status==='active'?'':'（已離職／停用）'}</option>`).join('')}</select>`;
     const add=document.createElement('button');add.type='button';add.className='btn ghost';add.textContent='加入本月班表';toolbar.append(label,add);
-    add.onclick=()=>{const employee=state.relations.employees.find(x=>x.id===$('#archiveEmployee').value);if(!employee)return showNotice('請先選擇要加入的人員。','error');appendSiteSchedulePeople(employees,[employee],range);showNotice('已加入本月排班編輯，尚未儲存；不會更動員工案場指派或登入狀態。','success')};
-    if(isHistoricalScheduleMonth()){const note=document.createElement('p');note.className='schedule-import-summary';note.textContent='歷史班表補建：可加入當時人員（含已離職人員），不變更現行案場指派；儲存後不發送舊月份班表通知。';toolbar.after(note);$('#saveMonth').textContent='儲存歷史班表';}
+    add.onclick=async()=>{
+      const employee=state.relations.employees.find(x=>x.id===$('#archiveEmployee').value),month=state.scheduleMonth;
+      if(!employee)return showNotice('請先選擇要加入的人員。','error');
+      add.disabled=true;add.textContent='同步案場中…';
+      try{
+        await ensureScheduleSiteAssignment(employee,site,range.first);
+        if(!toolbar.isConnected||state.scheduleMonth!==month||state.scheduleSite!==site.id){showNotice('員工可排班案場已同步；畫面已切換，請回原月份加入班表。','success');return;}
+        appendSiteSchedulePeople(employees,[employee],range);
+        showNotice('已加入本月班表，並同步至員工管理的可排班案場；每日班次仍須按儲存。','success');
+      }catch(error){showNotice(`加入失敗，尚未加入班表：${error.message||'無法同步員工案場，請重試。'}`,'error');}
+      finally{add.disabled=false;add.textContent='加入本月班表';}
+    };
+    const assignmentNote=document.createElement('p');assignmentNote.className='muted';assignmentNote.textContent='「加入本月班表」會立即補上員工管理的可排班案場（新關聯自所選月份 1 日起算），保留原有案場及登入狀態；每日班次另按儲存。';toolbar.after(assignmentNote);
+    if(isHistoricalScheduleMonth()){const note=document.createElement('p');note.className='schedule-import-summary';note.textContent='歷史班表補建：可加入當時人員（含已離職人員）；儲存後不發送舊月份班表通知。';toolbar.after(note);$('#saveMonth').textContent='儲存歷史班表';}
   }
   const siteScheduleShiftOptions=[['','—'],['day','日班'],['night','夜班'],['mobile','機動班'],['special','特勤班'],['cash','現金班'],['custom','自訂班'],['off','休假'],['annual','特休'],['personal','事假'],['sick','病假'],['marriage','婚假'],['bereavement','喪假'],['maternity','產假'],['paternity','陪產檢及陪產假'],['menstrual','生理假'],['official','公假'],['occupational','公傷病假'],['compensatory','補休'],['unpaid','無薪假'],['typhoon_unpaid','天然災害未出勤（不支薪）'],['other','其他']];
   const siteScheduleShiftNames=Object.fromEntries(siteScheduleShiftOptions);
