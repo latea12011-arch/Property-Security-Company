@@ -10,7 +10,7 @@ http.createServer((req,res)=>{
     res.setHeader('Content-Type','text/html; charset=utf-8');res.end(html);return;
   }
   if(url.pathname==='/test-app.js'){
-    let app='window.confirm=()=>true;\n'+read('assets/app.js');
+    let app='window.ERP_LOCAL_TEST_DEMO=true;window.confirm=()=>true;\n'+read('assets/app.js');
     app=app.replace("if('serviceWorker' in navigator&&location.protocol!=='file:')","if(false)");
     app=app.replace("  if(cloudEnabled) client.auth.getSession()","  state.scheduleMonth='2026-08';enterApp(true);\n  if(cloudEnabled) client.auth.getSession()");
     app=app.replace("    if($('#saveMonth'))$('#saveMonth').onclick=()=>saveSiteMonthlySchedule(employees,site);",`    const fixtureButton=document.createElement('button');fixtureButton.textContent='測試匯入歷史 CSV';fixtureButton.onclick=()=>{const person=state.relations.employees[1],csv='月份,115年8月\\n姓名,2026-08-01,2026-08-02\\n'+person.full_name+',日班 07-19,婚假';importSiteScheduleFile(new File(['\\ufeff'+csv],'history.csv',{type:'text/csv'}),employees,site)};$('.site-schedule-toolbar').appendChild(fixtureButton);\n    if($('#saveMonth'))$('#saveMonth').onclick=()=>saveSiteMonthlySchedule(employees,site);`);

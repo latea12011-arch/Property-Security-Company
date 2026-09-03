@@ -7,6 +7,10 @@
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
   const demoKey = 'hongjia_erp_demo_v2';
+  // Synthetic fixtures are opt-in and loopback-only; deployed ERP never enables demo access.
+  const demoAllowed=!cloudEnabled&&['localhost','127.0.0.1','[::1]'].includes(location.hostname)&&window.ERP_LOCAL_TEST_DEMO===true;
+  window.ERP_DEMO_MODE=false;
+  $('#loginView')?.querySelectorAll('button').forEach(button=>{if(button.textContent.includes('示範'))button.remove();});
   let demo = false;
   // Contract modules continue to read window.ERP_DEMO_MODE; legacy marker: ERP_DEMO_MODE=demo.
 
@@ -219,6 +223,7 @@
   }
 
   function demoData() {
+    if(!demoAllowed)throw Error('無法連接正式資料，請稍後重試或聯絡管理員。');
     let data;
     try { data = JSON.parse(localStorage.getItem(demoKey)); } catch (_) {}
     if (!data) { data = seedDemo(); localStorage.setItem(demoKey, JSON.stringify(data)); }
@@ -1145,12 +1150,14 @@ table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
   async function loadSignedInUser(authUser){const[{data:profile},{data:employee}]=await Promise.all([client.from('profiles').select('*').eq('id',authUser.id).maybeSingle(),client.from('employees').select('id,employee_no,full_name,role').eq('user_id',authUser.id).maybeSingle()]);let permissions=[];if(employee){const{data}=await client.from('employee_feature_permissions').select('feature_key').eq('employee_id',employee.id);permissions=(data||[]).map(x=>x.feature_key)}state.user={email:authUser.email,name:employee?.full_name||profile?.full_name||authUser.email,role:profile?.role||employee?.role||'guard',employeeId:employee?.id,permissions};}
   function applyNavigationPermissions(){const all=state.user?.role==='admin',allowed=new Set(state.user?.permissions||[]);$$('[data-view]').forEach(button=>button.hidden=!all&&button.dataset.view!=='dashboard'&&!allowed.has(button.dataset.view)&&!(button.dataset.view==='committeeItems'&&allowed.has('committeeManagement'))&&!(button.dataset.view==='labor841Approvals'&&allowed.has('employees'))&&!(['cashReceipts','billingClaims'].includes(button.dataset.view)&&allowed.has('payroll'))&&!(button.dataset.view==='tenderDocuments'&&allowed.has('tenderQuotations')));$$('.nav-group').forEach(group=>group.hidden=![...group.querySelectorAll('.nav-submenu [data-view]')].some(button=>!button.hidden));renderMobileMore()}
   async function login(identifier,password) {
-    if (!cloudEnabled) throw new Error('尚未連接 Supabase，請改用示範模式。');
+    if (!cloudEnabled) throw new Error('登入服務尚未連線，請重新整理或聯絡管理員。');
     const {data,error}=await client.auth.signInWithPassword({email:staffLoginEmail(identifier),password}); if(error) throw Error('工號、Email 或密碼錯誤');
     await loadSignedInUser(data.user);enterApp();
   }
 
   function enterApp(isDemo=false) {
+    if(isDemo&&!demoAllowed){$('#loginMessage').textContent='示範模式已停用，請使用正式帳號登入。';return;}
+    if(!isDemo&&(!cloudEnabled||!state.user)){$('#loginMessage').textContent='請使用正式帳號登入。';return;}
     demo=isDemo;
     window.ERP_DEMO_MODE=isDemo;
     if(isDemo) state.user={name:'示範管理員',email:'demo@local',role:'admin',permissions:[]};
