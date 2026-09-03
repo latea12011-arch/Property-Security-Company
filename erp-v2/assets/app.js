@@ -978,7 +978,7 @@ table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
   }
   const siteScheduleShiftOptions=[['','—'],['day','日班'],['night','夜班'],['mobile','機動班'],['special','特勤班'],['cash','現金班'],['custom','自訂班'],['off','休假'],['annual','特休'],['personal','事假'],['sick','病假'],['marriage','婚假'],['bereavement','喪假'],['maternity','產假'],['paternity','陪產檢及陪產假'],['menstrual','生理假'],['official','公假'],['occupational','公傷病假'],['compensatory','補休'],['unpaid','無薪假'],['typhoon_unpaid','天然災害未出勤（不支薪）'],['other','其他']];
   const siteScheduleShiftNames=Object.fromEntries(siteScheduleShiftOptions);
-  const scheduleDutyPostOptions=[['','未指定哨別'],['main','主哨'],['control','中控'],['lane','車道'],['patrol','巡邏哨'],['secondary','副哨'],['lobby','大廳哨'],['gate','門禁哨'],['parking','停車場哨'],['reception','收發哨'],['mobile_support','機動支援'],['other','其他哨別']];
+  const scheduleDutyPostOptions=[['','未指定哨別'],['chief_manager','總幹事'],['secretary','秘書'],['main','主哨'],['control','中控'],['lane','車道'],['patrol','巡邏哨'],['secondary','副哨'],['lobby','大廳哨'],['gate','門禁哨'],['parking','停車場哨'],['reception','收發哨'],['mobile_support','機動支援'],['other','其他哨別']];
   const scheduleDutyPostNames=Object.fromEntries(scheduleDutyPostOptions);
   function moveScheduleMonth(step){const[y,m]=state.scheduleMonth.split('-').map(Number),d=new Date(y,m-1+step,1);state.scheduleMonth=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;renderSiteMonthlySchedule();}
   function scheduleCellTime(row){return row?.work_time_text||((row?.start_time&&row?.end_time)?`${String(row.start_time).slice(0,5).replace(':00','')}-${String(row.end_time).slice(0,5).replace(':00','')}`:'');}

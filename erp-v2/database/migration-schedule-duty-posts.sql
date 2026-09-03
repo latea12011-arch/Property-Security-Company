@@ -9,7 +9,7 @@ alter table public.schedules
   add constraint schedules_duty_post_check check (
     duty_post is null or duty_post in (
       'main','control','lane','patrol','secondary','lobby','gate','parking',
-      'reception','mobile_support','other'
+      'reception','mobile_support','other','chief_manager','secretary'
     )
   );
 

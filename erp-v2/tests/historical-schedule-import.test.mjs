@@ -9,10 +9,20 @@ vm.createContext(context);
 vm.runInContext(read('assets/schedule-import.js'),context);
 const parseSource=app.slice(app.indexOf('  function parseImportedShift('),app.indexOf('  function importedDay('));
 const timeSource=app.slice(app.indexOf('  function defaultShiftTime('),app.indexOf('  async function renderEmployeeMonthlySchedule('));
-vm.runInContext(`const scheduleDutyPostOptions=[['','未指定哨別'],['control','中控']];const scheduleDutyShifts=new Set(['day','night','mobile','special','cash','custom']);${timeSource}${parseSource}`,context);
+const postSource=app.match(/  const scheduleDutyPostOptions=.*;/)[0];
+vm.runInContext(`${postSource}const scheduleDutyShifts=new Set(['day','night','mobile','special','cash','custom']);${timeSource}${parseSource}`,context);
 const parser=context.HongJiaScheduleImport;
 const employees=[{id:'e1',employee_no:'D001',full_name:'測試甲',status:'active'},{id:'e2',employee_no:'D002',full_name:'測試乙',status:'inactive'}];
 const options={month:'2026-08',siteName:'測試案場',employees,parseShift:context.parseImportedShift};
+
+test('office duty posts import and remain distinct from shift type',()=>{
+  for(const [label,post] of [['總幹事','chief_manager'],['秘書','secretary']]){
+    const result=parser.parse([['姓名','1'],['測試甲',`日班 ${label} 09-18`]],options);
+    assert.equal(result.changes[0].post,post);assert.equal(result.changes[0].shift,'day');
+    assert.ok(read('database/schema.sql').includes(`'${post}'`));
+    assert.ok(read('database/migration-schedule-office-duty-posts.sql').includes(`'${post}'`));
+  }
+});
 
 test('supports Gregorian and ROC dates without confusing year with day',()=>{
   for(const value of ['1','１日','8/1','8月1日','2026-08-01','115/8/1','1（六）'])assert.equal(parser.dayValue(value,'2026-08'),1,value);
