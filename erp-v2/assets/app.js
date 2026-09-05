@@ -551,6 +551,7 @@ table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
         <tr><th>交通方式</th><td colspan="2">□ 步行　□ 自行車　□ 機車　□ 汽車　□ 大眾運輸　□ 其他</td><th>駕照類別</th><td colspan="2">________________________</td></tr>
         <tr><th>總幹事證號</th><td colspan="2"></td><th>其他專業證照</th><td colspan="2"></td></tr>
         <tr><th>是否可接受<br>警局核備</th><td colspan="2">□ 是　□ 否　□ 不適用</td><th>是否有相關前科<br>或核備限制</th><td colspan="2">□ 無　□ 有，說明：____________</td></tr>
+        <tr><th>是否可以加保<br>勞健團保</th><td colspan="5" class="check-line">□ 勞保　□ 健保　□ 團保　□ 其他：________</td></tr>
       </table>
       <h2>三、學歷</h2>
       <table><thead><tr><th>學校名稱</th><th>科系</th><th>就讀期間</th><th>畢業／肄業</th></tr></thead><tbody><tr class="blank-row"><td></td><td></td><td></td><td></td></tr><tr class="blank-row"><td></td><td></td><td></td><td></td></tr></tbody></table>
