@@ -5,13 +5,15 @@ import fs from 'node:fs';
 const root=new URL('../',import.meta.url);
 const read=path=>fs.readFileSync(new URL(path,root),'utf8');
 
-test('清潔人員面試履歷可從面試新進文件下載',()=>{
+test('清潔人員面試履歷可勾選合併下載或列印',()=>{
   const documents=read('assets/employee-documents.js');
-  const form=fs.readFileSync(new URL('assets/employee-documents/cleaning-personnel-interview-form.docx',root));
-  assert.match(documents,/cleaning-personnel-interview-form\.docx/);
-  assert.match(documents,/清潔人員面試履歷表下載（Word）/);
-  assert.match(documents,/download="紘嘉_清潔人員應徵履歷暨面試紀錄表\.docx"/);
-  assert.equal(form.subarray(0,2).toString(),'PK');
+  const form=fs.readFileSync(new URL('assets/employee-documents/cleaning-personnel-interview-form.pdf',root));
+  assert.match(documents,/\['清潔人員應徵履歷暨面試紀錄表','assets\/employee-documents\/cleaning-personnel-interview-form\.pdf'\]/);
+  assert.match(documents,/data-employee-document/);
+  assert.match(documents,/下載勾選 PDF/);
+  assert.match(documents,/列印勾選 PDF/);
+  assert.doesNotMatch(documents,/清潔人員面試履歷表下載（Word）/);
+  assert.equal(form.subarray(0,4).toString(),'%PDF');
   assert.ok(form.length>10000);
 });
 

@@ -1,5 +1,5 @@
 // Previous caches: hongjia-admin-pwa-v23, hongjia-admin-pwa-v24, hongjia-admin-pwa-v25
-const ADMIN_CACHE='hongjia-admin-pwa-v113';
+const ADMIN_CACHE='hongjia-admin-pwa-v114';
 const ADMIN_SHELL=['./index.html','./favicon-v2.ico','./config.js','./manifest-v2.json','./assets/app.css','./assets/app.js','./assets/schedule-import.js','./assets/attendance-export.js','./assets/lazy-libs.js','./assets/custom-dialogs.js','./assets/company-logo.png','./assets/erp-icon-v2-192.png'];
 
 self.addEventListener('install',event=>{event.waitUntil(caches.open(ADMIN_CACHE).then(cache=>cache.addAll(ADMIN_SHELL)));self.skipWaiting()});
