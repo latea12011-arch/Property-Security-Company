@@ -66,7 +66,7 @@ create table public.schedules (
   site_id uuid references public.sites(id) on delete restrict,
   work_date date not null,
   shift_type text not null check (shift_type in ('day','night','mobile','special','cash','off','annual','personal','sick','custom','marriage','bereavement','maternity','paternity','menstrual','official','occupational','compensatory','unpaid','typhoon_unpaid','other')),
-  duty_post text check (duty_post is null or duty_post in ('chief_manager','secretary','main','control','lane','patrol','secondary','lobby','gate','parking','reception','mobile_support','other')),
+  duty_post text check (duty_post is null or duty_post in ('chief_manager','secretary','cleaner','main','control','lane','patrol','secondary','lobby','gate','parking','reception','mobile_support','other')),
   start_time time not null,
   end_time time not null,
   work_time_text text,

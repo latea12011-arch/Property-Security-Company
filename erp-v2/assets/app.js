@@ -46,7 +46,7 @@
       ['medical_exam_date','健康檢查日期','date'],
       ['emergency_contact_name','緊急聯絡人','text'],['emergency_contact_relationship','與員工關係','text'],['emergency_contact_phone','緊急聯絡電話','tel'],['hire_date','入職日期','date'],['labor_health_insurance_enroll_date','勞健保加保日期','date'],['employment_type','身分類別','select',true,[['full_time','正職人員'],['mobile','機動人員'],['internal','內部人員'],['part_time','兼職人員'],['cash_shift','現金班人員'],['temporary','臨時／支援人員']]],
       ['assigned_sites','可排班案場','site-picker'],
-      ['job_title','職稱','select',true,[['保全員','保全員'],['機動保全員','機動保全員'],['行政保全','行政保全'],['案場主任','案場主任'],['總幹事','總幹事'],['社區秘書','社區秘書'],['勤務督導','勤務督導'],['行政專員','行政專員'],['人事專員','人事專員'],['會計專員','會計專員'],['業務人員','業務人員'],['業務經理','業務經理'],['部門主管','部門主管'],['總經理','總經理']]],
+      ['job_title','職稱','select',true,[['保全員','保全員'],['機動保全員','機動保全員'],['行政保全','行政保全'],['清潔人員','清潔人員'],['案場主任','案場主任'],['總幹事','總幹事'],['社區秘書','社區秘書'],['勤務督導','勤務督導'],['行政專員','行政專員'],['人事專員','人事專員'],['會計專員','會計專員'],['業務人員','業務人員'],['業務經理','業務經理'],['部門主管','部門主管'],['總經理','總經理']]],
       ['standard_daily_hours','標準每日工時','number',true],
       ['cash_shift_default_amount','現金班預設日薪','number'],
       ['police_approval_section','警局核備（與獨立核備區同步）','section'],
@@ -978,7 +978,7 @@ table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
   }
   const siteScheduleShiftOptions=[['','—'],['day','日班'],['night','夜班'],['mobile','機動班'],['special','特勤班'],['cash','現金班'],['custom','自訂班'],['off','休假'],['annual','特休'],['personal','事假'],['sick','病假'],['marriage','婚假'],['bereavement','喪假'],['maternity','產假'],['paternity','陪產檢及陪產假'],['menstrual','生理假'],['official','公假'],['occupational','公傷病假'],['compensatory','補休'],['unpaid','無薪假'],['typhoon_unpaid','天然災害未出勤（不支薪）'],['other','其他']];
   const siteScheduleShiftNames=Object.fromEntries(siteScheduleShiftOptions);
-  const scheduleDutyPostOptions=[['','未指定哨別'],['chief_manager','總幹事'],['secretary','秘書'],['main','主哨'],['control','中控'],['lane','車道'],['patrol','巡邏哨'],['secondary','副哨'],['lobby','大廳哨'],['gate','門禁哨'],['parking','停車場哨'],['reception','收發哨'],['mobile_support','機動支援'],['other','其他哨別']];
+  const scheduleDutyPostOptions=[['','未指定哨別'],['chief_manager','總幹事'],['secretary','秘書'],['cleaner','清潔人員'],['main','主哨'],['control','中控'],['lane','車道'],['patrol','巡邏哨'],['secondary','副哨'],['lobby','大廳哨'],['gate','門禁哨'],['parking','停車場哨'],['reception','收發哨'],['mobile_support','機動支援'],['other','其他哨別']];
   const scheduleDutyPostNames=Object.fromEntries(scheduleDutyPostOptions);
   function moveScheduleMonth(step){const[y,m]=state.scheduleMonth.split('-').map(Number),d=new Date(y,m-1+step,1);state.scheduleMonth=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;renderSiteMonthlySchedule();}
   function scheduleCellTime(row){return row?.work_time_text||((row?.start_time&&row?.end_time)?`${String(row.start_time).slice(0,5).replace(':00','')}-${String(row.end_time).slice(0,5).replace(':00','')}`:'');}

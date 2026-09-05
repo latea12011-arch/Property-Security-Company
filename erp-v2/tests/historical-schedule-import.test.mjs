@@ -15,12 +15,12 @@ const parser=context.HongJiaScheduleImport;
 const employees=[{id:'e1',employee_no:'D001',full_name:'測試甲',status:'active'},{id:'e2',employee_no:'D002',full_name:'測試乙',status:'inactive'}];
 const options={month:'2026-08',siteName:'測試案場',employees,parseShift:context.parseImportedShift};
 
-test('office duty posts import and remain distinct from shift type',()=>{
-  for(const [label,post] of [['總幹事','chief_manager'],['秘書','secretary']]){
+test('office and cleaning duty posts import and remain distinct from shift type',()=>{
+  for(const [label,post] of [['總幹事','chief_manager'],['秘書','secretary'],['清潔人員','cleaner']]){
     const result=parser.parse([['姓名','1'],['測試甲',`日班 ${label} 09-18`]],options);
     assert.equal(result.changes[0].post,post);assert.equal(result.changes[0].shift,'day');
     assert.ok(read('database/schema.sql').includes(`'${post}'`));
-    assert.ok(read('database/migration-schedule-office-duty-posts.sql').includes(`'${post}'`));
+    assert.ok(read('database/migration-cleaning-personnel.sql').includes(`'${post}'`));
   }
 });
 
