@@ -1,5 +1,5 @@
 (()=>{'use strict';
-  const MAILBOX='hongjia_prse@gmail.com';
+  const MAILBOX='hongjia.prse@gmail.com';
   const $=selector=>document.querySelector(selector);
   const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   let client=null,notice=()=>{},query='',nextPageToken='',messages=[];

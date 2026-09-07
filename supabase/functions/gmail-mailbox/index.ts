@@ -4,7 +4,7 @@ const corsHeaders={
   'Access-Control-Allow-Origin':'*',
   'Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type',
 }
-const MAILBOX=(Deno.env.get('GMAIL_ACCOUNT')||'hongjia_prse@gmail.com').trim().toLowerCase()
+const MAILBOX=(Deno.env.get('GMAIL_ACCOUNT')||'hongjia.prse@gmail.com').trim().toLowerCase()
 const json=(body:unknown,status=200)=>Response.json(body,{status,headers:corsHeaders})
 const clamp=(value:number,min:number,max:number)=>Math.max(min,Math.min(max,Number.isFinite(value)?Math.floor(value):min))
 const decodeBase64Url=(value='')=>{const normalized=value.replace(/-/g,'+').replace(/_/g,'/');const padded=normalized+'='.repeat((4-normalized.length%4)%4);const bytes=Uint8Array.from(atob(padded),char=>char.charCodeAt(0));return new TextDecoder().decode(bytes)}
