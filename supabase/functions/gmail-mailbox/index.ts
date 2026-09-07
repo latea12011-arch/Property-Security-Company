@@ -27,7 +27,7 @@ async function accessToken(){
   const response=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:clientId,client_secret:clientSecret,refresh_token:refreshToken,grant_type:'refresh_token'})})
   const result=await response.json();if(!response.ok||!result.access_token)throw new Error(result.error_description||'Gmail 授權已失效，請重新連結公司信箱');return result.access_token as string
 }
-async function gmail(path:string,token:string,init:RequestInit={}){const response=await fetch(`https://gmail.googleapis.com/gmail/v1/users/me${path}`,{...init,headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json',...(init.headers||{})}});const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result?.error?.message||`Gmail API 錯誤（${response.status}）`);return result}
+async function gmail(path:string,token:string,init:RequestInit={}){const response=await fetch(`https://gmail.googleapis.com/gmail/v1/users/me${path}`,{...init,headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json',...(init.headers||{})}});const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(`Gmail API ${path}：${result?.error?.message||`錯誤（${response.status}）`}`);return result}
 function summary(message:any){const headers=message.payload?.headers||[],from=header(headers,'From');return{id:message.id,threadId:message.threadId,from,fromName:senderName(from),subject:header(headers,'Subject'),date:header(headers,'Date')||new Date(Number(message.internalDate||0)).toISOString(),snippet:message.snippet||'',unread:(message.labelIds||[]).includes('UNREAD')}}
 
 Deno.serve(async req=>{
@@ -59,5 +59,5 @@ Deno.serve(async req=>{
       const raw=[...mailHeaders,'',replyBody].join('\r\n'),sent=await gmail('/messages/send',token,{method:'POST',body:JSON.stringify({threadId,raw:encodeBase64Url(raw)})});return json({ok:true,id:sent.id,thread_id:sent.threadId})
     }
     throw new Error('不支援的郵件操作')
-  }catch(error){return json({ok:false,error:error instanceof Error?error.message:'郵件服務發生錯誤'},400)}
+  }catch(error){console.error('[gmail-mailbox]',error instanceof Error?error.message:String(error));return json({ok:false,error:error instanceof Error?error.message:'郵件服務發生錯誤'},400)}
 })
