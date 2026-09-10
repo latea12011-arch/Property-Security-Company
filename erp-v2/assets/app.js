@@ -859,7 +859,6 @@ table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
     if(table==='employees')['payroll_basic_salary','payroll_personal_leave_day_rate','payroll_sick_leave_day_rate','payroll_unpaid_leave_day_rate','payroll_labor_insurance','payroll_health_insurance','payroll_group_insurance','payroll_pension_contribution','payroll_effective_date','payroll_note'].forEach(key=>delete record[key]);
     if(table==='employees')['police_approval_status','police_station','police_submitted_date','police_document_no','police_approval_date','police_approval_note'].forEach(key=>delete record[key]);
     if(table==='employees'&&initialPassword&&String(initialPassword).length<8){$('#formMessage').textContent='初始登入密碼至少需要 8 個字元；若暫時不建立登入帳號，請將密碼欄留空。';return}
-    if(table==='employees'&&record.salary_payment_method==='bank_transfer'&&(!record.bank_code||!record.bank_account_no)){ $('#formMessage').textContent='薪資選擇銀行匯款時，請選擇銀行並填寫銀行帳戶。';return }
     if(table==='sites'&&record.community_tax_id&&!/^\d{8}$/.test(String(record.community_tax_id).trim())){ $('#formMessage').textContent='社區統編請輸入 8 位數字。';return }
     if(table==='sites'&&record.acquisition_source==='partner'&&!record.referrer_name){ $('#formMessage').textContent='案場來源選擇「他人介紹／合作案場」時，請填寫介紹人或合作來源。';return }
     if(table==='employees'&&policeApproval.status!=='not_submitted'&&(!policeApproval.police_station||!policeApproval.submitted_date)){ $('#formMessage').textContent='警局核備已進入送件流程時，請填寫送件警局與送件日期。';return }
