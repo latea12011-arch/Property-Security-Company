@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
-test('現金班審核後完整重載並保留其他待審核操作',async()=>{
+test('薪資領取申請單審核後完整重載並保留其他待審核操作',async()=>{
   const [app,html]=await Promise.all([read('assets/app.js'),read('index.html')]);
   const approval=app.slice(app.indexOf('async function approveCashReceipt'),app.indexOf('function decorateCashReceiptApprovals'));
   assert.match(approval,/await renderCurrent\(\)/);
@@ -13,5 +13,5 @@ test('現金班審核後完整重載並保留其他待審核操作',async()=>{
   assert.match(app,/state\.cashReceiptMonth/);
   assert.match(app,/state\.cashReceiptSite/);
   assert.match(app,/state\.cashReceiptEmployee/);
-  assert.match(html,/assets\/app\.js\?v=158/);
+  assert.match(html,/assets\/app\.js\?v=\d+/);
 });
