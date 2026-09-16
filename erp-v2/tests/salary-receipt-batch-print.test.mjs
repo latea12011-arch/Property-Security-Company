@@ -34,11 +34,14 @@ test('renders monthly receipt statistics and all-print workflow',()=>{
   assert.match(app,/本月總金額/);
   assert.match(app,/同一位員工依日期彙整次數、金額與總額/);
   assert.match(app,/groups\.map\(cashReceiptBatchPage\)/);
+  assert.match(app,/<details class="cash-receipt-summary">/);
+  assert.match(app,/展開查看/);
+  assert.match(app,/收起統計/);
   assert.match(css,/\.cash-receipt-summary/);
 });
 
 test('bumps ERP assets and service-worker cache',()=>{
-  assert.match(index,/assets\/app\.css\?v=90/);
-  assert.match(index,/assets\/app\.js\?v=181/);
-  assert.match(worker,/hongjia-admin-pwa-v125/);
+  assert.match(index,/assets\/app\.css\?v=91/);
+  assert.match(index,/assets\/app\.js\?v=182/);
+  assert.match(worker,/hongjia-admin-pwa-v126/);
 });
