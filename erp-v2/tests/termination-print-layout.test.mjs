@@ -5,17 +5,17 @@ import vm from 'node:vm';
 
 const source=readFileSync(new URL('../assets/app.js',import.meta.url),'utf8');
 const code=source.slice(source.indexOf('  const terminationCompanyMarker='),source.indexOf('  function employmentCertificateBody('));
-export function renderTermination(companyType='property',employeeOverrides={}){
+export function renderTermination(companyType='property',employeeOverrides={},blank=false){
   const frame={};
   const context={
-    state:{relations:{employees:[{id:'sample',full_name:'測試員工',national_id:'A123456789',phone:'0912-345678',birth_date:'1982-11-23',hire_date:'2024-04-16',registered_address:'桃園市八德區範例路一段100號10樓',job_title:'社區秘書',...employeeOverrides}]}},
+    state:{relations:{employees:blank?[]:[{id:'sample',full_name:'測試員工',national_id:'A123456789',phone:'0912-345678',birth_date:'1982-11-23',hire_date:'2024-04-16',registered_address:'桃園市八德區範例路一段100號10樓',job_title:'社區秘書',...employeeOverrides}]}},
     document:{createElement:()=>frame,body:{appendChild:()=>{}}},
     esc:value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),
     setTimeout:()=>{}
   };
   vm.createContext(context);
   vm.runInContext(code,context);
-  context.printTermination({employee_id:'sample',company_type:companyType,issue_date:'2026-08-31',separation_date:'2026-08-31',certificate_no:'HJ-TERM-SAMPLE',separation_reason:'自願離職'});
+  context.printTermination(blank?{company_type:companyType}:{employee_id:'sample',company_type:companyType,issue_date:'2026-08-31',separation_date:'2026-08-31',certificate_no:'HJ-TERM-SAMPLE',separation_reason:'自願離職'});
   return frame.srcdoc;
 }
 
@@ -47,6 +47,17 @@ test('保留兩間公司、員工資料、原有勾選內容',()=>{
 test('列印資料安全編碼，空白資料仍可產生',()=>{
   assert.match(renderTermination('security',{full_name:'<script>測試</script>'}),/&lt;script&gt;/);
   assert.ok(renderTermination('security',{hire_date:null,birth_date:null,registered_address:''}));
+});
+test('離職證明頁提供可選公司且不帶員工個資的空白表格',()=>{
+  const blank=renderTermination('security',{},true);
+  assert.match(source,/id='printBlankTermination'/);
+  assert.match(source,/列印空白表格/);
+  assert.match(source,/不會帶入任何員工個資/);
+  assert.match(blank,/本表為空白離職證明書/);
+  assert.match(blank,/紘嘉保全股份有限公司/);
+  assert.doesNotMatch(blank,/測試員工|A123456789|0912-345678/);
+  assert.match(blank,/身分證正面/);
+  assert.match(blank,/身分證反面/);
 });
 
 if(process.env.TERMINATION_PREVIEW_DIR){
