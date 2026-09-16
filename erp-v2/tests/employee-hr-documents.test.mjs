@@ -26,7 +26,7 @@ test('員工資料支援出生日期、84-1 審核、批次列印及任職文件
   assert.match(batch,/員工基本資料清冊/);
   assert.match(batch,/rows\.map\(row=>/);
   assert.match(html,/data-view="labor841Approvals">84-1 核備/);
-  assert.match(html,/labor-84-1-approvals\.js\?v=5/);
+  assert.match(html,/labor-84-1-approvals\.js\?v=6/);
   const labor841=await read('assets/labor-84-1-approvals.js');
   for(const text of ['列印勾選','下載勾選','data-labor841-print','data-labor841-download','84-1 核備字號','公司發文字號'])assert.match(labor841,new RegExp(text));
   assert.match(labor841,/application\/msword/);
@@ -36,6 +36,9 @@ test('員工資料支援出生日期、84-1 審核、批次列印及任職文件
   assert.match(labor841,/inputmode="numeric" pattern="\[0-9\]\*"/);
   assert.match(labor841,/values\.labor_84_1_document_no=digits/);
   assert.match(labor841,/values\.labor_84_1_approval_no=digits/);
+  assert.match(labor841,/class="police-summary labor841-summary"/);
+  assert.match(labor841,/data-labor841-count/);
+  assert.match(labor841,/function updateSummary\(\)/);
   assert.match(app,/\['highest_education','最高學歷','text'\]/);
   assert.match(documents,/全選/);
   assert.match(documents,/下載勾選 PDF/);
