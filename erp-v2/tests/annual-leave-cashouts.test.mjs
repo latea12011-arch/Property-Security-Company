@@ -12,7 +12,7 @@ const worker=fs.readFileSync(new URL('../admin-service-worker.js',import.meta.ur
 
 test('特休換薪位於薪資與行政並使用獨立權限',()=>{
   assert.match(html,/data-view="annualLeaveCashouts">特休換薪申請單/);
-  assert.match(html,/assets\/annual-leave-cashouts\.js\?v=4/);
+  assert.match(html,/assets\/annual-leave-cashouts\.js\?v=5/);
   assert.match(app,/\['annualLeaveCashouts','特休換薪申請單'\]/);
   assert.match(app,/annualLeaveCashouts:\['休','薪資行政'\]/);
   assert.match(app,/state\.view==='annualLeaveCashouts'\?await window\.AnnualLeaveCashouts\.render\(\)/);
@@ -35,7 +35,7 @@ test('保全採十小時，其餘指定職務與內部人員採八小時',()=>{
   assert.match(migration,/like '%保全%' then 10/);
   assert.match(migration,/basic_salary\/30\.0\/new\.daily_hours_basis/);
   assert.match(migration,/new\.calculated_amount := round\(new\.requested_hours\*new\.hourly_rate\)/);
-  assert.match(moduleCode,/換薪金額＝月薪 ÷ 30 ÷ 每日計算時數 × 申請換薪時數/);
+  assert.doesNotMatch(moduleCode,/換薪計算方式/);
 });
 
 test('申請單可預覽、審核、列印並阻擋超額申請',()=>{
@@ -68,12 +68,12 @@ test('提供可自行填寫與計算的空白特休換薪表格',()=>{
   assert.match(moduleCode,/年度特休總額/);
   assert.match(moduleCode,/目前剩餘特休/);
   assert.match(moduleCode,/□ 10 小時　□ 8 小時/);
-  assert.match(moduleCode,/換算時薪＝月薪 ÷ 30 ÷ 每日計算時數/);
-  assert.match(moduleCode,/換薪金額＝換算時薪 × 申請換薪時數/);
+  assert.doesNotMatch(moduleCode,/換算時薪＝月薪 ÷ 30 ÷ 每日計算時數/);
+  assert.doesNotMatch(moduleCode,/換薪金額＝換算時薪 × 申請換薪時數/);
 });
 
 test('離線快取與正式資產版本已更新',()=>{
-  assert.match(worker,/hongjia-admin-pwa-v133/);
+  assert.match(worker,/hongjia-admin-pwa-v134/);
   assert.match(worker,/annual-leave-cashouts\.js/);
   assert.match(html,/assets\/app\.css\?v=93/);
   assert.match(html,/assets\/app\.js\?v=185/);

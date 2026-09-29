@@ -43,5 +43,5 @@ test('renders monthly receipt statistics and all-print workflow',()=>{
 test('bumps ERP assets and service-worker cache',()=>{
   assert.match(index,/assets\/app\.css\?v=93/);
   assert.match(index,/assets\/app\.js\?v=185/);
-  assert.match(worker,/hongjia-admin-pwa-v133/);
+  assert.match(worker,/hongjia-admin-pwa-v134/);
 });
