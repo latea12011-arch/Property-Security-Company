@@ -33,7 +33,7 @@
     return`<section class="annual-cashout-stats"><article><small>待審核</small><strong>${pending.length}</strong><span>筆申請</span></article><article><small>已核准待換薪</small><strong>${approved.length}</strong><span>NT$ ${money(approved.reduce((sum,row)=>sum+number(row.calculated_amount),0))}</span></article><article><small>已完成換薪</small><strong>${paid.length}</strong><span>NT$ ${money(paid.reduce((sum,row)=>sum+number(row.calculated_amount),0))}</span></article></section>`;
   }
   function table(){
-    return`<div class="table-wrap"><table><thead><tr><th>申請單號</th><th>申請日</th><th>員工</th><th>特休年度</th><th>換薪時數</th><th>計算基準</th><th>換薪金額</th><th>狀態</th><th>操作</th></tr></thead><tbody>${rows.length?rows.map(row=>`<tr><td><strong>${esc(row.application_no)}</strong></td><td>${esc(row.application_date)}</td><td><strong>${esc(row.employee_name_snapshot)}</strong><small>${esc(row.employee_no_snapshot)}・${esc(row.job_title_snapshot)}</small></td><td>${esc(row.leave_period_start)}<small>至 ${esc(row.leave_period_end)}</small></td><td>${hours(row.requested_hours)} 小時</td><td>${hours(row.daily_hours_basis)} 小時制<small>時薪 NT$ ${money(row.hourly_rate)}</small></td><td><strong>NT$ ${money(row.calculated_amount)}</strong></td><td>${statusBadge(row.status)}</td><td><div class="action-row"><button class="mini-button" data-cashout-edit="${esc(row.id)}">編輯／審核</button><button class="mini-button" data-cashout-print="${esc(row.id)}">列印</button></div></td></tr>`).join(''):'<tr><td colspan="9" class="empty">尚無特休換薪申請紀錄。</td></tr>'}</tbody></table></div>`;
+    return`<div class="table-wrap"><table><thead><tr><th>申請單號</th><th>申請日</th><th>員工</th><th>特休年度</th><th>換薪時數</th><th>計算基準</th><th>換薪金額</th><th>狀態</th><th>操作</th></tr></thead><tbody>${rows.length?rows.map(row=>`<tr><td><strong>${esc(row.application_no)}</strong></td><td>${esc(row.application_date)}</td><td><strong>${esc(row.employee_name_snapshot)}</strong><small>${esc(row.employee_no_snapshot)}・${esc(row.job_title_snapshot)}</small></td><td>${esc(row.leave_period_start)}<small>至 ${esc(row.leave_period_end)}</small></td><td>${hours(row.requested_hours)} 小時</td><td>${hours(row.daily_hours_basis)} 小時制<small>時薪 NT$ ${money(row.hourly_rate)}</small></td><td><strong>NT$ ${money(row.calculated_amount)}</strong></td><td>${statusBadge(row.status)}</td><td><div class="action-row"><button class="mini-button" data-cashout-edit="${esc(row.id)}">編輯／審核</button><button class="mini-button" data-cashout-print="${esc(row.id)}">列印</button><button class="mini-button danger" data-cashout-delete="${esc(row.id)}">刪除</button></div></td></tr>`).join(''):'<tr><td colspan="9" class="empty">尚無特休換薪申請紀錄。</td></tr>'}</tbody></table></div>`;
   }
   async function render(){
     const host=$('#content');host.innerHTML='<article class="panel empty">正在計算特休餘額與薪資…</article>';
@@ -42,6 +42,7 @@
     $('#addAnnualCashout').onclick=()=>openDialog();
     document.querySelectorAll('[data-cashout-edit]').forEach(button=>button.onclick=()=>openDialog(rows.find(row=>row.id===button.dataset.cashoutEdit)));
     document.querySelectorAll('[data-cashout-print]').forEach(button=>button.onclick=()=>printRow(rows.find(row=>row.id===button.dataset.cashoutPrint)));
+    document.querySelectorAll('[data-cashout-delete]').forEach(button=>button.onclick=()=>removeRow(rows.find(row=>row.id===button.dataset.cashoutDelete),button));
   }
   function ensureDialog(){
     let dialog=$('#annualCashoutDialog');if(dialog)return dialog;
@@ -64,6 +65,14 @@
     if(!employee){message.textContent='請選擇已到職滿一年且已建立薪資設定的員工。';return}if(requested<=0||requested>spendableFor(employee,editing)){message.textContent='申請時數不可超過目前可換薪餘額。';return}
     const payload={employee_id:employee.employee_id,application_date:form.elements.application_date.value,requested_hours:requested,status:form.elements.status.value,note:form.elements.note.value.trim()||null,review_note:form.elements.review_note.value.trim()||null};button.disabled=true;message.textContent='正在重新核對特休與薪資…';
     try{const query=editing?client.from('annual_leave_cashouts').update(payload).eq('id',editing.id):client.from('annual_leave_cashouts').insert(payload),{error}=await query;if(error)throw error;$('#annualCashoutDialog').close();await render()}catch(error){message.textContent=`儲存失敗：${error.message}`}finally{button.disabled=false}
+  }
+  async function removeRow(row,button){
+    if(!row)return;
+    const message=`確定刪除特休換薪申請單「${row.application_no}」？\n${row.employee_name_snapshot}・${hours(row.requested_hours)} 小時・NT$ ${money(row.calculated_amount)}\n刪除後無法復原，特休餘額會自動重新計算。`;
+    const confirmed=window.ERP_CONFIRM?await window.ERP_CONFIRM(message,'刪除特休換薪申請單'):confirm(message);if(!confirmed)return;
+    button.disabled=true;button.textContent='刪除中…';
+    try{const{error}=await client.from('annual_leave_cashouts').delete().eq('id',row.id);if(error)throw error;await render();if(window.ERP_ALERT)void window.ERP_ALERT('申請單已刪除，員工特休餘額已重新計算。','刪除完成')}
+    catch(error){button.disabled=false;button.textContent='刪除';if(window.ERP_ALERT)void window.ERP_ALERT(`刪除失敗：${error.message}`,'無法刪除');else alert(`刪除失敗：${error.message}`)}
   }
   function printRow(row){
     if(!row)return;

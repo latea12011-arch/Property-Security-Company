@@ -233,7 +233,7 @@ revoke all on function public.list_annual_leave_cashout_employees() from public,
 grant execute on function public.list_annual_leave_cashout_employees() to authenticated;
 grant execute on function public.annual_leave_cashout_daily_hours(text,text) to authenticated;
 grant usage,select on sequence public.annual_leave_cashout_no_seq to authenticated;
-grant select,insert,update on public.annual_leave_cashouts to authenticated;
+grant select,insert,update,delete on public.annual_leave_cashouts to authenticated;
 notify pgrst,'reload schema';
 select public.refresh_all_annual_leave_balances(current_date);
 select 'annual leave cashouts installed' as status;

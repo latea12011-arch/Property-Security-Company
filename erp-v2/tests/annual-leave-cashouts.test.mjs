@@ -5,13 +5,14 @@ import fs from 'node:fs';
 const app=fs.readFileSync(new URL('../assets/app.js',import.meta.url),'utf8');
 const moduleCode=fs.readFileSync(new URL('../assets/annual-leave-cashouts.js',import.meta.url),'utf8');
 const migration=fs.readFileSync(new URL('../database/migration-annual-leave-cashouts.sql',import.meta.url),'utf8');
+const deleteMigration=fs.readFileSync(new URL('../database/migration-annual-leave-cashouts-delete.sql',import.meta.url),'utf8');
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const css=fs.readFileSync(new URL('../assets/app.css',import.meta.url),'utf8');
 const worker=fs.readFileSync(new URL('../admin-service-worker.js',import.meta.url),'utf8');
 
 test('特休換薪位於薪資與行政並使用獨立權限',()=>{
   assert.match(html,/data-view="annualLeaveCashouts">特休換薪申請單/);
-  assert.match(html,/assets\/annual-leave-cashouts\.js\?v=2/);
+  assert.match(html,/assets\/annual-leave-cashouts\.js\?v=3/);
   assert.match(app,/\['annualLeaveCashouts','特休換薪申請單'\]/);
   assert.match(app,/annualLeaveCashouts:\['休','薪資行政'\]/);
   assert.match(app,/state\.view==='annualLeaveCashouts'\?await window\.AnnualLeaveCashouts\.render\(\)/);
@@ -52,8 +53,17 @@ test('申請單可預覽、審核、列印並阻擋超額申請',()=>{
   assert.match(css,/\.annual-cashout-preview/);
 });
 
+test('申請單提供二次確認刪除並由資料庫重新計算餘額',()=>{
+  assert.match(moduleCode,/data-cashout-delete/);
+  assert.match(moduleCode,/ERP_CONFIRM/);
+  assert.match(moduleCode,/from\('annual_leave_cashouts'\)\.delete\(\)\.eq\('id',row\.id\)/);
+  assert.match(moduleCode,/特休餘額會自動重新計算/);
+  assert.match(deleteMigration,/grant delete on public\.annual_leave_cashouts to authenticated/);
+  assert.match(migration,/sync_annual_leave_after_cashout after insert or update or delete/);
+});
+
 test('離線快取與正式資產版本已更新',()=>{
-  assert.match(worker,/hongjia-admin-pwa-v131/);
+  assert.match(worker,/hongjia-admin-pwa-v132/);
   assert.match(worker,/annual-leave-cashouts\.js/);
   assert.match(html,/assets\/app\.css\?v=93/);
   assert.match(html,/assets\/app\.js\?v=185/);
