@@ -11,7 +11,7 @@ const worker=fs.readFileSync(new URL('../admin-service-worker.js',import.meta.ur
 
 test('特休換薪位於薪資與行政並使用獨立權限',()=>{
   assert.match(html,/data-view="annualLeaveCashouts">特休換薪申請單/);
-  assert.match(html,/assets\/annual-leave-cashouts\.js\?v=1/);
+  assert.match(html,/assets\/annual-leave-cashouts\.js\?v=2/);
   assert.match(app,/\['annualLeaveCashouts','特休換薪申請單'\]/);
   assert.match(app,/annualLeaveCashouts:\['休','薪資行政'\]/);
   assert.match(app,/state\.view==='annualLeaveCashouts'\?await window\.AnnualLeaveCashouts\.render\(\)/);
@@ -44,11 +44,16 @@ test('申請單可預覽、審核、列印並阻擋超額申請',()=>{
   assert.match(moduleCode,/特休換薪申請單/);
   assert.match(moduleCode,/申請人簽名/);
   assert.match(moduleCode,/行政覆核/);
+  assert.match(moduleCode,/button\.onclick=\(\)=>printRow/);
+  assert.match(moduleCode,/annualCashoutPrintFrame/);
+  assert.match(moduleCode,/frame\.contentWindow\.print\(\)/);
+  assert.doesNotMatch(moduleCode,/forEach\(button=>printRow/);
+  assert.doesNotMatch(moduleCode,/window\.open\(/);
   assert.match(css,/\.annual-cashout-preview/);
 });
 
 test('離線快取與正式資產版本已更新',()=>{
-  assert.match(worker,/hongjia-admin-pwa-v130/);
+  assert.match(worker,/hongjia-admin-pwa-v131/);
   assert.match(worker,/annual-leave-cashouts\.js/);
   assert.match(html,/assets\/app\.css\?v=93/);
   assert.match(html,/assets\/app\.js\?v=185/);
