@@ -12,7 +12,7 @@ test('員工資料支援出生日期、84-1 審核、批次列印及任職文件
     read('service-worker.js'),
   ]);
   assert.match(html,/assets\/lazy-libs\.js\?v=1/);
-  assert.match(html,/employee-batch-actions\.js\?v=7/);
+  assert.match(html,/employee-batch-actions\.js\?v=8/);
   assert.match(app,/\['birth_date','出生年月日','date'\]/);
   assert.match(app,/\['labor_84_1_status','84-1 核備狀態'/);
   assert.match(app,/\['labor_84_1_approval_no','84-1 核備字號'/);

@@ -686,7 +686,7 @@ table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
     if(table==='termination_certificates'){const blank=document.createElement('button');blank.type='button';blank.className='btn ghost';blank.id='printBlankTermination';blank.textContent='列印空白表格';blank.onclick=openBlankTerminationPrint;$('.panel-head').appendChild(blank);}
     if(table==='employees'){
       if(window.EmployeeDocuments)window.EmployeeDocuments.attach($('.panel-head'),printApplicantResumeForm);else{const resume=document.createElement('button');resume.className='btn ghost';resume.id='printBlankApplicantResume';resume.textContent='面試履歷表下載／列印';resume.onclick=printApplicantResumeForm;$('.panel-head').appendChild(resume);}
-      window.EmployeeBatchActions?.attach({container:document.querySelector('#content article.panel'),rows});
+      window.EmployeeBatchActions?.attach({container:document.querySelector('#content article.panel'),rows,bankLabel:code=>employeeOptionText('bank_code',code)});
       if(window.EmployeeImport){
         window.EmployeeImport.configure({
           client,

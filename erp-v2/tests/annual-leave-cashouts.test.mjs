@@ -73,8 +73,8 @@ test('提供可自行填寫與計算的空白特休換薪表格',()=>{
 });
 
 test('離線快取與正式資產版本已更新',()=>{
-  assert.match(worker,/hongjia-admin-pwa-v136/);
+  assert.match(worker,/hongjia-admin-pwa-v137/);
   assert.match(worker,/annual-leave-cashouts\.js/);
   assert.match(html,/assets\/app\.css\?v=93/);
-  assert.match(html,/assets\/app\.js\?v=187/);
+  assert.match(html,/assets\/app\.js\?v=188/);
 });
