@@ -4,6 +4,7 @@
 alter table public.payroll_records
   add column if not exists salary_payment_method text not null default 'cash',
   add column if not exists bank_code text,
+  add column if not exists bank_branch text,
   add column if not exists bank_account_no text,
   add column if not exists transfer_fee numeric(10,2) not null default 0
     check (transfer_fee >= 0);
@@ -17,6 +18,7 @@ alter table public.payroll_records
 
 comment on column public.payroll_records.salary_payment_method is '該期薪資實際發放方式';
 comment on column public.payroll_records.bank_code is '該期薪資實際匯款銀行代碼';
+comment on column public.payroll_records.bank_branch is '該期薪資實際匯款分行快照';
 comment on column public.payroll_records.bank_account_no is '該期薪資實際匯款帳戶快照';
 comment on column public.payroll_records.transfer_fee is '公司負擔的匯款手續費，不計入員工扣款';
 

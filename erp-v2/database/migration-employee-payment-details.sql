@@ -3,6 +3,7 @@
 alter table public.employees
   add column if not exists salary_payment_method text not null default 'cash',
   add column if not exists bank_code text,
+  add column if not exists bank_branch text,
   add column if not exists bank_account_no text;
 
 alter table public.employees
@@ -14,6 +15,7 @@ alter table public.employees
 
 comment on column public.employees.salary_payment_method is '薪資發放方式：bank_transfer 銀行匯款、cash 領現';
 comment on column public.employees.bank_code is '薪資匯款銀行代碼';
+comment on column public.employees.bank_branch is '薪資匯款銀行分行';
 comment on column public.employees.bank_account_no is '薪資匯款帳戶';
 
 grant select,insert,update on public.employees to authenticated;
